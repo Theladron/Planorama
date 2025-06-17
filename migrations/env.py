@@ -7,22 +7,18 @@ from alembic import context
 
 import sys
 import os
-from dotenv import load_dotenv
 
 from app.core.config_loader import settings
+from app.core.database import Base, import_all_models
 
-# Load .env if you have one
-load_dotenv()
+# Import all models to ensure they are registered
+import_all_models()
 
-# Inject the env var into Alembic config
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from app.db.base import Base
-from app.models import station, quote, user, activity, trip, travel
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+# Set the DB URL
+config.set_main_option("sqlalchemy.url", str(settings.SQLALCHEMY_DATABASE_URI))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -31,14 +27,14 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-config.set_main_option("sqlalchemy.url", str(settings.SQLALCHEMY_DATABASE_URI))
-
+# from myapp import mymodel
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+print(Base.metadata.tables.keys())
 
 
 def run_migrations_offline() -> None:
@@ -53,7 +49,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = settings.SQLALCHEMY_DATABASE_URI
     context.configure(
         url=url,
         target_metadata=target_metadata,

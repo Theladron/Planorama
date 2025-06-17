@@ -1,6 +1,7 @@
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Annotated, Any, Literal
+from functools import cached_property
 
 from pydantic import (
     AnyUrl,
@@ -30,14 +31,16 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # Security
-    SECRET_KEY: str
     ALGORITHM: str = "HS256"
+    JWT_SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Environment
     DOMAIN: str = "localhost"
-    ENVIRONMENT: Literal["local", "staging", "production"] = "Local"
-    JWT_SECRET_KEY: str
+    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+
+    @computed_field
+    @property
     def server_host(self) -> str:
         if self.ENVIRONMENT == "local":
             return f"http://{self.DOMAIN}"
@@ -47,23 +50,19 @@ class Settings(BaseSettings):
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = Field(default_factory=list)
 
-
     POSTGRESQL_USERNAME: str
     POSTGRESQL_PASSWORD: str
     POSTGRESQL_SERVER: str
     POSTGRESQL_PORT: int
     POSTGRESQL_DATABASE: str
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def SQLALCHEMY_DATABASE_URI(self) -> str:
-        return str(
-            MultiHostUrl.build(
-                scheme="postgresql+psycopg2",
-                username=self.POSTGRESQL_USERNAME,
-                password=self.POSTGRESQL_PASSWORD,
-                host=self.POSTGRESQL_SERVER,
-                port=self.POSTGRESQL_PORT,
-                path=f"/{self.POSTGRESQL_DATABASE}",
-            )
+    @cached_property
+    def SQLALCHEMY_DATABASE_URI(self):
+        return MultiHostUrl.build(
+            scheme="postgresql+psycopg2",
+            username=self.POSTGRESQL_USERNAME,
+            password=self.POSTGRESQL_PASSWORD,
+            host=self.POSTGRESQL_SERVER,
+            port=self.POSTGRESQL_PORT,
+            path=self.POSTGRESQL_DATABASE,
         )
