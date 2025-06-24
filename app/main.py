@@ -4,6 +4,7 @@ from app.core.config_loader import settings
 from app.core.database import import_all_models
 from app.auth.api import auth_router
 from app.users.api import user_router
+from app.trips.api import trip_router
 
 openapi_tags = [
     {
@@ -36,6 +37,7 @@ if settings.BACKEND_CORS_ORIGINS:
 
 app.include_router(auth_router, prefix='/api')
 app.include_router(user_router, prefix='/api')
+app.include_router(trip_router, prefix='/api')
 
 
 @app.get("/api/health", tags=['Health Checks'])
