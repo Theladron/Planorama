@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 auth_router = APIRouter(
-    prefix="/api/auth",
+    prefix="/auth",
     tags=["auth"],
 )
 

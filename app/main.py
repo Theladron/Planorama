@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config_loader import settings
-
+from app.core.database import import_all_models
 from app.auth.api import auth_router
 from app.users.api import user_router
 
@@ -15,8 +15,13 @@ openapi_tags = [
         "description": "Application health checks",
     }
 ]
+app = FastAPI(openapi_tags=openapi_tags,
+              docs_url="/api/docs",
+              debug=settings.DEBUG
+              )
 
-app = FastAPI(openapi_tags=openapi_tags)
+# importing all database models
+import_all_models()
 
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -30,8 +35,9 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(auth_router, prefix='/api')
-app.include_router(user_router, prefix='/api', tags=['Users'])
+app.include_router(user_router, prefix='/api')
 
-@app.get("/health", tags=['Health Checks'])
+
+@app.get("/api/health", tags=['Health Checks'])
 def read_root():
     return {"health": "true"}
