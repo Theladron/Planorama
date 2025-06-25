@@ -4,7 +4,7 @@ from app.core.config_loader import settings
 from app.core.database import import_all_models
 from app.auth.api import auth_router
 from app.users.api import user_router, admin_user_router
-from app.trips.api import trip_router
+from app.trips.api import trip_router, admin_trip_router
 from app.custom_docs.api import router as custom_docs_router  # import custom docs
 
 openapi_tags = [
@@ -40,4 +40,5 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
 app.include_router(admin_user_router, prefix="/api")  # Admin routes
 app.include_router(trip_router, prefix="/api")
+app.include_router(admin_trip_router, prefix="/api")
 app.include_router(custom_docs_router)

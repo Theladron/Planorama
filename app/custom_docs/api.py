@@ -12,7 +12,8 @@ async def custom_openapi(request: Request):
     openapi_schema = get_base_openapi_schema(request.app)
 
     openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})[
-        "OAuth2Password"] = {
+        "OAuth2Password"
+    ] = {
         "type": "oauth2",
         "flows": {
             "password": {
@@ -49,7 +50,7 @@ async def custom_swagger_ui_html(request: Request):
     )
 
     interceptor_script = """
-    <script>
+<script>
 (function interceptFetch() {
     const originalFetch = window.fetch;
     window.fetch = async function(input, init) {
@@ -68,6 +69,7 @@ async def custom_swagger_ui_html(request: Request):
                 if (data.access_token) {
                     const safeToken = encodeURIComponent(data.access_token);
                     document.cookie = `swagger_authentication=${safeToken}; path=/; SameSite=Lax`;
+                    location.reload();  // <<< reload after login
                 }
             } catch (e) {}
         }
@@ -104,43 +106,38 @@ async def custom_swagger_ui_html(request: Request):
 })();
 
 (function interceptLogoutButton() {
-  function getLogoutButton() {
-    return Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.trim() === 'Logout');
-  }
+    let lastAttachedButton = null;
 
-  function attachLogoutHandler(button) {
-    if (!button) return false;
-
-    button.addEventListener('click', () => {
-      document.cookie = 'swagger_authentication=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
-    }, { once: true });
-
-    return true;
-  }
-
-  function startObserving() {
-    if (!document.body) {
-      return setTimeout(startObserving, 50);
+    function getLogoutButton() {
+        return Array.from(document.querySelectorAll('button'))
+            .find(btn => btn.textContent.trim() === 'Logout');
     }
 
-    const observer = new MutationObserver((mutations, obs) => {
-      let logoutButton = getLogoutButton();
-      if (logoutButton && attachLogoutHandler(logoutButton)) {
-        obs.disconnect();
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    let buttonNow = getLogoutButton();
-    if (buttonNow) {
-      if (attachLogoutHandler(buttonNow)) {
-        observer.disconnect();
-      }
+    function isSameButton(btn1, btn2) {
+        return btn1 === btn2;
     }
-  }
 
-  startObserving();
+    function attachLogoutHandler(button) {
+        if (!button || isSameButton(button, lastAttachedButton)) return;
+
+        button.addEventListener('click', () => {
+            document.cookie = 'swagger_authentication=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
+            location.reload();
+        }, { once: true });
+
+        lastAttachedButton = button;
+    }
+
+    function monitorLogoutButton() {
+        setInterval(() => {
+            const logoutButton = getLogoutButton();
+            if (logoutButton) {
+                attachLogoutHandler(logoutButton);
+            }
+        }, 500);
+    }
+
+    monitorLogoutButton();
 })();
 </script>
     """

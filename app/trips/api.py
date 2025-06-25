@@ -11,9 +11,12 @@ trip_router = APIRouter(
     prefix="/trips",
     tags=["Trips"]
 )
+admin_trip_router = APIRouter(
+    prefix="/admin/trips",
+    tags=["Admin"]
+)
 
-
-@trip_router.get("/", response_model=list[TripSchema])
+@admin_trip_router.get("/", response_model=list[TripSchema])
 def list_trips(db: Session = Depends(get_db)):
     return get_trips(db)
 
