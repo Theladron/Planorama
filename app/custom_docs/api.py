@@ -10,7 +10,13 @@ router = APIRouter()
 @router.get("/openapi.json", include_in_schema=False)
 async def custom_openapi(request: Request):
     openapi_schema = get_base_openapi_schema(request.app)
-
+    openapi_schema["info"]["title"] = "Planorama"
+    openapi_schema["info"]["description"] = (
+        "Planorama is an all-in-one travel app that lets you plan your perfect trip. "
+        "It gives you necessary data "
+        "about travel routes, weather, and things to do while on vacation."
+    )
+    openapi_schema["info"]["version"] = "0.8.0"
     openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})[
         "OAuth2Password"
     ] = {

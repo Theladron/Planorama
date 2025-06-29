@@ -5,7 +5,7 @@ from datetime import date
 
 class TripBase(BaseModel):
     trip_name: str
-    trip_countries: Optional[List[str]] = None
+    trip_countries: List[str] = []
     start_date: date
     end_date: date
 
@@ -21,3 +21,7 @@ class TripSchema(TripBase):
 
     class Config:
         from_attributes = True
+
+class TripUpdate(BaseModel):
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
