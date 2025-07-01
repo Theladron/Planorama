@@ -11,7 +11,7 @@ from jwt import InvalidTokenError
 from app.core.config_loader import settings
 
 SECRET_KEY = settings.JWT_SECRET_KEY
-ALGORITHM = "HS256"
+ALGORITHM = settings.ALGORITHM
 
 
 def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
@@ -25,7 +25,8 @@ def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta if expires_delta else timedelta(minutes=15))
+    expire = datetime.now(timezone.utc) + (expires_delta if expires_delta
+                                           else timedelta(minutes=15))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -37,7 +38,8 @@ async def get_token_from_auth_header(authorization: str = Header(None)) -> str:
     return authorization[7:]
 
 
-async def get_current_user(token: str = Depends(get_token_from_auth_header), db: Session = Depends(get_db)) -> User:
+async def get_current_user(token: str = Depends(get_token_from_auth_header),
+                           db: Session = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

@@ -15,6 +15,7 @@ class Travel(Base):
     to_station_id: Mapped[int] = mapped_column(Integer, nullable=False)
     method_of_transport: Mapped[str] = mapped_column(String(100), nullable=False)
     cost_euros: Mapped[float] = mapped_column(Float, nullable=True)
-    travel_route_description: Mapped[dict] = mapped_column(JSON, nullable=False)
+    travel_route_description: Mapped[dict] = mapped_column(JSON, nullable=True)
+    time_estimated: Mapped[str] = mapped_column(String(50), nullable=True)
 
     trip: Mapped["Trip"] = relationship("Trip", back_populates="travels")

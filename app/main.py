@@ -6,7 +6,7 @@ from app.auth.api import auth_router
 from app.users.api import user_router, admin_user_router
 from app.trips.api import trip_router, admin_trip_router
 from app.stations.api import station_router, admin_station_router
-from app.travel.api import travel_router, admin_travel_router
+from app.travel.api import travel_router
 from app.custom_docs.api import router as custom_docs_router  # import custom docs
 
 openapi_tags = [
@@ -46,5 +46,4 @@ app.include_router(admin_trip_router, prefix="/api")
 app.include_router(station_router, prefix="/api")
 app.include_router(admin_station_router, prefix="/api")
 app.include_router(travel_router, prefix="/api")
-app.include_router(admin_travel_router, prefix="/api")
 app.include_router(custom_docs_router)

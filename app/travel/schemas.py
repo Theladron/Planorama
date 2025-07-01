@@ -2,12 +2,6 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 
 
-class TravelCreate(BaseModel):
-    trip_id: int
-    from_station_id: int
-    to_station_id: int
-
-
 class TravelSchema(BaseModel):
     id: int
     trip_id: int
@@ -15,7 +9,8 @@ class TravelSchema(BaseModel):
     to_station_id: int
     method_of_transport: str
     cost_euros: Optional[float]
-    travel_route_description: Dict
+    travel_route_description: Optional[Dict]
+    time_estimated: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True

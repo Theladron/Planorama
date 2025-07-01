@@ -3,8 +3,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.auth.models import Token
-from app.auth.services import authenticate_user, create_access_token
+from app.auth.services import authenticate_user, create_access_token, is_token_admin
 from app.core.database import get_db
+from jwt import decode, InvalidTokenError
+from app.core.config_loader import settings
 
 auth_router = APIRouter(
     prefix="/auth",
@@ -27,7 +29,7 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={
             "sub": user.email,
-            "is_admin": user.is_admin,  # include admin info in token
+            "is_admin": user.is_admin,
         },
         expires_delta=access_token_expires,
     )
@@ -44,17 +46,13 @@ async def check_token_validity(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
 
     token = authorization[7:]
-    from app.auth.services import is_token_admin  # avoid circular import if any
 
     try:
-        # Just try decoding it; if invalid, will raise
-        from jwt import decode, InvalidTokenError
-        from app.core.config_loader import settings
         SECRET_KEY = settings.JWT_SECRET_KEY
-        ALGORITHM = "HS256"
+        ALGORITHM = settings.ALGORITHM
 
         decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # Token valid, return 200 OK
+
         return {"detail": "Token valid"}
     except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")

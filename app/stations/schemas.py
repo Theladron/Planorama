@@ -1,22 +1,27 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
 class StationBase(BaseModel):
     day_number: int
     station_name: str
-    location_name: str  # assuming it's used to get lat/lon from OpenRoute
 
 class StationCreate(StationBase):
     trip_id: int
 
-class StationUpdate(BaseModel):
-    day_number: Optional[int] = None
+class StationReorderItem(BaseModel):
+    station_id: int
+    day_number: int
 
 class StationSchema(StationBase):
     id: int
     trip_id: int
     latitude: float
     longitude: float
+    country: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class StationsReorderRequest(BaseModel):
+    trip_id: int
+    stations: List[StationReorderItem]

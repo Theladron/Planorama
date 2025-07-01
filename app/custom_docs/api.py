@@ -29,7 +29,7 @@ async def custom_openapi(request: Request):
         }
     }
     openapi_schema.setdefault("security", [{"OAuth2Password": []}])
-
+    openapi_schema["paths"].pop("/api/auth/check-token", None)
     token = get_token_from_request(request)
     if token is None or not is_token_admin(token):
         filtered_paths = {
@@ -145,6 +145,25 @@ async def custom_swagger_ui_html(request: Request):
 
     monitorLogoutButton();
 })();
+
+// === NEW: Hide the Authorization input fields without breaking functionality ===
+
+function hideAuthInputs() {
+    const inputs = document.querySelectorAll('.auth-wrapper input');
+    inputs.forEach(input => {
+        input.style.display = 'none';
+    });
+}
+
+// Run once after a short delay (after Swagger UI loads)
+setTimeout(hideAuthInputs, 1000);
+
+// Also observe DOM changes to hide inputs if modal opens later
+const observer = new MutationObserver(() => {
+    hideAuthInputs();
+});
+observer.observe(document.body, { childList: true, subtree: true });
+
 </script>
     """
 
