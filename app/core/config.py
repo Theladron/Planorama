@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "Planorama"
     DEBUG: bool = True
 
+    # API
+    ORS_API_KEY: str
+
     # Security
     ALGORITHM: str = "HS256"
     JWT_SECRET_KEY: str

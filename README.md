@@ -9,41 +9,81 @@ Planorama is a smart travel planning backend powered by FastAPI and AI. It integ
 ## 🚀 Tech Stack
 
 | Layer         | Tech                            |
-|---------------|----------------------------------|
-| Backend       | FastAPI, SQLAlchemy, Pydantic    |
-| Database      | PostgreSQL, Alembic              |
-| Auth          | JWT (manual), Auth0 (WIP)        |
-| AI Services   | OpenAI, OpenRoute, Weather APIs  |
-| DevOps        | Docker, Render, .env configs     |
-| Testing       | Pytest, pre-commit, Pylint       |
-| Docs (Planned)| Sphinx, Markdown                 |
+|---------------|---------------------------------|
+| Backend       | FastAPI, SQLAlchemy, Pydantic   |
+| Backend       | React, GUI                      |
+| Database      | PostgreSQL, Alembic             |
+| Auth          | JWT (manual), Auth0 (WIP)       |
+| AI Services   | OpenAI, OpenRoute, Weather APIs |
+| DevOps        | Docker, Render, .env configs    |
+| Testing       | Pytest, pre-commit, Pylint      |
+| Docs (Planned)| Sphinx, Markdown                |
 
 ---
 
 ## 📁 Project Structure (In Progress)
 
-<details> <summary>Click to expand</summary>
+<details>
+<summary>Click to expand</summary>
 <br>
-planorama/<br>
-├── app/  <br>
-│   ├── api/              # Route handlers (REST)<br>
-│   ├── core/             # App-wide config, logging, auth<br>
-│   ├── crud/             # DB access layer<br>
-│   ├── db/               # DB session, base, handlers<br>
-│   ├── models/           # SQLAlchemy models<br>
-│   ├── pages/            # Route handlers (HTML)<br>
-│   ├── schemas/          # Pydantic schemas<br>
-│   ├── services/         # External APIs, AI integration<br>
-│   ├── static/           # Assets<br>
-│   ├── templates/        # Jinja2 templates (if needed)<br>
-│   ├── utils/            # MCP client/server setup<br>
-│   └── main.py           # Entrypoint (FastAPI app)<br>
+> 📁 Folders like `activities`, `auth`, `travel`, etc. follow a **feature module pattern**, each containing `api.py`, `models.py`, `schemas.py`, and `services.py` for separation of concerns.
+<br>
+<br>
+project_root/<br>
+├── app/<br>
+│   ├── activities/<br>
+│   │   ├── api.py<br>
+│   │   ├── models.py<br>
+│   │   ├── schemas.py<br>
+│   │   └── services.py<br>
+│   ├── auth/  # Feature module (api/models/schemas/services)<br>
+│   │   └── ...<br>
+│   ├── core/<br>
+│   │   ├── config.py, database.py, security.py, ...<br>
+│   ├── custom_docs/  # Custom OpenAPI docs logic<br>
+│   │   └── api.py, services.py<br>
+│   ├── external_services/<br>
+│   │   ├── chatgpt.py, weather_api.py, ...<br>
+│   │   └── connectors/<br>
+│   │       └── openroute_connector.py<br>
+│   ├── quotes/        # Feature module<br>
+│   │   └── ...<br>
+│   ├── stations/      # Feature module<br>
+│   │   └── ...<br>
+│   ├── travel/        # Feature module<br>
+│   │   └── ...<br>
+│   ├── trips/         # Feature module<br>
+│   │   └── ...<br>
+│   ├── users/         # Feature module<br>
+│   │   └── ...<br>
+│   ├── static/<br>
+│   ├── templates/<br>
+│   ├── utils/<br>
+│   ├── __init__.py<br>
+│   └── main.py<br>
 ├── docker/<br>
-├── alembic/<br>
+│   ├── development/<br>
+│   ├── postgres/<br>
+│   └── production/<br>
+├── frontend/<br>
+├── migrations/<br>
+│   ├── versions/<br>
+│   ├── env.py<br>
+│   ├── README<br>
+│   └── script.py.mako<br>
+├── tests/<br>
+│   ├── test_auth.py<br>
+│   └── test_trip.py<br>
 ├── .env / .env.example<br>
-├── requirements.txt<br>
+├── .gitignore<br>
+├── .pylintrc<br>
+├── alembic.ini<br>
+├── LICENSE<br>
+├── pre-commit-config.yaml<br>
+├── pyproject.toml<br>
 ├── README.md<br>
-└── LICENSE<br>
+└── requirements.txt<br>
+
 </details>
 
 <br>
@@ -71,15 +111,15 @@ uvicorn app.main:app --reload
 
 ## 📌 Roadmap
 
-* [ ] FastAPI scaffolding
+* [x] FastAPI scaffolding
 
-* [ ] SQLAlchemy models
+* [x] SQLAlchemy models
 
-* [ ] JWT authentication
+* [x] JWT authentication
 
-* [ ] Auth0 integration
+* [x] Auth0 integration
 
-* [ ] Dockerization
+* [ ] React MUI frontend
 
 * [ ] Pytest coverage
 
@@ -88,6 +128,8 @@ uvicorn app.main:app --reload
 * [ ] Sphinx docs
 
 * [ ] Render deployment
+
+* [ ] Dockerization
 
 ## 🤝 Contributing
 

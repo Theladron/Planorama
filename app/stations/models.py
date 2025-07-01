@@ -15,5 +15,6 @@ class Station(Base):
     station_name: Mapped[str] = mapped_column(String(100), nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    country: Mapped[str] = mapped_column(String, nullable=True)
 
     trip: Mapped["Trip"] = relationship("Trip", back_populates="stations")
