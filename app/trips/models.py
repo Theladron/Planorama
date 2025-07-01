@@ -16,12 +16,15 @@ class Trip(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     trip_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    trip_countries: Mapped[list[str]] = mapped_column(JSON, nullable=True)
+    trip_countries: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
     created_at: Mapped[date] = mapped_column(Date, server_default=func.now(), nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="trips")
-    travels: Mapped[list["Travel"]] = relationship("Travel", back_populates="trip", cascade="all, delete-orphan")
-    stations: Mapped[list["Station"]] = relationship("Station", back_populates="trip", cascade="all, delete-orphan")
-    activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="trip", cascade="all, delete-orphan")
+    travels: Mapped[list["Travel"]] = relationship("Travel", back_populates="trip",
+                                                   cascade="all, delete-orphan")
+    stations: Mapped[list["Station"]] = relationship("Station", back_populates="trip",
+                                                     cascade="all, delete-orphan")
+    activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="trip",
+                                                        cascade="all, delete-orphan")

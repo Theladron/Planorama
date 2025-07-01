@@ -16,15 +16,19 @@ def get_user_by_email(db: Session, email: str):
 
 
 def create_user(db: Session, user: UserCreate):
-    db_user = User(
-        email=str(user.email),
-        username=user.username,
-        password=hash_password(user.password)
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        db_user = User(
+            email=str(user.email),
+            username=user.username,
+            password_hash=hash_password(user.password)
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        raise
 
 
 def delete_user(db: Session, user_id: int):
