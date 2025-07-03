@@ -7,8 +7,8 @@ from app.core.security import verify_password
 from app.users.models import User
 from typing import Optional
 import jwt
-from jwt import InvalidTokenError
 from app.core.config_loader import settings
+from jwt import decode, InvalidTokenError, ExpiredSignatureError
 
 SECRET_KEY = settings.JWT_SECRET_KEY
 ALGORITHM = settings.ALGORITHM
@@ -45,13 +45,21 @@ async def get_current_user(token: str = Depends(get_token_from_auth_header),
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    expired_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token expired",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
+    except ExpiredSignatureError:
+        raise expired_exception
     except InvalidTokenError:
         raise credentials_exception
+
     user = get_user_by_email(db, email=email)
     if user is None:
         raise credentials_exception
