@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Dialog state
   const [openConfirm, setOpenConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
@@ -76,7 +75,6 @@ export default function SettingsPage() {
         },
       }}
     >
-      {/* Sidebar */}
       <Box
         component="nav"
         sx={{
@@ -117,7 +115,6 @@ export default function SettingsPage() {
         </Box>
       </Box>
 
-      {/* Main content */}
       <Box
         component="main"
         sx={{
@@ -151,7 +148,6 @@ export default function SettingsPage() {
           </Typography>
         )}
 
-        {/* Confirmation Dialog */}
         <Dialog open={openConfirm} onClose={handleCancel}>
           <DialogTitle>Confirm Account Deletion</DialogTitle>
           <DialogContent>

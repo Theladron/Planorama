@@ -26,7 +26,7 @@ def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta if expires_delta
-                                           else timedelta(minutes=15))
+                                           else timedelta(minutes=60))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

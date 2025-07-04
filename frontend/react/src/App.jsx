@@ -16,8 +16,10 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
 import TripsPage from "./pages/TripsPage";
-
+import TripsGenerationPage from "./pages/TripsGenerationPage";
+import TripsCreationPage from "./pages/TripsCreationPage";
 import PrivateRoute from "./components/PrivateRoute";
+import AddStationPage from "./pages/AddStationPage";
 
 import { Snackbar, Alert } from "@mui/material";
 
@@ -38,24 +40,23 @@ function Layout({ children }) {
 function AuthErrorHandler() {
   const { authError, setAuthError, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (authError) {
-      // Show snackbar
       setOpen(true);
-      // Redirect to login page
-      logout(); // clear auth states & token
+      logout();
       if (location.pathname !== "/") {
         navigate("/login");
       }
     }
-  }, [authError, navigate, logout]);
+  }, [authError, navigate, logout, location.pathname]);
 
   const handleClose = (event, reason) => {
     if (reason === "clickaway") return;
     setOpen(false);
-    setAuthError(null); // Clear error so message doesn't show again
+    setAuthError(null);
   };
 
   return (
@@ -101,6 +102,30 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <TripsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/trips/generate"
+              element={
+                <PrivateRoute>
+                  <TripsGenerationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/trips/create"
+              element={
+                <PrivateRoute>
+                  <TripsCreationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/trips/:tripId/add"
+              element={
+                <PrivateRoute>
+                  <AddStationPage />
                 </PrivateRoute>
               }
             />

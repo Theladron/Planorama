@@ -4,13 +4,13 @@ import axios from "axios";
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  // Auth states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // True until we verify auth
   const [authError, setAuthError] = useState(null);
 
-  // Setup axios default Authorization header _immediately_ on mount if token exists
+
+  // Setup axios default Authorization header immediately on mount if token exists
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -20,7 +20,6 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Fetch user info from backend, used on mount and login
   const fetchUser = async () => {
     setLoading(true);
     try {
@@ -29,7 +28,6 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(true);
       setAuthError(null);
     } catch (err) {
-      // If token expired or invalid, logout and show message
       if (
         err.response &&
         err.response.status === 401 &&
@@ -65,7 +63,6 @@ export function AuthProvider({ children }) {
     setAuthError(errorMessage);
   };
 
-  // On mount, check if token exists and fetch user
   useEffect(() => {
     fetchUser();
   }, []);

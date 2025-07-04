@@ -4,7 +4,6 @@ import {
   Typography,
   Card,
   CardContent,
-  CardActions,
   Button,
   TextField,
   Dialog,
@@ -15,7 +14,7 @@ import {
   CircularProgress,
   Link as MuiLink,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import countries from "i18n-iso-countries";
@@ -52,6 +51,11 @@ export default function TripsPage() {
 
   const [editableDates, setEditableDates] = useState({});
 
+  // New state: stations by tripId
+  const [stationsByTrip, setStationsByTrip] = useState({});
+
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchTrips = async () => {
       setLoading(true);
@@ -68,6 +72,26 @@ export default function TripsPage() {
           };
         });
         setEditableDates(dates);
+
+        // Fetch stations for each trip in parallel
+        const stationsResults = await Promise.all(
+          res.data.map(async (trip) => {
+            try {
+              const stationsRes = await axios.get(`/api/stations/by-trip/${trip.id}`);
+              return { tripId: trip.id, stations: stationsRes.data };
+            } catch (err) {
+              console.error(`Failed to fetch stations for trip ${trip.id}:`, err);
+              return { tripId: trip.id, stations: [] };
+            }
+          })
+        );
+
+        const stationsMap = {};
+        stationsResults.forEach(({ tripId, stations }) => {
+          stationsMap[tripId] = stations;
+        });
+        setStationsByTrip(stationsMap);
+
       } catch (err) {
         console.error("Failed to fetch trips:", err);
         setError("Failed to load trips.");
@@ -147,6 +171,18 @@ export default function TripsPage() {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  const handleGenerateClick = (tripId) => {
+    navigate(`/trips/generate?tripId=${tripId}`);
+  };
+
+  const handleAddStationClick = (tripId) => {
+    navigate(`/trips/${tripId}/add`);
+  };
+
+  const handleReorderStationsClick = (tripId) => {
+    navigate(`/trips/${tripId}/reorder`);
   };
 
   if (loading) {
@@ -235,164 +271,249 @@ export default function TripsPage() {
             </MuiLink>
           </Typography>
         ) : (
-          trips.map((trip) => (
-            <Card
-              key={trip.id}
-              sx={{
-                mb: 4,
-                maxWidth: 270,
-                backgroundColor: "rgba(250, 201, 72, 0.15)",
-                backdropFilter: "blur(6px)",
-                border: "1px solid rgba(250, 201, 72, 0.3)",
-                borderRadius: "8px",
-                boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.2)",
-                fontFamily: "'Pacifico', cursive",
-                textShadow: "2px 2px 6px rgba(0,0,0,0.6)",
-                color: "#fac948",
-                position: "relative",
-                zIndex: 1,
-              }}
-            >
-              <CardContent>
-                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  {trip.trip_name}
-                </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 3,
+              mb: 4,
+            }}
+          >
+            {trips.map((trip) => (
+              <Card
+                key={trip.id}
+                sx={{
+                  maxWidth: 270,
+                  backgroundColor: "rgba(250, 201, 72, 0.15)",
+                  backdropFilter: "blur(6px)",
+                  border: "1px solid rgba(250, 201, 72, 0.3)",
+                  borderRadius: "8px",
+                  boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.2)",
+                  fontFamily: "'Pacifico', cursive",
+                  textShadow: "2px 2px 6px rgba(0,0,0,0.6)",
+                  color: "#fac948",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h5" fontWeight="bold" gutterBottom>
+                    {trip.trip_name}
+                  </Typography>
 
-                {/* Country flags */}
-                <Box sx={{ mb: 2 }}>
-                  {trip.trip_countries.map((countryName) => {
-                    const code = getCountryCode(countryName);
-                    return (
-                      <Typography
-                        key={countryName}
-                        component="span"
-                        sx={{ fontSize: "1.5rem", mr: 1 }}
-                        aria-label={`Flag of ${countryName}`}
-                        title={countryName}
-                      >
-                        {code ? countryCodeToEmoji(code) : countryName}
+
+                  <Box sx={{ mb: 2 }}>
+                    {trip.trip_countries.map((countryName) => {
+                      const code = getCountryCode(countryName);
+                      return (
+                        <Typography
+                          key={countryName}
+                          component="span"
+                          sx={{ fontSize: "1.5rem", mr: 1 }}
+                          aria-label={`Flag of ${countryName}`}
+                          title={countryName}
+                        >
+                          {code ? countryCodeToEmoji(code) : countryName}
+                        </Typography>
+                      );
+                    })}
+                  </Box>
+
+
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    Created at: {dayjs(trip.created_at).format("MMMM D, YYYY")}
+                  </Typography>
+
+                  {/* Start Date */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1,
+                      ml: -2,
+                      flexWrap: "wrap",
+                      height: "55px",
+                    }}
+                  >
+                    <TextField
+                      label="Start Date"
+                      type="date"
+                      size="small"
+                      value={editableDates[trip.id]?.start_date || ""}
+                      onChange={(e) =>
+                        handleDateChange(trip.id, "start_date", e.target.value)
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      sx={{
+                        maxWidth: 160,
+                        input: {
+                          color: "#f0e6cc",
+                        },
+                      }}
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleUpdateDate(trip.id)}
+                      disabled={updateLoading[trip.id]}
+                    >
+                      {updateLoading[trip.id] ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        "Update"
+                      )}
+                    </Button>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1,
+                      ml: -2,
+                      flexWrap: "wrap",
+                      height: "55px",
+                    }}
+                  >
+                    <TextField
+                      label="End Date"
+                      type="date"
+                      size="small"
+                      value={editableDates[trip.id]?.end_date || ""}
+                      onChange={(e) =>
+                        handleDateChange(trip.id, "end_date", e.target.value)
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      sx={{
+                        maxWidth: 160,
+                        input: {
+                          color: "#f0e6cc",
+                        },
+                      }}
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => handleUpdateDate(trip.id)}
+                      disabled={updateLoading[trip.id]}
+                    >
+                      {updateLoading[trip.id] ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        "Update"
+                      )}
+                    </Button>
+                  </Box>
+
+                  <Box sx={{ mt: 1, ml: 1 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                      Stations:
+                    </Typography>
+                    {stationsByTrip[trip.id]?.length > 0 ? (
+                      <ul style={{ margin: 0, paddingLeft: 16 }}>
+                        {stationsByTrip[trip.id].map((station) => (
+                          <li key={station.id} style={{ color: "#f0e6cc" }}>
+                            {station.station_name}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Typography variant="body2" sx={{ fontStyle: "italic", color: "#f0e6cc" }}>
+                        No stations added yet.
                       </Typography>
-                    );
-                  })}
-                </Box>
-
-                {/* Created at */}
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  Created at: {dayjs(trip.created_at).format("MMMM D, YYYY")}
-                </Typography>
-
-                {/* Start Date */}
-                <Box sx={{ display: "flex",
-                    alignItems: "center",
-                    mb: 1,
-                    ml: -2,
-                    flexWrap: "wrap",
-                     height: "55px"}}>
-                  <TextField
-                    label="Start Date"
-                    type="date"
-                    size="small"
-                    value={editableDates[trip.id]?.start_date || ""}
-                    onChange={(e) =>
-                      handleDateChange(trip.id, "start_date", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ maxWidth: 160,
-                        input: {
-                        color: "#f0e6cc",
-                        } }}
-                  />
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleUpdateDate(trip.id)}
-                    disabled={updateLoading[trip.id]}
-                  >
-                    {updateLoading[trip.id] ? (
-                      <CircularProgress size={20} color="inherit" />
-                    ) : (
-                      "Update"
                     )}
-                  </Button>
-                </Box>
+                  </Box>
+                </CardContent>
 
-                {/* End Date */}
-                <Box sx={{ display: "flex",
-                    alignItems: "center",
-                    mb: 1,
-                    ml: -2,
-                    flexWrap: "wrap",
-                    height: "55px" }}>
-                  <TextField
-                    label="End Date"
-                    type="date"
-                    size="small"
-                    value={editableDates[trip.id]?.end_date || ""}
-                    onChange={(e) =>
-                      handleDateChange(trip.id, "end_date", e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ maxWidth: 160,
-                        input: {
-                        color: "#f0e6cc",
-                        }}}
-                  />
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleUpdateDate(trip.id)}
-                    disabled={updateLoading[trip.id]}
+                <Box sx={{ px: 2, pb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1,
+                      gap: 1,
+                    }}
                   >
-                    {updateLoading[trip.id] ? (
-                      <CircularProgress size={20} color="inherit" />
-                    ) : (
-                      "Update"
-                    )}
-                  </Button>
-                </Box>
-              </CardContent>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => handleAddStationClick(trip.id)}
+                      fullWidth
+                      size="small"
+                    >
+                      Add Station
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="success"
+                      onClick={() => handleReorderStationsClick(trip.id)}
+                      fullWidth
+                      size="small"
+                    >
+                      Reorder Stations
+                    </Button>
+                  </Box>
 
-              <CardActions>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => openDeleteDialog(trip)}
-                  disabled={deleteLoading}
-                >
-                  Delete
-                </Button>
-              </CardActions>
-            </Card>
-          ))
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 1,
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => openDeleteDialog(trip)}
+                      disabled={deleteLoading}
+                      fullWidth
+                      size="small"
+                    >
+                      Delete
+                    </Button>
+                    <Button
+                      variant="warning"
+                      onClick={() => handleGenerateClick(trip.id)}
+                      fullWidth
+                      size="small"
+                    >
+                      Show Trip
+                    </Button>
+                  </Box>
+                </Box>
+              </Card>
+            ))}
+          </Box>
         )}
-
-        <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
-          <DialogTitle>Confirm Delete Trip</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you sure you want to delete the trip{" "}
-              <strong>{tripToDelete?.trip_name}</strong>? This action cannot be
-              undone.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={closeDeleteDialog} disabled={deleteLoading}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmDelete}
-              color="error"
-              disabled={deleteLoading}
-            >
-              {deleteLoading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
+
+
+      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this trip? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} disabled={deleteLoading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Delete"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
