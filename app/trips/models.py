@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.users.models import User
     from app.travel.models import Travel
-    from app.stations.models import Station
     from app.activities.models import Activity
+    from app.trip_stations.models import TripStation
 
 class Trip(Base):
     __tablename__ = "trips"
@@ -24,7 +24,7 @@ class Trip(Base):
     user: Mapped["User"] = relationship("User", back_populates="trips")
     travels: Mapped[list["Travel"]] = relationship("Travel", back_populates="trip",
                                                    cascade="all, delete-orphan")
-    stations: Mapped[list["Station"]] = relationship("Station", back_populates="trip",
-                                                     cascade="all, delete-orphan")
     activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="trip",
                                                         cascade="all, delete-orphan")
+    trip_stations: Mapped[list["TripStation"]] = relationship("TripStation", back_populates="trip",
+                                                              cascade="all, delete-orphan")
