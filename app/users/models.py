@@ -17,6 +17,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
                                                  nullable=False, server_default=text('now()'))
+    language_preference = mapped_column(String(5), nullable=False, default="en")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
                                                  nullable=True, onupdate=func.now())
 
