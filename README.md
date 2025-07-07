@@ -8,16 +8,16 @@ Planorama is a smart travel planning backend powered by FastAPI and AI. It integ
 
 ## 🚀 Tech Stack
 
-| Layer         | Tech                            |
-|---------------|---------------------------------|
-| Backend       | FastAPI, SQLAlchemy, Pydantic   |
-| Backend       | React, GUI                      |
-| Database      | PostgreSQL, Alembic             |
-| Auth          | JWT (manual), Auth0 (WIP)       |
-| AI Services   | OpenAI, OpenRoute, Weather APIs |
-| DevOps        | Docker, Render, .env configs    |
-| Testing       | Pytest, pre-commit, Pylint      |
-| Docs (Planned)| Sphinx, Markdown                |
+| Layer          | Tech                            |
+|----------------|---------------------------------|
+| Backend        | FastAPI, SQLAlchemy, Pydantic   |
+| Frontend       | React, GUI                      |
+| Database       | PostgreSQL, Alembic             |
+| Auth           | JWT (manual), Auth0 (WIP)       |
+| AI Services    | OpenAI, OpenRoute, Weather APIs |
+| DevOps         | Docker, Render, .env configs    |
+| Testing        | Pytest, pre-commit, Pylint      |
+| Docs (Planned) | Sphinx, Markdown                |
 
 ---
 
@@ -92,7 +92,7 @@ project_root/<br>
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/planorama.git
+git clone https://github.com/Theladron/planorama.git
 cd planorama
 
 # Create virtual environment
@@ -107,6 +107,11 @@ cp .env.example .env
 
 # Run the app
 uvicorn app.main:app --reload
+
+# Open a second terminal and run the frontend simultaneously
+cd frontend/react
+npm install
+npm run dev
 ```
 
 ## 📌 Roadmap
