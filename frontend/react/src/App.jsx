@@ -20,7 +20,7 @@ import TripsGenerationPage from "./pages/TripsGenerationPage";
 import TripsCreationPage from "./pages/TripsCreationPage";
 import PrivateRoute from "./components/PrivateRoute";
 import AddStationPage from "./pages/AddStationPage";
-
+import ReorderStationsPage from "./pages/ReorderStationsPage";
 import { Snackbar, Alert } from "@mui/material";
 
 // Wrapper to control Navbar layout based on current path
@@ -126,6 +126,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <AddStationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/trips/:tripId/reorder"
+              element={
+                <PrivateRoute>
+                  <ReorderStationsPage />
                 </PrivateRoute>
               }
             />
