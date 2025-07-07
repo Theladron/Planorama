@@ -12,3 +12,13 @@ class OpenRouteConnector:
 
     def get_route_info(self, start_town: str, end_town: str) -> Optional[tuple[list[str], str]]:
         return openroute.get_route_directions(self.client, start_town, end_town)
+
+    def get_full_route_by_coords(
+            self,
+            start_lat: float, start_lon: float,
+            end_lat: float, end_lon: float) -> Optional[dict]:
+        return openroute.get_full_route_data_by_coords(
+            self.client,
+            start_lat, start_lon,
+            end_lat, end_lon
+        )

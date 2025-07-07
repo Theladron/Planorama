@@ -46,3 +46,50 @@ def get_route_directions(
 
     except (KeyError, IndexError):
         return None
+
+def get_full_route_data_by_coords(
+    client: openrouteservice.Client,
+    start_lat: float,
+    start_lon: float,
+    end_lat: float,
+    end_lon: float
+) -> Optional[dict]:
+    try:
+        route = client.directions(
+            coordinates=[(start_lon, start_lat), (end_lon, end_lat)],
+            profile="driving-car",
+            instructions=True
+        )
+
+        route_data = route['routes'][0]
+        geometry = route_data['geometry']
+        decoded_coords = [
+            [coord[1], coord[0]] for coord in
+            openrouteservice.convert.decode_polyline(geometry)['coordinates']
+        ]
+        print("Decoded polyline:", decoded_coords[:5])
+        steps = route_data['segments'][0]['steps']
+        duration_sec = route_data['summary']['duration']
+        readable_duration = (
+            f"{int(duration_sec // 3600)}h {int((duration_sec % 3600) // 60)}m"
+            if duration_sec else None
+        )
+
+        directions = [
+            {
+                "instruction": step.get("instruction"),
+                "distance": step.get("distance"),
+                "name": step.get("name")
+            }
+            for step in steps
+            if step.get("instruction")
+        ]
+
+        return {
+            "polyline": decoded_coords,
+            "duration": readable_duration,
+            "directions": directions
+        }
+
+    except (KeyError, IndexError, TypeError):
+        return None
