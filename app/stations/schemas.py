@@ -1,27 +1,27 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
+
 
 class StationBase(BaseModel):
-    day_number: int
-    station_name: str
+    station_name: str  # Treated as user's preferred language
+
 
 class StationCreate(StationBase):
-    trip_id: int
+    latitude: float
+    longitude: float
+    country: str
 
-class StationReorderItem(BaseModel):
-    station_id: int
+    # Used for trips_stations linking table
+    trip_id: int
     day_number: int
+
 
 class StationSchema(StationBase):
     id: int
-    trip_id: int
+    station_name_de: str
     latitude: float
     longitude: float
-    country: Optional[str] = None
+    country: str
 
     class Config:
         from_attributes = True
-
-class StationsReorderRequest(BaseModel):
-    trip_id: int
-    stations: List[StationReorderItem]

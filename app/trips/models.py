@@ -22,9 +22,12 @@ class Trip(Base):
     created_at: Mapped[date] = mapped_column(Date, server_default=func.now(), nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="trips")
-    travels: Mapped[list["Travel"]] = relationship("Travel", back_populates="trip",
+    travels: Mapped[list["Travel"]] = relationship("Travel",
+                                                   back_populates="trip",
                                                    cascade="all, delete-orphan")
-    activities: Mapped[list["Activity"]] = relationship("Activity", back_populates="trip",
+    activities: Mapped[list["Activity"]] = relationship("Activity",
+                                                        back_populates="trip",
                                                         cascade="all, delete-orphan")
-    trip_stations: Mapped[list["TripStation"]] = relationship("TripStation", back_populates="trip",
+    trip_stations: Mapped[list["TripStation"]] = relationship("TripStation",
+                                                              back_populates="trip",
                                                               cascade="all, delete-orphan")

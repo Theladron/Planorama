@@ -29,9 +29,9 @@ admin_station_router = APIRouter(prefix="/admin/stations", tags=["Admin"])
     response_model=StationSchema,
     summary="Create a new station for a user's trip",
     description=(
-        "Creates a new station linked to one of the current user's trips. "
-        "Each trip day can only have one station assigned, "
-        "so you cannot add multiple stations with the same day_number. "
+        "Creates a new station and links it to one of the current user's trips via the linking table. "
+        "Each trip day can only have one station assigned, so you cannot add multiple stations with the same day_number. "
+        "The day_number and trip_id provided are stored in the linking table, not directly on the station. "
         "The station's day_number must fall within the trip's duration. "
         "Coordinates are automatically retrieved from an external service."
     )
@@ -50,8 +50,10 @@ async def create_new_station(
     "/by-trip/{trip_id}",
     response_model=list[StationSchema],
     summary="Get all stations for a trip",
-    description="Returns all stations of a trip belonging to the current user, "
-                "ordered by day_number."
+    description=(
+            "Returns all stations linked to a trip belonging to the current user, "
+            "ordered by day_number as stored in the linking table."
+    )
 )
 def list_stations_for_trip(
     trip_id: int,
@@ -71,9 +73,10 @@ def list_stations_for_trip(
     response_model=list[StationSchema],
     summary="Bulk reorder stations by updating their day_numbers",
     description=(
-        "Reorders multiple stations within a specified trip owned by the current user. "
-        "Each station must have a unique day_number. Consecutive duplicate station "
-        "names will be handled automatically."
+            "Reorders multiple stations within a specified trip owned by the current user "
+            "by updating their day_numbers in the linking table. "
+            "Each station must have a unique day_number within the trip. "
+            "Consecutive duplicate station names will be handled automatically."
     ),
 )
 def put_reorder_stations(
