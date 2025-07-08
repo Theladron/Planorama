@@ -20,7 +20,7 @@ class TripStationSchema(TripStationBase):
 
 
 class TripStationReorderItem(BaseModel):
-    station_id: int
+    link_id: int
     day_number: int
 
 

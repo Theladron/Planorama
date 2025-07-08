@@ -3,34 +3,15 @@ from typing import Optional, List
 
 
 def geocode_town(client: openrouteservice.Client,
-                 town_name: str,
-                 lang: str = "en") -> Optional[dict]:
-    results = client.pelias_search(text=town_name, size=1, lang=lang)  # type: ignore[attr-defined]
+                 town_name: str) -> Optional[dict]:
+    results = client.pelias_search(text=town_name, size=1)  # type: ignore[attr-defined]
     features = results.get("features")
     if not features:
         return None
     try:
-        country = features[0]['properties']['country']
         coords = features[0]['geometry']['coordinates']
-        return {"lat": coords[1], "lon": coords[0], "country": country}
+        return {"lat": coords[1], "lon": coords[0], "country": features[0]['properties']['country']}
     except (KeyError, IndexError):
-        return None
-
-
-def reverse_geocode_name(client: openrouteservice.Client, lat: float, lon: float, lang: str = "en") -> Optional[str]:
-    try:
-        response = client.reverse_geocode(
-            coordinates=[[lon, lat]],
-            size=1,
-            lang=lang
-        )
-        features = response.get("features")
-        if not features:
-            return None
-        props = features[0]['properties']
-        place_name = props.get('locality')
-        return place_name
-    except Exception:
         return None
 
 

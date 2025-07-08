@@ -1,20 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
-
 
 class StationBase(BaseModel):
-    station_name: str  # Treated as user's preferred language
-
+    station_name: str
 
 class StationCreate(StationBase):
-    latitude: float
-    longitude: float
-    country: str
-
-    # Used for trips_stations linking table
     trip_id: int
     day_number: int
-
 
 class StationSchema(StationBase):
     id: int
@@ -22,6 +13,14 @@ class StationSchema(StationBase):
     latitude: float
     longitude: float
     country: str
+
+    class Config:
+        from_attributes = True
+
+
+class StationWithLinkIdSchema(StationSchema):
+    link_id: int
+    day_number: int
 
     class Config:
         from_attributes = True
