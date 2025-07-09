@@ -34,6 +34,7 @@ def get_user_travel_by_day(db: Session, trip_id: int,
     travel = db.query(Travel).filter_by(trip_id=trip_id, to_station_id=station.id).first()
     return travel
 
+
 def create_travel_entry(
     db: Session,
     trip_id: int,
@@ -41,19 +42,22 @@ def create_travel_entry(
     to_station_id: int,
     from_town: str,
     to_town: str,
-    connector: openroute_connector
 ) -> Travel:
-    try:
-        route_data = connector.get_route_info(from_town, to_town)
-    except Exception:
-
-        route_data = None
-
-    # Validate town names
     if not from_town or not to_town:
         raise ValueError("Both from_town and to_town must be provided")
 
-    if route_data and isinstance(route_data, tuple) and len(route_data) == 2:
+    try:
+        route_data = openroute_connector.get_route_info(from_town, to_town)
+    except Exception:
+        route_data = None
+
+    if (
+        route_data
+        and isinstance(route_data, tuple)
+        and len(route_data) == 2
+        and isinstance(route_data[0], list)
+        and isinstance(route_data[1], str)
+    ):
         directions, duration = route_data
         travel = Travel(
             trip_id=trip_id,
@@ -65,7 +69,7 @@ def create_travel_entry(
             time_estimated=duration
         )
     else:
-        # Fallback scenario: route data missing or malformed
+        # Fallback if routing failed
         travel = Travel(
             trip_id=trip_id,
             from_station_id=from_station_id,

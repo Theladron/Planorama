@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.users.models import User
-from app.users.schemas import UserCreate
+from app.users.schemas import UserCreate, UserUpdate
 
 def get_users(db: Session):
     return db.query(User).all()
@@ -37,3 +37,29 @@ def delete_user(db: Session, user_id: int):
         db.delete(db_user)
         db.commit()
     return
+
+
+def update_user(db: Session, user: User, update_data: UserUpdate):
+    if not any([update_data.username, update_data.old_password, update_data.new_password]):
+        raise ValueError("No data provided to update")
+
+    if update_data.username:
+        user.username = update_data.username
+
+    if update_data.old_password and update_data.new_password:
+        # Verify old password correctness
+        if not verify_password(update_data.old_password, user.password_hash):
+            raise ValueError("Old password is incorrect")
+        user.password_hash = hash_password(update_data.new_password)
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_language_preference(db: Session, user: User, new_language: str):
+    user.language_preference = new_language
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user

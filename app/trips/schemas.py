@@ -12,20 +12,20 @@ class TripBase(BaseModel):
 
 class TripCreate(TripBase):
     @field_validator('trip_name')
-    def name_must_not_be_empty(cls, v):
-        if not v or not v.strip():
+    def name_must_not_be_empty(cls, trip_name):
+        if not trip_name or not trip_name.strip():
             raise ValueError('Trip name must not be empty')
-        if len(v.strip()) < 3:
+        if len(trip_name.strip()) < 3:
             raise ValueError('Trip name must be at least 3 characters long')
-        return v.strip()
+        return trip_name.strip()
 
     @model_validator(mode='before')
-    def check_dates(cls, values):
-        start = values.get('start_date')
-        end = values.get('end_date')
-        if start and end and start > end:
+    def check_dates(cls, data):
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        if start_date and end_date and start_date > end_date:
             raise ValueError('start_date must be before end_date')
-        return values
+        return data
 
 
 
