@@ -16,6 +16,8 @@ import {
   Box,
 } from "@mui/material";
 
+import { useTranslation } from "react-i18next";
+
 // Fix leaflet default icon issue in many bundlers
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -28,7 +30,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function TripsGenerationPage() {
-
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tripId = searchParams.get("tripId");
@@ -54,8 +56,9 @@ export default function TripsGenerationPage() {
         ]);
         setStations(stationsRes.data);
         setTravels(travelsRes.data);
+        setError(null);
       } catch (err) {
-        setError("Failed to load trip data.");
+        setError(t("tripsgeneration.error_load_failed"));
       } finally {
         setLoading(false);
       }
@@ -63,11 +66,10 @@ export default function TripsGenerationPage() {
     if (tripId) {
       fetchTripData();
     } else {
-      setError("No tripId specified.");
+      setError(t("tripsgeneration.error_no_trip_id"));
       setLoading(false);
     }
-  }, [tripId]);
-
+  }, [tripId, t]);
 
   // Fetch route data for each travel once travels and stations are loaded
   useEffect(() => {
@@ -79,17 +81,17 @@ export default function TripsGenerationPage() {
 
       try {
         const res = await axios.get("/api/full-route-by-coords", {
-  params: {
-    start_lat: fromStation.latitude,
-    start_lon: fromStation.longitude,
-    end_lat: toStation.latitude,
-    end_lon: toStation.longitude,
-  }
-});
+          params: {
+            start_lat: fromStation.latitude,
+            start_lon: fromStation.longitude,
+            end_lat: toStation.latitude,
+            end_lon: toStation.longitude,
+          },
+        });
         console.log("Route for travel", travel.id, res.data);
         return { travelId: travel.id, data: res.data };
-      } catch (error){
-          console.error("Error fetching route:", error);
+      } catch (error) {
+        console.error("Error fetching route:", error);
         // No route from openrouteservice - fallback
         return {
           travelId: travel.id,
@@ -98,7 +100,7 @@ export default function TripsGenerationPage() {
               [fromStation.latitude, fromStation.longitude],
               [toStation.latitude, toStation.longitude],
             ],
-            duration: travel.time_estimated || "N/A",
+            duration: travel.time_estimated || t("tripsgeneration.unknown_duration"),
             directions: [],
           },
         };
@@ -121,7 +123,7 @@ export default function TripsGenerationPage() {
     }
 
     fetchAllRoutes();
-  }, [travels, stations, token]);
+  }, [travels, stations, token, t]);
 
   const center = stations.length
     ? [stations[0].latitude, stations[0].longitude]
@@ -141,7 +143,21 @@ export default function TripsGenerationPage() {
       </Box>
     );
 
-  if (error) return <Typography color="error">{error}</Typography>;
+  if (error)
+    return (
+      <Typography color="error" sx={{ p: 2, textAlign: "center" }}>
+        {error}
+      </Typography>
+    );
+
+  // Function to get station name depending on current language
+  const getStationName = (station) => {
+    if (!station) return "";
+    if (i18n.language.startsWith("de") && station.station_name_de) {
+      return station.station_name_de;
+    }
+    return station.station_name || "";
+  };
 
   return (
     <>
@@ -182,31 +198,29 @@ export default function TripsGenerationPage() {
         })}
       </MapContainer>
 
-
       <Dialog open={!!selectedMarker} onClose={() => setSelectedMarker(null)}>
-        <DialogTitle>Station Info</DialogTitle>
+        <DialogTitle>{t("tripsgeneration.dialog_station_info_title")}</DialogTitle>
         <DialogContent>
           <Typography>
-            <strong>Town:</strong> {selectedMarker?.station_name}
+            <strong>{t("tripsgeneration.label_town")}</strong> {getStationName(selectedMarker)}
           </Typography>
           <Typography>
-            <strong>Day:</strong> {selectedMarker?.day_number}
+            <strong>{t("tripsgeneration.label_day")}</strong> {selectedMarker?.day_number}
           </Typography>
         </DialogContent>
       </Dialog>
 
-
       <Dialog open={!!selectedRoute} onClose={() => setSelectedRoute(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Route Info</DialogTitle>
+        <DialogTitle>{t("tripsgeneration.dialog_route_info_title")}</DialogTitle>
         <DialogContent dividers>
           <Typography>
-            <strong>Transport:</strong> {selectedRoute?.travel.method_of_transport}
+            <strong>{t("tripsgeneration.label_transport")}</strong> {selectedRoute?.travel.method_of_transport}
           </Typography>
           <Typography>
-            <strong>Estimated Time:</strong> {selectedRoute?.route.duration || "N/A"}
+            <strong>{t("tripsgeneration.label_estimated_time")}</strong> {selectedRoute?.route.duration || t("tripsgeneration.unknown_duration")}
           </Typography>
           <Typography sx={{ mt: 2, mb: 1 }}>
-            <strong>Directions:</strong>
+            <strong>{t("tripsgeneration.label_directions")}</strong>
           </Typography>
           {selectedRoute?.route.directions.length > 0 ? (
             <ol>
@@ -215,7 +229,7 @@ export default function TripsGenerationPage() {
               ))}
             </ol>
           ) : (
-            <Typography>No detailed directions available.</Typography>
+            <Typography>{t("tripsgeneration.no_directions")}</Typography>
           )}
         </DialogContent>
       </Dialog>

@@ -4,7 +4,7 @@ from app.trips.models import Trip
 from app.users.models import User
 from app.trip_stations.models import TripStation
 from app.trip_stations.schemas import TripStationReorderItem, TripStationCreate
-from app.stations.schemas import StationCreate
+from app.stations.schemas import StationCreate, StationWithLinkIdSchema
 from app.trip_stations.services import (get_trip_station_by_trip_and_day,
                                         create_trip_station,
                                         sync_travel_routes_for_trip_stations,
@@ -53,7 +53,19 @@ def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> L
         .options(joinedload(TripStation.station))  # eager load station relationship
         .all()
     )
-    return trip_stations
+    return [
+        StationWithLinkIdSchema(
+            id=ts.station.id,
+            station_name=ts.station.station_name,
+            station_name_de=ts.station.station_name_de,
+            latitude=ts.station.latitude,
+            longitude=ts.station.longitude,
+            country=ts.station.country,
+            link_id=ts.id,  # this is the TripStation.id
+            day_number=ts.day_number,
+        )
+        for ts in trip_stations
+    ]
 
 
 async def create_station(db: Session, station_data: StationCreate, user_id: int) -> Station:
@@ -318,9 +330,8 @@ def reorder_stations(
 
     sync_travel_routes_for_trip_stations(db, trip_id)
 
-    remaining_trip_stations = get_trip_stations_for_trip(db, trip_id)
-    remaining_trip_stations.sort(key=lambda ts: ts.day_number)
-    return remaining_trip_stations
+    remaining_stations = get_trip_stations_with_link_id(db, trip_id, user_id)
+    return remaining_stations
 
 
 

@@ -1,8 +1,12 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+
 
 export default function HomePage() {
+
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -34,11 +38,10 @@ export default function HomePage() {
     >
       <Box sx={{ position: "relative", zIndex: 3 }}>
         <Typography variant="h3" gutterBottom sx={{ fontFamily: "'Pacifico', cursive", textShadow: "2px 2px 8px rgba(0,0,0,0.6)", }}>
-          Welcome to Planorama
+          {t('home.title')}
         </Typography>
         <Typography variant="h6" paragraph sx={{ maxWidth: "600px", textShadow: "2px 2px 8px rgba(0,0,0,0.6)", }}>
-          Your personal assistant in planning and capturing every necessary information
-          about your upcoming vacation.
+          {t('home.subtitle')}
         </Typography>
         <Typography variant="h6" paragraph>
           <Link
@@ -49,7 +52,7 @@ export default function HomePage() {
               fontWeight: "bold",
             }}
           >
-            Register for free
+            {t('home.register_link')}
           </Link>
         </Typography>
       </Box>

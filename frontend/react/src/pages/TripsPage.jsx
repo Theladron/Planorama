@@ -12,33 +12,33 @@ import {
   DialogContentText,
   DialogActions,
   CircularProgress,
+  IconButton,
   Link as MuiLink,
 } from "@mui/material";
+
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
+import { useTranslation } from "react-i18next";
+import Sidebar from "../components/Sidebar";
 
-// Register English locale for country name lookup
 countries.registerLocale(enLocale);
 
-// Helper to convert country code to emoji flag
 function countryCodeToEmoji(countryCode) {
-  if (!countryCode) return ""; // handle unknown
+  if (!countryCode) return "";
   return countryCode
     .toUpperCase()
-    .replace(/./g, (char) =>
-      String.fromCodePoint(127397 + char.charCodeAt())
-    );
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt()));
 }
 
-// Convert full country name to alpha-2 code using i18n-iso-countries
 function getCountryCode(countryName) {
   return countries.getAlpha2Code(countryName, "en") || null;
 }
 
 export default function TripsPage() {
+  const { t, i18n } = useTranslation();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,10 +48,7 @@ export default function TripsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [updateLoading, setUpdateLoading] = useState({});
-
   const [editableDates, setEditableDates] = useState({});
-
-  // New state: stations by tripId
   const [stationsByTrip, setStationsByTrip] = useState({});
 
   const navigate = useNavigate();
@@ -73,7 +70,6 @@ export default function TripsPage() {
         });
         setEditableDates(dates);
 
-        // Fetch stations for each trip in parallel
         const stationsResults = await Promise.all(
           res.data.map(async (trip) => {
             try {
@@ -91,16 +87,15 @@ export default function TripsPage() {
           stationsMap[tripId] = stations;
         });
         setStationsByTrip(stationsMap);
-
       } catch (err) {
         console.error("Failed to fetch trips:", err);
-        setError("Failed to load trips.");
+        setError(t("trips.errorLoading"));
       } finally {
         setLoading(false);
       }
     };
     fetchTrips();
-  }, []);
+  }, [t]);
 
   const handleDateChange = (tripId, field, value) => {
     setEditableDates((prev) => ({
@@ -116,7 +111,6 @@ export default function TripsPage() {
     if (!editableDates[tripId]) return;
 
     const { start_date, end_date } = editableDates[tripId];
-
     setUpdateLoading((prev) => ({ ...prev, [tripId]: true }));
 
     try {
@@ -127,19 +121,27 @@ export default function TripsPage() {
 
       setTrips((prevTrips) =>
         prevTrips.map((trip) =>
-          trip.id === tripId
-            ? { ...trip, start_date, end_date }
-            : trip
+          trip.id === tripId ? { ...trip, start_date, end_date } : trip
         )
       );
     } catch (err) {
       console.error("Failed to update trip dates:", err);
-      alert(
-        err.response?.data?.detail ||
-          "Failed to update trip dates. Please check your inputs."
-      );
+      alert(err.response?.data?.detail || t("trips.errorLoading"));
     } finally {
       setUpdateLoading((prev) => ({ ...prev, [tripId]: false }));
+    }
+  };
+
+  const handleDeleteStation = async (linkId, tripId) => {
+    try {
+      await axios.delete(`/api/stations/${linkId}`);
+      setStationsByTrip((prev) => ({
+        ...prev,
+        [tripId]: prev[tripId].filter((station) => station.link_id !== linkId),
+      }));
+    } catch (err) {
+      console.error("Failed to delete station:", err);
+      alert("Error deleting station.");
     }
   };
 
@@ -159,15 +161,11 @@ export default function TripsPage() {
 
     try {
       await axios.delete(`/api/trips/${tripToDelete.id}`);
-
       setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
-
       closeDeleteDialog();
     } catch (err) {
       console.error("Failed to delete trip:", err);
-      alert(
-        err.response?.data?.detail || "Failed to delete trip. Try again later."
-      );
+      alert(err.response?.data?.detail || t("trips.errorLoading"));
     } finally {
       setDeleteLoading(false);
     }
@@ -217,303 +215,206 @@ export default function TripsPage() {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        p: 4,
-        backgroundImage: "url('/images/home_background.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        position: "relative",
-        color: "#fff",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.4)",
-          zIndex: 0,
-        },
-      }}
-    >
-      <Box sx={{ position: "relative", zIndex: 1, maxWidth: 1000, mx: "auto" }}>
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 600,
-            mt: "100px",
-            fontSize: "4rem",
-            mb: 3,
-            textShadow: "2px 2px 8px rgba(0,0,0,0.6)",
-            textAlign: "center",
-          }}
-        >
-          Your Trips
-        </Typography>
-
-        {error && (
-          <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
-            {error}
+    <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#000" }}>
+      <Sidebar />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 4,
+          overflowY: "auto",
+          position: "relative",
+          color: "#fff",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundImage: "url('/images/home_background.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            backgroundAttachment: "fixed",
+            zIndex: 0,
+            opacity: 0.4,
+          },
+        }}
+      >
+        <Box sx={{ position: "relative", zIndex: 1, maxWidth: 1000, mx: "auto" }}>
+          <Typography variant="h3" sx={{ fontWeight: 600, mt: "100px", fontSize: "4rem", mb: 3, textShadow: "2px 2px 8px rgba(0,0,0,0.6)", textAlign: "center" }}>
+            {t("trips.title")}
           </Typography>
-        )}
 
-        {trips.length === 0 ? (
-          <Typography variant="h6" sx={{ textAlign: "center" }}>
-            You have not created any trips yet.{" "}
-            <MuiLink
-              component={RouterLink}
-              to="/trips/new"
-              sx={{ color: "#f0e6cc", fontWeight: "bold" }}
-            >
-              Start by adding a new vacation trip.
-            </MuiLink>
-          </Typography>
-        ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 3,
-              mb: 4,
-            }}
-          >
-            {trips.map((trip) => (
-              <Card
-                key={trip.id}
-                sx={{
-                  maxWidth: 270,
-                  backgroundColor: "rgba(250, 201, 72, 0.15)",
-                  backdropFilter: "blur(6px)",
-                  border: "1px solid rgba(250, 201, 72, 0.3)",
-                  borderRadius: "8px",
-                  boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.2)",
-                  fontFamily: "'Pacifico', cursive",
-                  textShadow: "2px 2px 6px rgba(0,0,0,0.6)",
-                  color: "#fac948",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <CardContent>
-                  <Typography variant="h5" fontWeight="bold" gutterBottom>
-                    {trip.trip_name}
-                  </Typography>
+          {error && (
+            <Typography color="error" sx={{ mb: 2, textAlign: "center" }}>
+              {error}
+            </Typography>
+          )}
 
-
-                  <Box sx={{ mb: 2 }}>
-                    {trip.trip_countries.map((countryName) => {
-                      const code = getCountryCode(countryName);
-                      return (
-                        <Typography
-                          key={countryName}
-                          component="span"
-                          sx={{ fontSize: "1.5rem", mr: 1 }}
-                          aria-label={`Flag of ${countryName}`}
-                          title={countryName}
-                        >
-                          {code ? countryCodeToEmoji(code) : countryName}
-                        </Typography>
-                      );
-                    })}
-                  </Box>
-
-
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    Created at: {dayjs(trip.created_at).format("MMMM D, YYYY")}
-                  </Typography>
-
-                  {/* Start Date */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mb: 1,
-                      ml: -2,
-                      flexWrap: "wrap",
-                      height: "55px",
-                    }}
-                  >
-                    <TextField
-                      label="Start Date"
-                      type="date"
-                      size="small"
-                      value={editableDates[trip.id]?.start_date || ""}
-                      onChange={(e) =>
-                        handleDateChange(trip.id, "start_date", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      sx={{
-                        maxWidth: 160,
-                        input: {
-                          color: "#f0e6cc",
-                        },
-                      }}
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleUpdateDate(trip.id)}
-                      disabled={updateLoading[trip.id]}
-                    >
-                      {updateLoading[trip.id] ? (
-                        <CircularProgress size={20} color="inherit" />
-                      ) : (
-                        "Update"
-                      )}
-                    </Button>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mb: 1,
-                      ml: -2,
-                      flexWrap: "wrap",
-                      height: "55px",
-                    }}
-                  >
-                    <TextField
-                      label="End Date"
-                      type="date"
-                      size="small"
-                      value={editableDates[trip.id]?.end_date || ""}
-                      onChange={(e) =>
-                        handleDateChange(trip.id, "end_date", e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      sx={{
-                        maxWidth: 160,
-                        input: {
-                          color: "#f0e6cc",
-                        },
-                      }}
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleUpdateDate(trip.id)}
-                      disabled={updateLoading[trip.id]}
-                    >
-                      {updateLoading[trip.id] ? (
-                        <CircularProgress size={20} color="inherit" />
-                      ) : (
-                        "Update"
-                      )}
-                    </Button>
-                  </Box>
-
-                  <Box sx={{ mt: 1, ml: 1 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                      Stations:
+          {trips.length === 0 ? (
+            <Typography variant="h6" sx={{ textAlign: "center" }}>
+              {t("trips.noTrips")}{" "}
+              <MuiLink component={RouterLink} to="/trips/new" sx={{ color: "#f0e6cc", fontWeight: "bold" }}>
+                {t("trips.startNewTrip")}
+              </MuiLink>
+            </Typography>
+          ) : (
+            <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 3, mb: 4 }}>
+              {trips.map((trip) => (
+                <Card
+                  key={trip.id}
+                  sx={{
+                    maxWidth: 270,
+                    backgroundColor: "rgba(250, 201, 72, 0.15)",
+                    backdropFilter: "blur(6px)",
+                    border: "1px solid rgba(250, 201, 72, 0.3)",
+                    borderRadius: "8px",
+                    boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.2)",
+                    fontFamily: "'Pacifico', cursive",
+                    textShadow: "2px 2px 6px rgba(0,0,0,0.6)",
+                    color: "#f0e6cc",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    position: "relative",
+                  }}
+                >
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography variant="h5" gutterBottom>{trip.name}</Typography>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: "bold" }}>
+                      {t("trips.createdAt", {
+                        date: dayjs(trip.created_at).format("YYYY-MM-DD"),
+                      })}
                     </Typography>
-                    {stationsByTrip[trip.id]?.length > 0 ? (
-                      <ul style={{ margin: 0, paddingLeft: 16 }}>
-                        {stationsByTrip[trip.id].map((station) => (
-                          <li key={station.id} style={{ color: "#f0e6cc" }}>
-                            {station.station_name}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <Typography variant="body2" sx={{ fontStyle: "italic", color: "#f0e6cc" }}>
-                        No stations added yet.
-                      </Typography>
-                    )}
-                  </Box>
-                </CardContent>
 
-                <Box sx={{ px: 2, pb: 2 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                      gap: 1,
-                    }}
-                  >
+                    <TextField
+                      label={t("trips.startDate")}
+                      type="date"
+                      value={editableDates[trip.id]?.start_date || ""}
+                      onChange={(e) => handleDateChange(trip.id, "start_date", e.target.value)}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      sx={{
+                        backgroundColor: "rgba(250, 201, 72, 0.3)",
+                        borderRadius: 1,
+                        mb: 1,
+                        input: { color: "#f0e6cc" },
+                        label: { color: "#f0e6cc" },
+                      }}
+                    />
+                    <TextField
+                      label={t("trips.endDate")}
+                      type="date"
+                      value={editableDates[trip.id]?.end_date || ""}
+                      onChange={(e) => handleDateChange(trip.id, "end_date", e.target.value)}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      sx={{
+                        backgroundColor: "rgba(250, 201, 72, 0.3)",
+                        borderRadius: 1,
+                        input: { color: "#f0e6cc" },
+                        label: { color: "#f0e6cc" },
+                      }}
+                    />
                     <Button
-                      variant="outlined"
+                      variant="contained"
                       color="primary"
-                      onClick={() => handleAddStationClick(trip.id)}
-                      fullWidth
-                      size="small"
+                      onClick={() => handleUpdateDate(trip.id)}
+                      disabled={updateLoading[trip.id]}
+                      sx={{ mt: 1 }}
                     >
-                      Add Station
+                      {updateLoading[trip.id] ? (
+                        <CircularProgress size={24} color="inherit" />
+                      ) : (
+                        t("trips.update")
+                      )}
                     </Button>
-                    <Button
-                      variant="outlined"
-                      color="success"
-                      onClick={() => handleReorderStationsClick(trip.id)}
-                      fullWidth
-                      size="small"
-                    >
-                      Reorder Stations
-                    </Button>
-                  </Box>
 
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 1,
-                    }}
-                  >
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => openDeleteDialog(trip)}
-                      disabled={deleteLoading}
-                      fullWidth
-                      size="small"
-                    >
-                      Delete
-                    </Button>
-                    <Button
-                      variant="warning"
-                      onClick={() => handleGenerateClick(trip.id)}
-                      fullWidth
-                      size="small"
-                    >
-                      Show Trip
-                    </Button>
-                  </Box>
-                </Box>
-              </Card>
-            ))}
-          </Box>
-        )}
+                    <Typography variant="subtitle1" sx={{ fontWeight: "bold", mt: 2, mb: 1 }}>
+                      {t("trips.stations")}
+                    </Typography>
+
+                    {stationsByTrip[trip.id]?.length > 0 ? (
+                      stationsByTrip[trip.id].map((station) => {
+                        const countryCode = getCountryCode(station.country);
+                        const flagEmoji = countryCodeToEmoji(countryCode);
+
+                        return (
+                          <Box
+                            key={station.link_id}
+                            sx={{
+                              backgroundColor: "rgba(250, 201, 72, 0.25)",
+                              mb: 1,
+                              p: 1,
+                              borderRadius: 1,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Typography sx={{ flex: 1 }}>
+                              {flagEmoji}{" "}
+                              {i18n.language === "de" ? station.station_name_de : station.station_name},{" "}
+                              {station.city} {station.country}
+                            </Typography>
+                            <IconButton onClick={() => handleDeleteStation(station.link_id, trip.id)} color="error">
+                              🗑
+                            </IconButton>
+                          </Box>
+                        );
+                      })
+                    ) : (
+                      <Typography sx={{ fontStyle: "italic" }}>{t("trips.noStations")}</Typography>
+                    )}
+
+                    <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                      <Button fullWidth variant="contained" color="info" onClick={() => handleAddStationClick(trip.id)} sx={{ flexBasis: "48%" }}>
+                        {t("trips.addStation")}
+                      </Button>
+                      <Button fullWidth variant="contained" color="info" onClick={() => handleReorderStationsClick(trip.id)} sx={{ flexBasis: "48%" }}>
+                        {t("trips.reorderStations")}
+                      </Button>
+                      <Button fullWidth variant="contained" color="error" onClick={() => openDeleteDialog(trip)} sx={{ flexBasis: "48%" }}>
+                        {t("trips.delete")}
+                      </Button>
+                      <Button fullWidth variant="contained" color="success" onClick={() => handleGenerateClick(trip.id)} sx={{ flexBasis: "48%" }}>
+                        {t("trips.showTrip")}
+                      </Button>
+
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
+        </Box>
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={closeDeleteDialog}
+          aria-labelledby="delete-trip-dialog-title"
+          aria-describedby="delete-trip-dialog-description"
+        >
+          <DialogTitle id="delete-trip-dialog-title">
+            {t("trips.confirmDeleteTitle")}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="delete-trip-dialog-description">
+              {t("trips.confirmDeleteText")}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeDeleteDialog} disabled={deleteLoading}>
+              {t("trips.cancel")}
+            </Button>
+            <Button onClick={handleConfirmDelete} color="error" disabled={deleteLoading} autoFocus>
+              {deleteLoading ? <CircularProgress size={20} /> : t("trips.delete")}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-
-
-      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this trip? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteDialog} disabled={deleteLoading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              "Delete"
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

@@ -1,16 +1,44 @@
 import React, { useContext, useState } from "react";
-import { AppBar, Toolbar, Button, Box, Menu, MenuItem } from "@mui/material";
+import { AppBar, Toolbar, Button, Box, Menu, MenuItem, IconButton } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
+import axios from "axios";
+
+const flagStyles = {
+  fontSize: "1.5rem",
+  cursor: "pointer",
+  mr: 5,
+  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+};
 
 export default function Navbar({ hasSidebar }) {
   const { isAuthenticated, user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
   const username = user?.username || "User";
+
+  // Change language locally & (if logged in) on backend
+  const changeLanguage = async (lng) => {
+    if (lng === i18n.language) return; // no change
+
+    try {
+      await i18n.changeLanguage(lng);
+
+      if (isAuthenticated) {
+        // Update backend user language preference
+        await axios.patch("/api/users/me/language", {
+          language_preference: lng,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to change language:", err);
+    }
+  };
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -40,20 +68,38 @@ export default function Navbar({ hasSidebar }) {
             color="inherit"
             sx={{ fontWeight: "bold", fontSize: "1.2rem" }}
           >
-            Home
+            {t("navbar.home")}
           </Button>
         </Box>
 
-        {!isAuthenticated && (
+
           <>
+            {/* Flags left of Register button */}
+            <IconButton
+              aria-label={t("navbar.language_en")}
+              onClick={() => changeLanguage("en")}
+              sx={{ ...flagStyles, mr: 0 }}
+              size="large"
+            >
+              🇬🇧
+            </IconButton>
+            <IconButton
+              aria-label={t("navbar.language_de")}
+              onClick={() => changeLanguage("de")}
+              sx={flagStyles}
+              size="large"
+            >
+              🇩🇪
+            </IconButton>
+
             <Button component={Link} to="/login" color="inherit">
-              Login
+              {t("navbar.login")}
             </Button>
             <Button component={Link} to="/register" color="inherit">
-              Register
+              {t("navbar.register")}
             </Button>
           </>
-        )}
+
 
         {isAuthenticated && (
           <>
@@ -87,7 +133,7 @@ export default function Navbar({ hasSidebar }) {
                 }}
                 sx={{ "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" } }}
               >
-                Dashboard
+                {t("navbar.dashboard")}
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -96,7 +142,7 @@ export default function Navbar({ hasSidebar }) {
                 }}
                 sx={{ "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" } }}
               >
-                Trips
+                {t("navbar.trips")}
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -105,13 +151,13 @@ export default function Navbar({ hasSidebar }) {
                 }}
                 sx={{ "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" } }}
               >
-                Settings
+                {t("navbar.settings")}
               </MenuItem>
               <MenuItem
                 onClick={handleLogout}
                 sx={{ "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" } }}
               >
-                Logout
+                {t("navbar.logout")}
               </MenuItem>
             </Menu>
           </>

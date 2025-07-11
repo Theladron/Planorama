@@ -5,7 +5,7 @@ from app.auth.services import get_current_active_user
 from app.core.database import get_db
 from app.users.models import User
 from app.stations.schemas import StationCreate, StationSchema, StationWithLinkIdSchema
-from app.trip_stations.schemas import TripStationReorderItem, TripStationsReorderRequest
+from app.trip_stations.schemas import TripStationsReorderRequest
 from app.stations.services import (
     get_all_stations,
     create_station,
@@ -62,30 +62,12 @@ def list_stations_for_trip(
     Retrieves TripStations linked to a user's trip and returns them
     with station details, TripStation link id, and day_number.
     """
-    trip_stations = get_trip_stations_with_link_id(db, trip_id, current_user.id)
-
-    # Map TripStation objects to response schemas combining link_id and station data
-    results = []
-    for ts in trip_stations:
-        station = ts.station
-        results.append(
-            StationWithLinkIdSchema(
-                id=station.id,
-                station_name=station.station_name,
-                station_name_de=station.station_name_de,
-                latitude=station.latitude,
-                longitude=station.longitude,
-                country=station.country,
-                link_id=ts.id,
-                day_number=ts.day_number
-            )
-        )
-    return results
+    return get_trip_stations_with_link_id(db, trip_id, current_user.id)
 
 
 @station_router.put(
     "/reorder",
-    response_model=List[StationSchema],
+    response_model=List[StationWithLinkIdSchema],
     summary="Bulk reorder trip stations using link IDs",
     description=(
         "Updates the order of stations within a user's trip by modifying their `day_number`s "
@@ -133,11 +115,11 @@ def put_reorder_stations(
 
 
 @station_router.delete(
-    "/{station_id}",
+    "/{link_id}",
     summary="Remove a station from a trip using link ID",
     description=(
         "Removes a specific instance of a station from a trip. "
-        "`station_id` refers to the **TripStation link ID**, not the station itself. "
+        "`link_id` refers to the **TripStation link ID**, not the station itself. "
         "This only affects the specified trip — the Station object remains intact if used in other trips.\n\n"
         "Also handles:\n"
         "- Cleaning up unused countries from the trip.\n"
@@ -146,31 +128,36 @@ def put_reorder_stations(
     ),
 )
 def user_delete_station(
-    station_id: int,
+    link_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """
     Deletes a TripStation link by its ID (which removes the station from the specific trip).
-    Does **not** delete the Station object itself.
+
+    Note:
+        While this endpoint deletes the TripStation link, the underlying Station object
+        itself is **only deleted** if no other TripStation links exist referencing it.
+        Otherwise, the Station object remains intact.
 
     Args:
-        station_id (int): The ID of the TripStation link (not the Station itself).
+        link_id (int): The ID of the TripStation link (not the Station itself).
         db (Session): The database session.
         current_user (User): The authenticated user.
 
     Returns:
         dict: A success message upon deletion.
     """
-    if station_id <= 0:
-        raise HTTPException(status_code=400, detail="Invalid station_id")
+    if link_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid link_id")
 
     try:
-        return delete_station(db, station_id, current_user.id)
+        return delete_station(db, link_id, current_user.id)
     except HTTPException as e:
         raise e
     except Exception:
         raise HTTPException(status_code=500, detail="Unexpected error occurred")
+
 
 
 @admin_station_router.get(

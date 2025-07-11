@@ -9,7 +9,7 @@ import {
 
 import Navbar from "./components/Navbar";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
-
+import './i18n';
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";

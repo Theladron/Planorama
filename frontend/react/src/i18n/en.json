@@ -1,0 +1,131 @@
+{
+  "home": {
+    "title": "Welcome to Planorama",
+    "subtitle": "Your personal assistant in planning and capturing every necessary information about your upcoming vacation.",
+    "register_link": "Register for free"
+  },
+  "login": {
+    "title": "Login",
+    "email_label": "Email",
+    "password_label": "Password",
+    "submit_button": "Login",
+    "error_generic": "Login failed.",
+    "error_network": "Network error."
+  },
+  "register": {
+    "title": "Register",
+    "username_label": "Username",
+    "email_label": "Email",
+    "password_label": "Password",
+    "repeat_password_label": "Repeat Password",
+    "submit_button": "Register",
+    "error_mismatch": "Passwords do not match.",
+    "error_generic": "Registration failed.",
+    "error_network": "Network error.",
+    "success_message": "{{username}} created. You can now log in.",
+    "login_link_text": "Log in"
+  },
+  "dashboard": {
+  "welcome": "Welcome, {{username}}.",
+  "no_trips": "You have not added any trips yet.",
+  "plan_link": "Do you want to plan a new vacation trip?",
+  "trip_soon": "Your vacation trip {{tripName}} is coming up on {{date}}. Are you excited yet?",
+  "no_upcoming": "None of your trips are coming up soon. Still more time to plan and get excited!"
+  },
+  "sidebar": {
+    "trips": "Trips",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "settings": {
+  "delete_profile": "Delete Profile",
+  "confirm_title": "Confirm Account Deletion",
+  "confirm_text": "Are you sure you want to delete your profile? This action is irreversible.",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "error_delete": "Failed to delete account. Please try again."
+  },
+  "trips": {
+    "title": "Your Trips",
+    "errorLoading": "Failed to load trips.",
+    "noTrips": "You have not created any trips yet.",
+    "startNewTrip": "Start by adding a new vacation trip.",
+    "createdAt": "Created at: {{date}}",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "update": "Update",
+    "stations": "Stations:",
+    "noStations": "No stations added yet.",
+    "addStation": "Add Station",
+    "reorderStations": "Reorder Stations",
+    "delete": "Delete",
+    "showTrip": "Show Trip",
+    "confirmDeleteTitle": "Confirm Delete",
+    "confirmDeleteText": "Are you sure you want to delete this trip? This action cannot be undone.",
+    "cancel": "Cancel"
+  },
+  "addstation": {
+    "title": "Add Station to Trip: {{tripName}}",
+    "townName_label": "Town Name",
+    "selectDay_label": "Select Day",
+    "selectDay_helper_available": "Select a day to add the station",
+    "selectDay_helper_unavailable": "All days already have stations assigned.",
+    "error_enterTown": "Please enter a town name.",
+    "error_selectDay": "Please select a day.",
+    "error_submitFailed": "Failed to add station. Please try again.",
+    "success_stationAdded": "Station added successfully!",
+    "button_addStation": "Add Station",
+    "button_backToTrips": "Back to Trips",
+    "error_loadData": "Failed to load trip or station data."
+  },
+  "reorderstations": {
+    "title": "Reorder Stations for {{tripName}}",
+    "station_label": "Station: {{stationName}}",
+    "day_option": "Day {{day}}",
+    "submit_button": "Submit Reorder",
+    "error_unique_day": "Each station must be assigned to a unique day.",
+    "error_generic": "Failed to reorder stations. Please try again.",
+    "error_load": "Failed to load trip or stations data.",
+    "success_message": "Stations reordered successfully!",
+    "back_button": "Back to Trips"
+  },
+  "tripscreation": {
+    "title": "Create New Trip",
+    "label_trip_name": "Trip Name",
+    "label_start_date": "Start Date",
+    "label_end_date": "End Date",
+    "error_fill_all": "Please fill out all fields.",
+    "error_start_after_end": "Start date cannot be after end date.",
+    "error_generic": "Failed to create trip. Please try again.",
+    "button_create": "Create",
+    "button_back_to_trips": "Back to Trips"
+  },
+  "tripsgeneration": {
+    "error_load_failed": "Failed to load trip data.",
+    "error_no_trip_id": "No tripId specified.",
+    "dialog_station_info_title": "Station Info",
+    "label_town": "Town:",
+    "label_day": "Day:",
+    "dialog_route_info_title": "Route Info",
+    "label_transport": "Transport:",
+    "label_estimated_time": "Estimated Time:",
+    "label_directions": "Directions:",
+    "no_directions": "No detailed directions available.",
+    "unknown_duration": "N/A"
+  },
+  "authcontext": {
+    "session_expired": "Your login session has expired. Please log in again.",
+    "fetch_user_failed": "Failed to fetch user info."
+  },
+  "navbar": {
+    "home": "Home",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "trips": "Trips",
+    "settings": "Settings",
+    "logout": "Logout",
+    "language_en": "English",
+    "language_de": "German"
+  }
+}

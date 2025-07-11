@@ -1,0 +1,131 @@
+{
+  "home": {
+    "title": "Willkommen bei Planorama",
+    "subtitle": "Dein persönlicher Assistent in der Planung und der Erfassung aller notwendigen Informationen zu deinem kommenden Urlaub.",
+    "register_link": "Kostenlose Registrierung"
+  },
+  "login": {
+    "title": "Einloggen",
+    "email_label": "Email",
+    "password_label": "Passwort",
+    "submit_button": "Einloggen",
+    "error_generic": "Einloggen fehlgeschlagen.",
+    "error_network": "Netwerkfehler."
+  },
+  "register": {
+    "title": "Registrieren",
+    "username_label": "Benutzername",
+    "email_label": "Email",
+    "password_label": "Passwort",
+    "repeat_password_label": "Password wiederholen",
+    "submit_button": "Registrieren",
+    "error_mismatch": "Passwörter stimmen nicht überein.",
+    "error_generic": "Registration fehlgeschlagen.",
+    "error_network": "Netwerkfehler.",
+    "success_message": "{{username}} erstellt. Du kannst dich jetzt anmelden.",
+    "login_link_text": "Einloggen"
+  },
+  "dashboard": {
+    "welcome": "Wilkommen, {{username}}.",
+    "no_trips": "Du hast noch keine Reiseplanungen erstellt.",
+    "plan_link": "Willst du eine neue Reiseplanung erstellen?",
+    "trip_soon": "Bald ist es soweit! Deine Reise {{tripName}} startet am {{date}}. Bist du schon aufgeregt?",
+    "no_upcoming": "Keine Reisen in näherere Zukunft. Zeit voller Vorfreude zu planen!"
+  },
+  "sidebar": {
+    "trips": "Reisen",
+    "settings": "Einstellungen",
+    "logout": "Ausloggen"
+  },
+  "settings": {
+  "delete_profile": "Profil löschen",
+  "confirm_title": "Profillöschung bestätigen",
+  "confirm_text": "Bist du sicher, dass du dein Profil löschen willst? Dieser Vorgang kann nicht rückgängig gemacht werden",
+  "cancel": "Abbrechen",
+  "delete": "Löschen",
+  "error_delete": "Fehler beim Loeschen des Profils. Bitte versuche es erneut."
+  },
+  "trips": {
+    "title": "Deine Reisen",
+    "errorLoading": "Fehler beim Laden der Reisen.",
+    "noTrips": "Du hast noch keine Reiseplanungen erstellt.",
+    "startNewTrip": "Starte mit der Erstellung einer neuen Urlaubsreise.",
+    "createdAt": "Erstellt: {{date}}",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "update": "Update",
+    "stations": "Stationen:",
+    "noStations": "Keine Stationen hinzugefügt.",
+    "addStation": "Station hinzufügen",
+    "reorderStations": "Stationen neu anordnen",
+    "delete": "Löschen",
+    "showTrip": "Reise anzeigen",
+    "confirmDeleteTitle": "Löschen bestätigen",
+    "confirmDeleteText": "Bist du sicher, dass du diese Reise löschen willst? Dieser Vorgang kann nicht rückgängig gemacht werden.",
+    "cancel": "Abbrechen"
+  },
+  "addstation": {
+    "title": "Füge Station zu {{tripName}} hinzu.",
+    "townName_label": "Name der Stadt",
+    "selectDay_label": "Reisetag auswählen",
+    "selectDay_helper_available": "Wahlen Sie einen Tag, an dem die Station hinzugefügt werden soll.",
+    "selectDay_helper_unavailable": "Alle Tage haben bereits Stationen zugewiesen.",
+    "error_enterTown": "Geben Sie einen Städtenamen ein.",
+    "error_selectDay": "Wählen Sie einen Tag aus.",
+    "error_submitFailed": "Fehler beim Hinzufügen der Station. Bitte versuche es erneut.",
+    "success_stationAdded": "Station erfolgreich hinzugefügt!",
+    "button_addStation": "Station hinzufügen",
+    "button_backToTrips": "Zurück zu den Reisen",
+    "error_loadData": "Fehler beim Laden der Reise- und Stationsdaten."
+  },
+  "reorderstations": {
+    "title": "Stationen für {{tripName}} neu anordnen",
+    "station_label": "Station: {{stationName}}",
+    "day_option": "Tag {{day}}",
+    "submit_button": "Neue Reihenfolge speichern",
+    "error_unique_day": "Jeder Tag darf nur eine Station zugewiesen bekommen.",
+    "error_generic": "Fehler beim neu anordnen der Stationen. Bitte versuche es erneut.",
+    "error_load": "Fehler beim Laden der Reise- und Stationsdaten.",
+    "success_message": "Stations erfolgreich neu angeordnet!",
+    "back_button": "Zurück zu den Reisen"
+  },
+  "tripscreation": {
+    "title": "Neue Reise erstellen",
+    "label_trip_name": "Reisename",
+    "label_start_date": "Startdatum",
+    "label_end_date": "Enddatum",
+    "error_fill_all": "Bitte alle Felder ausfüllen.",
+    "error_start_after_end": "Startdatum muss vor dem Enddatum liegen.",
+    "error_generic": "Fehler beim Erstellen der Reise. Bitte versuche es erneut.",
+    "button_create": "Erstellen",
+    "button_back_to_trips": "Zurück zu den Reisen"
+  },
+  "tripsgeneration": {
+    "error_load_failed": "Fehler beim Laden der Reisedaten.",
+    "error_no_trip_id": "Keine tripId angegeben.",
+    "dialog_station_info_title": "Stationsinformation",
+    "label_town": "Stadt:",
+    "label_day": "Tag:",
+    "dialog_route_info_title": "Routeninformation",
+    "label_transport": "Fortbewegungsmittel:",
+    "label_estimated_time": "Geschätzte Dauer:",
+    "label_directions": "Navigation:",
+    "no_directions": "Keine Navigationsdetails verfügbar.",
+    "unknown_duration": "N/A"
+  },
+  "authcontext": {
+    "session_expired": "Deine Sitzung ist abgelaufen. Bitte logge dich erneut ein.",
+    "fetch_user_failed": "Fehler beim Laden der Benutzerdaten."
+  },
+  "navbar": {
+    "home": "Home",
+    "login": "Einloggen",
+    "register": "Registrieren",
+    "dashboard": "Dashboard",
+    "trips": "Reisen",
+    "settings": "Einstellungen",
+    "logout": "Ausloggen",
+    "language_en": "English",
+    "language_de": "German"
+  }
+}

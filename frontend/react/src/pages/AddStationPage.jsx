@@ -13,15 +13,18 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 export default function AddStationPage() {
+  const { t } = useTranslation();
   const { tripId } = useParams();
+  const navigate = useNavigate();
 
   const [trip, setTrip] = useState(null);
-  const [stations, setStations] = useState([]);
+  const [tripStations, setTripStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+
   const [townName, setTownName] = useState("");
   const [selectedDay, setSelectedDay] = useState("");
 
@@ -29,62 +32,56 @@ export default function AddStationPage() {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Fetch trip info and stations
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       setError(null);
       try {
-        // Fetch trip details
         const tripRes = await axios.get(`/api/trips/${tripId}`);
         setTrip(tripRes.data);
 
-        // Fetch stations for trip
         const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
-        setStations(stationsRes.data);
+        setTripStations(stationsRes.data);
       } catch (err) {
         console.error(err);
         setError(
-          err.response?.data?.detail ||
-            "Failed to load trip or stations data."
+          err.response?.data?.detail || t("addstation.error_loadData")
         );
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [tripId]);
+  }, [tripId, t]);
 
-  // Compute available days for selection (1-based)
-  function getAvailableDays() {
+  const getAvailableDays = () => {
     if (!trip) return [];
 
     const start = dayjs(trip.start_date);
     const end = dayjs(trip.end_date);
-    const totalDays = end.diff(start, "day") + 1; // inclusive days count
+    const totalDays = end.diff(start, "day") + 1;
 
-    const assignedDays = new Set(stations.map((s) => s.day_number));
+    const assignedDays = new Set(tripStations.map((s) => s.day_number));
     const available = [];
     for (let day = 1; day <= totalDays; day++) {
       if (!assignedDays.has(day)) available.push(day);
     }
     return available;
-  }
+  };
 
   const availableDays = getAvailableDays();
 
-  // Handle submit to create a new station
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
     setSubmitSuccess(false);
 
     if (!townName.trim()) {
-      setSubmitError("Please enter a town name.");
+      setSubmitError(t("addstation.error_enterTown"));
       return;
     }
     if (!selectedDay) {
-      setSubmitError("Please select a day.");
+      setSubmitError(t("addstation.error_selectDay"));
       return;
     }
 
@@ -101,13 +98,12 @@ export default function AddStationPage() {
       setTownName("");
       setSelectedDay("");
 
-      // Refetch stations to update available days
       const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
-      setStations(stationsRes.data);
+      setTripStations(stationsRes.data);
     } catch (err) {
       console.error(err);
       setSubmitError(
-        err.response?.data?.detail || "Failed to add station. Please try again."
+        err.response?.data?.detail || t("addstation.error_submitFailed")
       );
     } finally {
       setSubmitLoading(false);
@@ -188,11 +184,11 @@ export default function AddStationPage() {
           textAlign="center"
           sx={{ userSelect: "none" }}
         >
-          Add Station to Trip: {trip.trip_name}
+          {t("addstation.title", { tripName: trip.trip_name })}
         </Typography>
 
         <TextField
-          label="Town Name"
+          label={t("addstation.townName_label")}
           variant="standard"
           fullWidth
           value={townName}
@@ -210,7 +206,7 @@ export default function AddStationPage() {
 
         <TextField
           select
-          label="Select Day"
+          label={t("addstation.selectDay_label")}
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
           fullWidth
@@ -218,8 +214,8 @@ export default function AddStationPage() {
           disabled={submitLoading || availableDays.length === 0}
           helperText={
             availableDays.length === 0
-              ? "All days already have stations assigned."
-              : "Select a day to add the station"
+              ? t("addstation.selectDay_helper_unavailable")
+              : t("addstation.selectDay_helper_available")
           }
           variant="standard"
           sx={{
@@ -227,6 +223,7 @@ export default function AddStationPage() {
             input: { color: "#f0e6cc" },
             "& .MuiInputLabel-root": { color: "#fac948" },
             "& .MuiInput-underline:before": { borderBottomColor: "#fac948" },
+            "& .MuiFormHelperText-root": { color: "#ffffff" },
           }}
           InputLabelProps={{ shrink: true }}
         >
@@ -253,7 +250,7 @@ export default function AddStationPage() {
           {submitLoading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            "Add Station"
+            t("addstation.button_addStation")
           )}
         </Button>
 
@@ -268,12 +265,11 @@ export default function AddStationPage() {
             severity="success"
             sx={{ width: "100%" }}
           >
-            Station added successfully!
+            {t("addstation.success_stationAdded")}
           </Alert>
         </Snackbar>
       </Card>
 
-      {/* Back to Trips Button */}
       <Box
         sx={{
           position: "fixed",
@@ -299,7 +295,7 @@ export default function AddStationPage() {
             },
           }}
         >
-          Back to Trips
+          {t("addstation.button_backToTrips")}
         </Button>
       </Box>
     </Box>
