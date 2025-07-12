@@ -127,5 +127,51 @@
     "logout": "Logout",
     "language_en": "English",
     "language_de": "German"
+  },
+  "weatherwidget": {
+    "current_weather": "Current Weather",
+    "today": "Today",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "error_loading": "Weather data could not be loaded.",
+    "codes": {
+      "clear sky": "Clear sky",
+      "mainly clear": "Mainly clear",
+      "partly cloudy": "Partly cloudy",
+      "overcast": "Overcast",
+      "fog": "Fog",
+      "depositing rime fog": "Rime fog",
+      "light drizzle": "Light drizzle",
+      "moderate drizzle": "Moderate drizzle",
+      "dense drizzle": "Dense drizzle",
+      "slight rain": "Slight rain",
+      "moderate rain": "Moderate rain",
+      "heavy rain": "Heavy rain",
+      "freezing rain": "Freezing rain",
+      "heavy freezing rain": "Heavy freezing rain",
+      "slight snow": "Slight snow",
+      "moderate snow": "Moderate snow",
+      "heavy snow": "Heavy snow",
+      "rain showers": "Rain showers",
+      "heavy rain showers": "Heavy rain showers",
+      "thunderstorm": "Thunderstorm",
+      "thunderstorm with hail": "Thunderstorm with hail",
+      "unknown": "Unknown"
+      }
+  },
+  "tabbedmodal": {
+    "close": "Close",
+    "tabsAria": "Station details tabs",
+    "overview": "Overview",
+    "overnight": "Overnight",
+    "activities": "Activities",
+    "visitDay": "Visiting on:",
+    "selectStay": "Select stay category",
+    "hotel": "Hotel",
+    "hostel": "Hostel",
+    "camping": "Camping",
+    "visitLink": "Rbnb",
+    "interestPrompt": "What are you interested in?",
+    "interestPlaceholder": "e.g. hiking, museums, nightlife..."
   }
 }

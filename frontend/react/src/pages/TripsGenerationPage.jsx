@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -17,8 +17,9 @@ import {
 } from "@mui/material";
 
 import { useTranslation } from "react-i18next";
+import WeatherWidget from "../components/common/WeatherWidget";
+import TabbedModal from "../components/common/TabbedModal";
 
-// Fix leaflet default icon issue in many bundlers
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -35,15 +36,37 @@ export default function TripsGenerationPage() {
   const searchParams = new URLSearchParams(location.search);
   const tripId = searchParams.get("tripId");
 
+  const { token } = useContext(AuthContext);
+
   const [stations, setStations] = useState([]);
   const [travels, setTravels] = useState([]);
   const [routesData, setRoutesData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { token } = useContext(AuthContext);
 
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
+
+  // In-memory weather cache per session
+  const weatherCacheRef = useRef({});
+
+  const getCachedWeatherForCoords = async (lat, lon) => {
+    const cacheKey = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+    if (weatherCacheRef.current[cacheKey]) {
+      return weatherCacheRef.current[cacheKey];
+    }
+
+    try {
+      const res = await axios.get("/api/weather", {
+        params: { lat, lon },
+      });
+      weatherCacheRef.current[cacheKey] = res.data;
+      return res.data;
+    } catch (error) {
+      console.error("Failed to fetch weather:", error);
+      return null;
+    }
+  };
 
   // Fetch stations and travels
   useEffect(() => {
@@ -63,6 +86,7 @@ export default function TripsGenerationPage() {
         setLoading(false);
       }
     }
+
     if (tripId) {
       fetchTripData();
     } else {
@@ -71,7 +95,7 @@ export default function TripsGenerationPage() {
     }
   }, [tripId, t]);
 
-  // Fetch route data for each travel once travels and stations are loaded
+  // Fetch routes once travels and stations are loaded
   useEffect(() => {
     async function fetchRouteForTravel(travel) {
       const fromStation = stations.find((s) => s.id === travel.from_station_id);
@@ -88,11 +112,9 @@ export default function TripsGenerationPage() {
             end_lon: toStation.longitude,
           },
         });
-        console.log("Route for travel", travel.id, res.data);
         return { travelId: travel.id, data: res.data };
       } catch (error) {
         console.error("Error fetching route:", error);
-        // No route from openrouteservice - fallback
         return {
           travelId: travel.id,
           data: {
@@ -127,7 +149,15 @@ export default function TripsGenerationPage() {
 
   const center = stations.length
     ? [stations[0].latitude, stations[0].longitude]
-    : [20, 0]; // somewhere central
+    : [20, 0];
+
+  const getStationName = (station) => {
+    if (!station) return "";
+    if (i18n.language.startsWith("de") && station.station_name_de) {
+      return station.station_name_de;
+    }
+    return station.station_name || "";
+  };
 
   if (loading)
     return (
@@ -150,15 +180,6 @@ export default function TripsGenerationPage() {
       </Typography>
     );
 
-  // Function to get station name depending on current language
-  const getStationName = (station) => {
-    if (!station) return "";
-    if (i18n.language.startsWith("de") && station.station_name_de) {
-      return station.station_name_de;
-    }
-    return station.station_name || "";
-  };
-
   return (
     <>
       <MapContainer center={center} zoom={6} style={{ height: "100vh", width: "100%" }}>
@@ -167,7 +188,6 @@ export default function TripsGenerationPage() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Stations markers */}
         {stations.map((station) => (
           <Marker
             key={station.id}
@@ -178,7 +198,6 @@ export default function TripsGenerationPage() {
           />
         ))}
 
-        {/* Travel routes polylines */}
         {travels.map((travel) => {
           const route = routesData[travel.id];
           if (!route) return null;
@@ -186,7 +205,9 @@ export default function TripsGenerationPage() {
           return (
             <Polyline
               key={travel.id}
-              positions={Array.isArray(route.polyline) ? route.polyline.map(([lat, lon]) => [lat, lon]) : []}
+              positions={Array.isArray(route.polyline)
+                ? route.polyline.map(([lat, lon]) => [lat, lon])
+                : []}
               color="blue"
               weight={4}
               opacity={0.7}
@@ -198,26 +219,38 @@ export default function TripsGenerationPage() {
         })}
       </MapContainer>
 
-      <Dialog open={!!selectedMarker} onClose={() => setSelectedMarker(null)}>
-        <DialogTitle>{t("tripsgeneration.dialog_station_info_title")}</DialogTitle>
-        <DialogContent>
-          <Typography>
-            <strong>{t("tripsgeneration.label_town")}</strong> {getStationName(selectedMarker)}
-          </Typography>
-          <Typography>
-            <strong>{t("tripsgeneration.label_day")}</strong> {selectedMarker?.day_number}
-          </Typography>
-        </DialogContent>
-      </Dialog>
+      // Station Tabbed Modal
+      <TabbedModal
+        open={!!selectedMarker}
+        onClose={() => setSelectedMarker(null)}
+        stationName={getStationName(selectedMarker)}
+        visitDay={selectedMarker?.day_number}
+        weatherWidget={
+          <WeatherWidget
+            lat={selectedMarker?.latitude}
+            lon={selectedMarker?.longitude}
+            fetchCachedWeather={getCachedWeatherForCoords}
+          />
+        }
+        overnightOptions={[]} // Future: Inject dynamic AI results
+        activityOptions={[]}  // Future: Inject dynamic AI results
+        onActivitySearch={(query) => {
+          // Future: Use this callback to fetch suggestions via AI
+          console.log("Search activities for:", query);
+        }}
+      />
 
+      // Route Info Dialog
       <Dialog open={!!selectedRoute} onClose={() => setSelectedRoute(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t("tripsgeneration.dialog_route_info_title")}</DialogTitle>
         <DialogContent dividers>
           <Typography>
-            <strong>{t("tripsgeneration.label_transport")}</strong> {selectedRoute?.travel.method_of_transport}
+            <strong>{t("tripsgeneration.label_transport")}</strong>{" "}
+            {selectedRoute?.travel.method_of_transport}
           </Typography>
           <Typography>
-            <strong>{t("tripsgeneration.label_estimated_time")}</strong> {selectedRoute?.route.duration || t("tripsgeneration.unknown_duration")}
+            <strong>{t("tripsgeneration.label_estimated_time")}</strong>{" "}
+            {selectedRoute?.route.duration || t("tripsgeneration.unknown_duration")}
           </Typography>
           <Typography sx={{ mt: 2, mb: 1 }}>
             <strong>{t("tripsgeneration.label_directions")}</strong>
