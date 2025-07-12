@@ -26,7 +26,7 @@ import { Snackbar, Alert } from "@mui/material";
 // Wrapper to control Navbar layout based on current path
 function Layout({ children }) {
   const location = useLocation();
-  const hasSidebar = ["/dashboard", "/settings"].includes(location.pathname);
+  const hasSidebar = ["/dashboard", "/settings", "/trips"].includes(location.pathname);
 
   return (
     <>

@@ -15,7 +15,7 @@ export default function Sidebar() {
   };
 
   return (
-    <Box
+      <Box
       component="nav"
       sx={{
         width: 200,
@@ -35,6 +35,14 @@ export default function Sidebar() {
       }}
     >
       <Box>
+        <MuiLink
+          component={RouterLink}
+          to="/trips/create"
+          underline="none"
+          sx={linkStyle}
+        >
+          {t("sidebar.tripscreate")}
+        </MuiLink>
         <MuiLink
           component={RouterLink}
           to="/trips"

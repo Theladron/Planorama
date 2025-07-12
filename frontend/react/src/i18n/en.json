@@ -33,6 +33,7 @@
   "no_upcoming": "None of your trips are coming up soon. Still more time to plan and get excited!"
   },
   "sidebar": {
+    "tripscreate": "Create new trip",
     "trips": "Trips",
     "settings": "Settings",
     "logout": "Logout"

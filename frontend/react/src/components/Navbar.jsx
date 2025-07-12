@@ -106,7 +106,7 @@ export default function Navbar({ hasSidebar }) {
             <Button
               color="inherit"
               onClick={handleMenuOpen}
-              sx={{ textTransform: "none", fontWeight: "bold" }}
+              sx={{ textTransform: "none", fontWeight: "bold", color: "#f7d425" }}
             >
               {username}
             </Button>

@@ -256,7 +256,7 @@ export default function TripsPage() {
           {trips.length === 0 ? (
             <Typography variant="h6" sx={{ textAlign: "center" }}>
               {t("trips.noTrips")}{" "}
-              <MuiLink component={RouterLink} to="/trips/new" sx={{ color: "#f0e6cc", fontWeight: "bold" }}>
+              <MuiLink component={RouterLink} to="/trips/create" sx={{ color: "#f0e6cc", fontWeight: "bold" }}>
                 {t("trips.startNewTrip")}
               </MuiLink>
             </Typography>
@@ -282,7 +282,9 @@ export default function TripsPage() {
                   }}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="h5" gutterBottom>{trip.name}</Typography>
+                    <Typography variant="h5" gutterBottom fontWeight="bold">
+                        {trip.trip_name}
+                    </Typography>
                     <Typography variant="body2" sx={{ mb: 1, fontWeight: "bold" }}>
                       {t("trips.createdAt", {
                         date: dayjs(trip.created_at).format("YYYY-MM-DD"),
@@ -344,24 +346,16 @@ export default function TripsPage() {
                         return (
                           <Box
                             key={station.link_id}
-                            sx={{
-                              backgroundColor: "rgba(250, 201, 72, 0.25)",
-                              mb: 1,
-                              p: 1,
-                              borderRadius: 1,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
                           >
-                            <Typography sx={{ flex: 1 }}>
+                            <Typography sx={{ flex: 1, mt: -3}}>
                               {flagEmoji}{" "}
                               {i18n.language === "de" ? station.station_name_de : station.station_name},{" "}
                               {station.city} {station.country}
-                            </Typography>
+
                             <IconButton onClick={() => handleDeleteStation(station.link_id, trip.id)} color="error">
                               🗑
                             </IconButton>
+                            </Typography>
                           </Box>
                         );
                       })

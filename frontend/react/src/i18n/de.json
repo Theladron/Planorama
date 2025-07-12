@@ -33,6 +33,7 @@
     "no_upcoming": "Keine Reisen in näherere Zukunft. Zeit voller Vorfreude zu planen!"
   },
   "sidebar": {
+    "tripscreate": "Neue Reise erstellen",
     "trips": "Reisen",
     "settings": "Einstellungen",
     "logout": "Ausloggen"
