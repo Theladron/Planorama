@@ -70,7 +70,6 @@ const MultiTabModal = ({
           border: "1px solid rgba(250, 201, 72, 0.3)",
           borderRadius: "12px",
           boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.2)",
-          fontFamily: "'Pacifico', cursive",
           textShadow: "2px 2px 6px rgba(0,0,0,0.6)",
           color: "#f0e6cc",
         },
@@ -176,7 +175,7 @@ const MultiTabModal = ({
 
           {activityOptions.map((activity, idx) => (
             <Box key={idx} mt={2}>
-              <Typography variant="subtitle2">{activity.title}</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{activity.title}</Typography>
               <Typography variant="body2">{activity.description}</Typography>
               <Link href={activity.url} target="_blank" rel="noopener" underline="hover" color="#f0e6cc">
                 {t("tabbedmodal.visitLink")}

@@ -394,7 +394,18 @@ export default function TripsGenerationPage() {
         onOvernightCategoryChange={handleOvernightCategoryChange}
       />
 
-      <Dialog open={!!selectedRoute} onClose={() => setSelectedRoute(null)} maxWidth="sm" fullWidth>
+      <Dialog open={!!selectedRoute} onClose={() => setSelectedRoute(null)} maxWidth="sm" fullWidth
+          PaperProps={{
+      sx: {
+      backgroundColor: "rgba(250, 201, 72, 0.2)",
+      backdropFilter: "blur(4px)",
+      border: "1px solid rgba(250, 201, 72, 0.25)",
+      borderRadius: 3,
+      boxShadow: "0 6px 20px rgba(250, 201, 72, 0.1)",
+      color: "#f0e6cc",
+      textShadow: "1px 1px 4px rgba(0, 0, 0, 0.5)",
+    },
+  }}>
         <DialogTitle>{t("tripsgeneration.dialog_route_info_title")}</DialogTitle>
         <DialogContent dividers>
           <Typography>
