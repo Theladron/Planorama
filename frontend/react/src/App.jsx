@@ -13,7 +13,7 @@ import './i18n';
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./pages/DashBoardPage";
 import SettingsPage from "./pages/SettingsPage";
 import TripsPage from "./pages/TripsPage";
 import TripsGenerationPage from "./pages/TripsGenerationPage";
