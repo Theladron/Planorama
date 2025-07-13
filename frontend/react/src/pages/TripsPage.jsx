@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -58,7 +59,7 @@ export default function TripsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get("/api/trips/me");
+        const res = await axios.get("${backendURL}/api/trips/me");
         setTrips(res.data);
 
         const dates = {};
@@ -73,7 +74,7 @@ export default function TripsPage() {
         const stationsResults = await Promise.all(
           res.data.map(async (trip) => {
             try {
-              const stationsRes = await axios.get(`/api/stations/by-trip/${trip.id}`);
+              const stationsRes = await axios.get(`${backendURL}/api/stations/by-trip/${trip.id}`);
               return { tripId: trip.id, stations: stationsRes.data };
             } catch (err) {
               console.error(`Failed to fetch stations for trip ${trip.id}:`, err);
@@ -114,7 +115,7 @@ export default function TripsPage() {
     setUpdateLoading((prev) => ({ ...prev, [tripId]: true }));
 
     try {
-      await axios.put(`/api/trips/${tripId}`, {
+      await axios.put(`${backendURL}/api/trips/${tripId}`, {
         start_date,
         end_date,
       });
@@ -134,7 +135,7 @@ export default function TripsPage() {
 
   const handleDeleteStation = async (linkId, tripId) => {
     try {
-      await axios.delete(`/api/stations/${linkId}`);
+      await axios.delete(`${backendURL}/api/stations/${linkId}`);
       setStationsByTrip((prev) => ({
         ...prev,
         [tripId]: prev[tripId].filter((station) => station.link_id !== linkId),
@@ -160,7 +161,7 @@ export default function TripsPage() {
     setDeleteLoading(true);
 
     try {
-      await axios.delete(`/api/trips/${tripToDelete.id}`);
+      await axios.delete(`${backendURL}/api/trips/${tripToDelete.id}`);
       setTrips((prev) => prev.filter((t) => t.id !== tripToDelete.id));
       closeDeleteDialog();
     } catch (err) {

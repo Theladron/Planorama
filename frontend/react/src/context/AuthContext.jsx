@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";

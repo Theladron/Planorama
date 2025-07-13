@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { useContext, useEffect, useState } from "react";
 import {
   Box,

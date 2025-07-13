@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Link as MuiLink } from "@mui/material";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
+import { backendURL } from "../config";
 export default function RegisterPage() {
   const { t } = useTranslation();
 
@@ -24,7 +24,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/users/", {
+      const response = await fetch("${backendURL}/api/users/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
@@ -49,7 +49,7 @@ export default function RegisterPage() {
     <Box
       sx={{
         height: "100vh",
-        backgroundImage: "url('/images/home_background.jpg')",
+        backgroundImage: "url('${backendURL}/images/home_background.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { useContext, useState } from "react";
 import {
   Box,
@@ -43,7 +44,7 @@ export default function SettingsPage() {
     setDeleting(true);
     setError(null);
     try {
-      await axios.delete("/api/users/me");
+      await axios.delete("${backendURL}/api/users/me");
       logout();
       navigate("/login");
     } catch (err) {
