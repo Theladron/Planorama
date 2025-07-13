@@ -112,7 +112,11 @@
     "label_estimated_time": "Geschätzte Dauer:",
     "label_directions": "Navigation:",
     "no_directions": "Keine Navigationsdetails verfügbar.",
-    "unknown_duration": "N/A"
+    "unknown_duration": "N/A",
+    "overnight": "Übernachtung",
+    "activities": "Aktivitäten",
+    "legend": "Legende",
+    "legend_info": "Klicke auf eine Route oder Makierung, um mehr Informationen zu erhalten."
   },
   "authcontext": {
     "session_expired": "Deine Sitzung ist abgelaufen. Bitte logge dich erneut ein.",
@@ -169,10 +173,12 @@
     "visitDay": "Besuchstag:",
     "selectStay": "Übernachtungsart wählen",
     "hotel": "Hotel",
-    "hostel": "Hostel",
+    "hostel": "Herberge",
     "camping": "Camping",
-    "visitLink": "Rbnb",
+    "visitLink": "Website",
     "interestPrompt": "Woran hast du Interesse?",
-    "interestPlaceholder": "z.B. Wandern, Museen, Nachtleben..."
+    "interestPlaceholder": "z.B. Wandern, Museen, Nachtleben...",
+    "rbnb": "Rbnb",
+    "search": "Suchen"
   }
 }

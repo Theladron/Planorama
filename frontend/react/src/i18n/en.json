@@ -112,7 +112,11 @@
     "label_estimated_time": "Estimated Time:",
     "label_directions": "Directions:",
     "no_directions": "No detailed directions available.",
-    "unknown_duration": "N/A"
+    "unknown_duration": "N/A",
+    "overnight": "Overnight stays",
+    "activities": "Activities",
+    "legend": "Legend",
+    "legend_info": "Click on a route or icon to see more information."
   },
   "authcontext": {
     "session_expired": "Your login session has expired. Please log in again.",
@@ -171,8 +175,10 @@
     "hotel": "Hotel",
     "hostel": "Hostel",
     "camping": "Camping",
-    "visitLink": "Rbnb",
+    "visitLink": "Website",
     "interestPrompt": "What are you interested in?",
-    "interestPlaceholder": "e.g. hiking, museums, nightlife..."
+    "interestPlaceholder": "e.g. hiking, museums, nightlife...",
+    "rbnb": "Rbnb",
+    "search": "Search"
   }
 }

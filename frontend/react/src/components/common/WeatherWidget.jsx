@@ -30,7 +30,6 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
         if (fetchCachedWeather) {
           data = await fetchCachedWeather(lat, lon);
         } else {
-          // fallback: call API directly
           const response = await axios.get("/api/weather", {
             params: { lat, lon },
           });
@@ -67,27 +66,40 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
   const { current, today, forecast } = weatherData;
 
   return (
-    <Box mt={2}>
-      // Current Weather
+    <Box
+      sx={{
+        backgroundColor: "rgba(250, 201, 72, 0.2)",
+        backdropFilter: "blur(4px)",
+        border: "1px solid rgba(250, 201, 72, 0.25)",
+        borderRadius: "12px",
+        p: 2,
+        color: "#f0e6cc",
+        boxShadow: "0 6px 20px rgba(250, 201, 72, 0.1)",
+        fontFamily: "'Pacifico', cursive",
+        textShadow: "1px 1px 4px rgba(0, 0, 0, 0.5)",
+      }}
+    >
       <Box textAlign="center" mb={2}>
         <Typography variant="h6">
-          {t("weatherwidget.current_weather")} {current.icon} – {current.temperature}°C
+          {t("weatherwidget.current_weather")}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="h6">
+           {current.temperature}°C {current.icon}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85 }}>
           {t(`weatherwidget.codes.${current.description.toLowerCase()}`, {
             defaultValue: current.description,
           })}
         </Typography>
       </Box>
 
-      // Today Summary
       <Box textAlign="center" mb={3}>
         <Typography variant="subtitle1">{t("weatherwidget.today")}</Typography>
 
         <Typography variant="subtitle2">
           {today.temp_min}°C / {today.temp_max}°C {today.icon}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ opacity: 0.85 }}>
           {t("weatherwidget.sunrise")}:{" "}
           {new Date(today.sunrise).toLocaleTimeString([], {
             hour: "2-digit",
@@ -101,11 +113,19 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
         </Typography>
       </Box>
 
-      // 7-Day Forecast
-      <Grid container spacing={1}>
+      <Grid container spacing={0.5} justifyContent="center">
         {forecast.map((day, index) => (
           <Grid item xs={6} sm={4} md={3} key={index}>
-            <Card variant="outlined">
+            <Card
+              sx={{
+                backgroundColor: "rgba(250, 201, 72, 0.15)",
+                backdropFilter: "blur(3px)",
+                border: "1px solid rgba(250, 201, 72, 0.2)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                borderRadius: "8px",
+                color: "#f0e6cc",
+              }}
+            >
               <CardContent sx={{ textAlign: "center", py: 1.5 }}>
                 <Typography variant="subtitle2">
                   {new Date(day.date).toLocaleDateString(undefined, {
@@ -117,7 +137,7 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
                     defaultValue: day.description,
                   })}
                 >
-                  <Typography fontSize="1.5rem">{day.icon}</Typography>
+                  <Typography fontSize="1.6rem">{day.icon}</Typography>
                 </Tooltip>
                 <Typography variant="body2">
                   {day.temp_min}° / {day.temp_max}°

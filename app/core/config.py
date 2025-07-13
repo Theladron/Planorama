@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     # API
     ORS_API_KEY: str
+    AI_API_KEY: str
 
     # Security
     ALGORITHM: str = "HS256"
