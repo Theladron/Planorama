@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Environment
-    DOMAIN: str = "localhost"
+    DOMAIN: str
     ENVIRONMENT: Literal["local", "staging", "production"]
 
     @computed_field
