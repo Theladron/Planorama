@@ -25,3 +25,4 @@ def import_all_models():
     import app.quotes.models
     import app.stations.models
     import app.travel.models
+    import app.trip_stations.models

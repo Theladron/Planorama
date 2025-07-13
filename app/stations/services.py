@@ -1,19 +1,22 @@
 from sqlalchemy.orm import Session, joinedload
 from app.stations.models import Station
-from app.travel.models import Travel
 from app.trips.models import Trip
-from app.stations.schemas import StationCreate, StationReorderItem
+from app.users.models import User
+from app.trip_stations.models import TripStation
+from app.trip_stations.schemas import TripStationReorderItem, TripStationCreate
+from app.stations.schemas import StationCreate, StationWithLinkIdSchema
+from app.trip_stations.services import (get_trip_station_by_trip_and_day,
+                                        create_trip_station,
+                                        sync_travel_routes_for_trip_stations,
+                                        get_trip_stations_for_trip,
+                                        delete_trip_station)
 from fastapi import HTTPException
-from typing import cast
-from app.core.connector_loader import openroute_connector
-from app.travel.services import create_travel_entry
+from typing import cast, List
+from app.core.connector_loader import openroute_connector, googletrans_connector
 
 
 def get_station(db: Session, station_id: int):
-    return db.query(Station)\
-        .options(joinedload(Station.trip))\
-        .filter(Station.id == station_id)\
-        .first()
+    return db.query(Station).filter(Station.id == station_id).first()
 
 
 def get_trip(db: Session, trip_id: int):
@@ -24,131 +27,210 @@ def get_all_stations(db: Session):
     return db.query(Station).all()
 
 
-async def create_station(db: Session, station_data: StationCreate, user_id: int):
+def get_user_language_preference(db: Session, user_id: int):
+    user = db.query(User).filter_by(id=user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user.language_preference or "en"
+
+
+def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> List[TripStation]:
+    """
+    Retrieve TripStation objects linked to a trip owned by user,
+    ordered by day_number.
+    """
+    if trip_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid trip ID")
+
+    trip = get_trip(db, trip_id)
+    if not trip or trip.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized or trip not found")
+
+    trip_stations = (
+        db.query(TripStation)
+        .filter_by(trip_id=trip_id)
+        .order_by(TripStation.day_number)
+        .options(joinedload(TripStation.station))  # eager load station relationship
+        .all()
+    )
+    return [
+        StationWithLinkIdSchema(
+            id=ts.station.id,
+            station_name=ts.station.station_name,
+            station_name_de=ts.station.station_name_de,
+            latitude=ts.station.latitude,
+            longitude=ts.station.longitude,
+            country=ts.station.country,
+            link_id=ts.id,  # this is the TripStation.id
+            day_number=ts.day_number,
+        )
+        for ts in trip_stations
+    ]
+
+
+async def create_station(db: Session, station_data: StationCreate, user_id: int) -> Station:
     if station_data.trip_id <= 0 or station_data.day_number <= 0:
-        raise HTTPException(status_code=400,
-                            detail="Trip ID and day number must be positive integers")
+        raise HTTPException(status_code=400, detail="Trip ID and day number must be positive integers")
 
     trip = get_trip(db, station_data.trip_id)
     if not trip or trip.user_id != user_id:
-        raise HTTPException(status_code=403,
-                            detail="Trip not found or unauthorized")
+        raise HTTPException(status_code=403, detail="Trip not found or unauthorized")
 
     duration_days = (trip.end_date - trip.start_date).days + 1
     if station_data.day_number > duration_days:
-        raise HTTPException(status_code=400,
-                            detail="Day number is out of trip range")
+        raise HTTPException(status_code=400, detail="Day number is out of trip range")
 
-    existing_station = db.query(Station).filter(
-        Station.trip_id == station_data.trip_id,
-        Station.day_number == station_data.day_number
-    ).first()
-    if existing_station:
-        raise HTTPException(
-            status_code=400,
-            detail=f"A station already exists on day {station_data.day_number}."
-        )
+    # Check if day already has a station linked
+    existing_trip_station = get_trip_station_by_trip_and_day(db, station_data.trip_id, station_data.day_number)
+    if existing_trip_station:
+        raise HTTPException(status_code=400, detail=f"A station already exists on day {station_data.day_number}.")
 
-    stations = (db.query(Station).filter(Station.trip_id == station_data.trip_id)
-                .order_by(Station.day_number).all())
-
-    prev_station = None
-    for s in reversed(stations):
-        if s.day_number < station_data.day_number:
-            prev_station = s
-            break
-
-    next_station = None
-    for s in stations:
-        if s.day_number > station_data.day_number:
-            next_station = s
-            break
-
-    # Check if same station_name is adjacent (prev or next)
-    if prev_station and prev_station.station_name == station_data.station_name:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Station '{station_data.station_name}' "
-                   f"already exists adjacent before day {prev_station.day_number}."
-        )
-    if next_station and next_station.station_name == station_data.station_name:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Station '{station_data.station_name}' "
-                   f"already exists adjacent after day {next_station.day_number}."
-        )
-
-    coords = openroute_connector.get_location_info(station_data.station_name)
-    if not coords:
+    location_info = openroute_connector.get_location_info(station_data.station_name)
+    if not location_info:
         raise HTTPException(status_code=400, detail="Location lookup failed")
 
-    country = coords.get("country")
-    station = Station(
-        trip_id=station_data.trip_id,
-        day_number=station_data.day_number,
-        station_name=station_data.station_name,
-        latitude=coords["lat"],
-        longitude=coords["lon"],
-        country=country
+    lat = location_info.get("lat")
+    lon = location_info.get("lon")
+    country_raw = location_info.get("country")
+
+    if lat is None or lon is None or not country_raw:
+        raise HTTPException(status_code=400, detail="Incomplete location information")
+
+    origin_lang = get_user_language_preference(db, user_id)
+    if origin_lang not in ["en", "de"]:
+        raise HTTPException(status_code=400, detail="Unsupported language preference")
+
+    if origin_lang == "en":
+        station_name_en = station_data.station_name
+        station_name_de = await googletrans_connector.translate(station_data.station_name, "de", origin_lang)
+    else:
+        station_name_de = station_data.station_name
+        station_name_en = await googletrans_connector.translate(station_data.station_name, "en", origin_lang)
+
+    if not station_name_en or not station_name_de:
+        raise HTTPException(status_code=400, detail="Failed to translate station name")
+
+    country_en = await googletrans_connector.translate(country_raw, "en", origin_lang)
+    if not country_en:
+        raise HTTPException(status_code=400, detail="Failed to translate country name")
+
+    existing_station = db.query(Station).filter(Station.station_name == station_name_en).first()
+
+    if existing_station:
+        all_trip_stations = get_trip_stations_for_trip(db, station_data.trip_id)
+        all_trip_stations.sort(key=lambda ts: ts.day_number)
+
+        ordered_station_ids = [ts.station_id for ts in all_trip_stations]
+        insert_index = next(
+            (i for i, ts in enumerate(all_trip_stations) if ts.day_number > station_data.day_number),
+            len(all_trip_stations)
+        )
+
+        new_order_station_ids = ordered_station_ids.copy()
+        new_order_day_numbers = [ts.day_number for ts in all_trip_stations]
+        new_order_station_ids.insert(insert_index, existing_station.id)
+        new_order_day_numbers.insert(insert_index, station_data.day_number)
+
+        for idx in range(len(new_order_station_ids) - 1):
+            if new_order_station_ids[idx] == new_order_station_ids[idx + 1]:
+                day1 = new_order_day_numbers[idx]
+                day2 = new_order_day_numbers[idx + 1]
+
+                if station_data.day_number == max(day1, day2):
+                    return existing_station
+
+                day_to_delete = max(day1, day2)
+                delete_trip_station(db, trip_id=station_data.trip_id, day_number=day_to_delete, user_id=user_id)
+                db.flush()
+                break
+
+        create_trip_station(db, data=TripStationCreate(
+            trip_id=station_data.trip_id,
+            station_id=existing_station.id,
+            day_number=station_data.day_number,
+        ))
+        db.commit()
+        return existing_station
+
+    new_station = Station(
+        station_name=station_name_en,
+        station_name_de=station_name_de,
+        latitude=lat,
+        longitude=lon,
+        country=country_en
     )
-    db.add(station)
+    db.add(new_station)
     db.flush()
 
-    # Update trip countries if needed
-    if country:
-        current_countries = set(trip.trip_countries or [])
-        if country not in current_countries:
-            trip.trip_countries = list(current_countries.union({country}))
-            db.add(trip)
+    create_trip_station(db, data=TripStationCreate(
+        trip_id=station_data.trip_id,
+        station_id=new_station.id,
+        day_number=station_data.day_number,
+    ))
+
+    current_countries = set(trip.trip_countries or [])
+    if country_en not in current_countries:
+        trip.trip_countries = list(current_countries.union({country_en}))
+        db.add(trip)
 
     db.commit()
-    db.refresh(station)
-    sync_travel_routes_for_trip(db, trip.id)
-
-    return station
+    db.refresh(new_station)
+    return new_station
 
 
-def delete_station(db: Session, station_id: int, user_id: int):
-    if station_id <= 0:
-        raise HTTPException(status_code=400, detail="Invalid station ID")
 
-    station = get_station(db, station_id)
-    if not station:
-        raise HTTPException(status_code=404, detail="Station not found")
 
-    trip = cast(Trip, station.trip)
-    if trip.user_id != user_id:
-        raise HTTPException(status_code=403, detail="Unauthorized")
 
-    country_to_check = station.country
+def delete_station(
+    db: Session,
+    link_id: int,
+    user_id: int
+):
+    if link_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid TripStation link ID")
 
-    db.delete(station)
+    trip_station = db.query(TripStation).filter(TripStation.id == link_id).first()
+    if not trip_station:
+        raise HTTPException(status_code=404, detail="TripStation not found")
+
+    trip = db.query(Trip).filter(Trip.id == trip_station.trip_id).first()
+    if not trip or trip.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Unauthorized or trip not found")
+
+    country_to_check = trip_station.station.country
+
+    db.delete(trip_station)
     db.commit()
     db.refresh(trip)
 
-    # Remove country if no other stations from this country exist
     _remove_country_if_unused(db, trip, country_to_check)
 
-    # Remove adjacent duplicates after deletion
-    stations = (db.query(Station).filter(Station.trip_id == trip.id)
-                .order_by(Station.day_number).all())
+    # Remove adjacent duplicates (same station on consecutive days)
+    trip_station_links = (
+        db.query(TripStation)
+        .filter(TripStation.trip_id == trip.id)
+        .order_by(TripStation.day_number)
+        .all()
+    )
 
-    to_delete = []
-    previous_name = None
-    for station in stations:
-        if station.station_name == previous_name:
-            to_delete.append(station)
+    to_delete_links = []
+    previous_station_name = None
+    for ts in trip_station_links:
+        current_name = ts.station.station_name
+        if current_name == previous_station_name:
+            to_delete_links.append(ts)
         else:
-            previous_name = station.station_name
+            previous_station_name = current_name
 
-    for station in to_delete:
-        db.delete(station)
+    for ts in to_delete_links:
+        db.delete(ts)
 
     db.commit()
 
-    sync_travel_routes_for_trip(db, trip.id)
+    sync_travel_routes_for_trip_stations(db, trip.id)
 
-    return {"detail": "Station deleted successfully"}
+    return {"detail": "TripStation link deleted successfully"}
+
 
 
 def admin_delete_station(db: Session, station_id: int):
@@ -159,106 +241,102 @@ def admin_delete_station(db: Session, station_id: int):
     if not station:
         raise HTTPException(status_code=404, detail="Station not found")
 
-    trip = cast(Trip, station.trip)
+    trip_station_links = db.query(TripStation).filter_by(station_id=station_id).all()
+
+    if not trip_station_links:
+        db.delete(station)
+        db.commit()
+        return {"detail": "Station deleted (no links existed)"}
+
+    affected_trip_ids = {ts.trip_id for ts in trip_station_links}
     country_to_check = station.country
+
+    for link in trip_station_links:
+        db.delete(link)
 
     db.delete(station)
     db.commit()
-    db.refresh(trip)
 
-    # Remove country if no other stations from this country exist
-    _remove_country_if_unused(db, trip, country_to_check)
+    for trip_id in affected_trip_ids:
+        trip = db.query(Trip).filter_by(id=trip_id).first()
+        if trip:
+            _remove_country_if_unused(db, trip, country_to_check)
+            sync_travel_routes_for_trip_stations(db, trip.id)
 
-    # Remove adjacent duplicates after deletion
-    stations = (db.query(Station).filter(Station.trip_id == trip.id)
-                .order_by(Station.day_number).all())
+    return {"detail": f"Station and all associated links "
+                      f"deleted from {len(affected_trip_ids)} trip(s)"}
 
-    to_delete = []
-    previous_name = None
-    for s in stations:
-        if s.station_name == previous_name:
-            to_delete.append(s)
-        else:
-            previous_name = s.station_name
-
-    for s in to_delete:
-        db.delete(s)
-
-    db.commit()
-
-    sync_travel_routes_for_trip(db, trip.id)
 
 
 def reorder_stations(
     db: Session,
     trip_id: int,
-    reorder_items: list[StationReorderItem],
+    reorder_items: List[TripStationReorderItem],
     user_id: int
-):
+) -> List[TripStation]:
     if trip_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid trip ID")
 
-    trip = get_trip(db, trip_id)
+    trip = db.query(Trip).filter_by(id=trip_id).first()
     if not trip or trip.user_id != user_id:
         raise HTTPException(status_code=403, detail="Unauthorized or trip not found")
 
-    duration_days = (trip.end_date - trip.start_date).days + 1
-    seen_days = set()
+    if not trip.start_date or not trip.end_date:
+        raise HTTPException(status_code=400, detail="Trip must have a start and end date")
 
+    duration_days = (trip.end_date - trip.start_date).days + 1
+
+    seen_days = set()
     for item in reorder_items:
         if item.day_number <= 0:
-            raise HTTPException(status_code=400,
-                                detail="Day numbers must be positive integers")
+            raise HTTPException(status_code=400, detail="Day numbers must be positive integers")
         if item.day_number > duration_days:
-            raise HTTPException(status_code=400,
-                                detail=f"Day number {item.day_number} exceeds trip range")
+            raise HTTPException(status_code=400, detail=f"Day number {item.day_number} exceeds trip range")
         if item.day_number in seen_days:
-            raise HTTPException(status_code=400,
-                                detail="Duplicate day_numbers not allowed")
+            raise HTTPException(status_code=400, detail="Duplicate day_numbers not allowed")
         seen_days.add(item.day_number)
 
-    # Validate stations exist & belong to trip
-    station_ids = [item.station_id for item in reorder_items]
-    stations_to_reorder = db.query(Station).filter(Station.id.in_(station_ids)).all()
-    if len(stations_to_reorder) != len(station_ids):
-        raise HTTPException(status_code=404,
-                            detail="One or more stations not found")
-    if any(s.trip_id != trip_id for s in stations_to_reorder):
-        raise HTTPException(status_code=400,
-                            detail="All stations must belong to the specified trip")
+    trip_station_ids = [item.link_id for item in reorder_items]
+    trip_stations = db.query(TripStation).filter(TripStation.id.in_(trip_station_ids)).all()
 
-    # Update day_number of reordered stations
-    id_to_day = {item.station_id: item.day_number for item in reorder_items}
-    for station in stations_to_reorder:
-        station.day_number = id_to_day[station.id]
+    if len(trip_stations) != len(reorder_items):
+        raise HTTPException(status_code=404, detail="One or more TripStations not found")
+
+    for ts in trip_stations:
+        if ts.trip_id != trip_id:
+            raise HTTPException(status_code=400, detail="TripStation does not belong to specified trip")
+
+    id_to_day = {item.link_id: item.day_number for item in reorder_items}
+    for ts in trip_stations:
+        ts.day_number = id_to_day[ts.id]
 
     db.flush()
 
-    all_stations = (db.query(Station).filter(Station.trip_id == trip_id)
-                    .order_by(Station.day_number).all())
-
-    # Remove adjacent duplicates
-    to_delete = []
+    # Remove adjacent duplicates (by station name)
+    all_trip_stations = get_trip_stations_for_trip(db, trip_id)
+    to_delete: List[TripStation] = []
     previous_name = None
-    for station in all_stations:
-        if station.station_name == previous_name:
-            to_delete.append(station)
+    for ts in all_trip_stations:
+        current_name = ts.station.station_name
+        if current_name == previous_name:
+            to_delete.append(ts)
         else:
-            previous_name = station.station_name
+            previous_name = current_name
 
-    for station in to_delete:
-        db.delete(station)
+    for ts in to_delete:
+        db.delete(ts)
 
     db.commit()
-    sync_travel_routes_for_trip(db, trip_id)
 
-    # Return all remaining stations sorted by day_number
-    remaining_stations = [s for s in all_stations if s not in to_delete]
-    remaining_stations.sort(key=lambda s: s.day_number)
+    sync_travel_routes_for_trip_stations(db, trip_id)
+
+    remaining_stations = get_trip_stations_with_link_id(db, trip_id, user_id)
     return remaining_stations
 
 
-def get_stations_by_trip(db: Session, trip_id: int, user_id: int):
+
+
+def get_stations_by_trip(db: Session, trip_id: int, user_id: int) -> List[Station]:
     if trip_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid trip ID")
 
@@ -266,42 +344,21 @@ def get_stations_by_trip(db: Session, trip_id: int, user_id: int):
     if not trip or trip.user_id != user_id:
         raise HTTPException(status_code=403, detail="Unauthorized or trip not found")
 
-    return db.query(Station).filter_by(trip_id=trip_id).order_by(Station.day_number).all()
+    trip_stations = db.query(TripStation)\
+        .filter_by(trip_id=trip_id)\
+        .order_by(TripStation.day_number)\
+        .all()
 
+    station_ids = [ts.station_id for ts in trip_stations]
 
-def sync_travel_routes_for_trip(db: Session, trip_id: int):
-    stations = db.query(Station).filter_by(trip_id=trip_id).order_by(Station.day_number).all()
-    existing_travels = db.query(Travel).filter_by(trip_id=trip_id).all()
+    if not station_ids:
+        return []
 
-    expected_pairs = [
-        (stations[i].id, stations[i + 1].id)
-        for i in range(len(stations) - 1)
-    ]
+    stations = db.query(Station).filter(Station.id.in_(station_ids)).all()
+    stations_by_id = {s.id: s for s in stations}
+    ordered_stations = [stations_by_id[sid] for sid in station_ids if sid in stations_by_id]
 
-    expected_set = set(expected_pairs)
-    for travel in existing_travels:
-        if (travel.from_station_id, travel.to_station_id) not in expected_set:
-            db.delete(travel)
-
-    for from_id, to_id in expected_pairs:
-        exists = any(
-            t for t in existing_travels
-            if t.from_station_id == from_id and t.to_station_id == to_id
-        )
-        if not exists:
-            from_station = db.query(Station).get(from_id)
-            to_station = db.query(Station).get(to_id)
-            create_travel_entry(
-                db=db,
-                trip_id=trip_id,
-                from_station_id=from_id,
-                to_station_id=to_id,
-                from_town=from_station.station_name,
-                to_town=to_station.station_name,
-                connector=openroute_connector
-            )
-
-    db.commit()
+    return ordered_stations
 
 
 def _remove_country_if_unused(db: Session, trip: Trip, country: str | None):
@@ -310,14 +367,25 @@ def _remove_country_if_unused(db: Session, trip: Trip, country: str | None):
 
     db.refresh(trip)
 
-    # Check if any station with this country remains in DB
-    still_exists = db.query(Station).filter(
-        Station.trip_id == trip.id,
+    trip_stations = get_trip_stations_for_trip(db, trip.id)
+
+    station_ids = [ts.station_id for ts in trip_stations]
+
+    if not station_ids:
+        if country in trip.trip_countries:
+            current_countries = set(trip.trip_countries)
+            current_countries.discard(country)
+            trip.trip_countries = list(current_countries)
+            db.add(trip)
+            db.commit()
+        return
+
+    stations_in_country = db.query(Station).filter(
+        Station.id.in_(station_ids),
         Station.country == country
     ).first()
 
-    if not still_exists and country in trip.trip_countries:
-        # Use set for safer removal
+    if not stations_in_country and country in trip.trip_countries:
         current_countries = set(trip.trip_countries)
         current_countries.discard(country)
         trip.trip_countries = list(current_countries)

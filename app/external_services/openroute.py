@@ -2,15 +2,15 @@ import openrouteservice
 from typing import Optional, List
 
 
-def geocode_town(client: openrouteservice.Client, town_name: str) -> Optional[dict]:
+def geocode_town(client: openrouteservice.Client,
+                 town_name: str) -> Optional[dict]:
     results = client.pelias_search(text=town_name, size=1)  # type: ignore[attr-defined]
     features = results.get("features")
     if not features:
         return None
     try:
-        country = features[0]['properties']['country']
         coords = features[0]['geometry']['coordinates']
-        return {"lat": coords[1], "lon": coords[0], "country": country}
+        return {"lat": coords[1], "lon": coords[0], "country": features[0]['properties']['country']}
     except (KeyError, IndexError):
         return None
 

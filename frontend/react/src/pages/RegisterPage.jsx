@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Link as MuiLink } from "@mui/material";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,11 +19,10 @@ export default function RegisterPage() {
     setSuccessMessage("");
 
     if (password !== passwordRepeat) {
-      setError("Passwords do not match.");
+      setError(t("register.error_mismatch"));
       return;
     }
 
-    // Here you would send the registration data to your backend (example below)
     try {
       const response = await fetch("/api/users/", {
         method: "POST",
@@ -29,17 +31,17 @@ export default function RegisterPage() {
       });
 
       if (response.ok) {
-        setSuccessMessage(`${username} created. You can now log in.`);
+        setSuccessMessage(t("register.success_message", { username }));
         setUsername("");
         setEmail("");
         setPassword("");
         setPasswordRepeat("");
       } else {
         const data = await response.json();
-        setError(data.detail || "Registration failed.");
+        setError(data.detail || t("register.error_generic"));
       }
     } catch (err) {
-      setError("Network error.");
+      setError(t("register.error_network"));
     }
   };
 
@@ -55,14 +57,14 @@ export default function RegisterPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        '&::before': {
+        "&::before": {
           content: '""',
           position: "absolute",
           top: 0,
           left: 0,
           width: "100%",
           height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.4)", // dark overlay
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
           zIndex: 1,
         },
         zIndex: 2,
@@ -72,22 +74,22 @@ export default function RegisterPage() {
         component="form"
         onSubmit={handleSubmit}
         sx={{
-    position: "relative",
-    zIndex: 3,
-    backgroundColor: "rgba(240, 230, 204, 0.75)", // dark translucent black
-    color: "#00000",
-    p: 4,
-    borderRadius: 2,
-    boxShadow: 3,
-    width: "320px",
-    display: "flex",
-    flexDirection: "column",
-    gap: 2,
-    textAlign: "center",
-  }}
+          position: "relative",
+          zIndex: 3,
+          backgroundColor: "rgba(240, 230, 204, 0.75)",
+          color: "#000000",
+          p: 4,
+          borderRadius: 2,
+          boxShadow: 3,
+          width: "320px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          textAlign: "center",
+        }}
       >
         <Typography variant="h4" gutterBottom>
-          Register
+          {t("register.title")}
         </Typography>
 
         {error && (
@@ -95,49 +97,50 @@ export default function RegisterPage() {
             {error}
           </Typography>
         )}
+
         {successMessage && (
           <Typography color="success.main" variant="body2">
             {successMessage}{" "}
             <MuiLink component={Link} to="/login" underline="hover">
-              Log in
+              {t("register.login_link_text")}
             </MuiLink>
           </Typography>
         )}
 
         <TextField
-  label="Username"
-  value={username}
-  onChange={(e) => setUsername(e.target.value)}
-  required
-  sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
-/>
-<TextField
-  label="Email"
-  type="email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-  required
-  sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
-/>
-<TextField
-  label="Password"
-  type="password"
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-  required
-  sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
-/>
-<TextField
-  label="Repeat Password"
-  type="password"
-  value={passwordRepeat}
-  onChange={(e) => setPasswordRepeat(e.target.value)}
-  required
-  sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
-/>
+          label={t("register.username_label")}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
+        />
+        <TextField
+          label={t("register.email_label")}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
+        />
+        <TextField
+          label={t("register.password_label")}
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
+        />
+        <TextField
+          label={t("register.repeat_password_label")}
+          type="password"
+          value={passwordRepeat}
+          onChange={(e) => setPasswordRepeat(e.target.value)}
+          required
+          sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
+        />
 
         <Button variant="contained" type="submit">
-          Register
+          {t("register.submit_button")}
         </Button>
       </Box>
     </Box>

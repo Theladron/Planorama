@@ -9,7 +9,7 @@ import {
 
 import Navbar from "./components/Navbar";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
-
+import './i18n';
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -26,7 +26,7 @@ import { Snackbar, Alert } from "@mui/material";
 // Wrapper to control Navbar layout based on current path
 function Layout({ children }) {
   const location = useLocation();
-  const hasSidebar = ["/dashboard", "/settings"].includes(location.pathname);
+  const hasSidebar = ["/dashboard", "/settings", "/trips"].includes(location.pathname);
 
   return (
     <>

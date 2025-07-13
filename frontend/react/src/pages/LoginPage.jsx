@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { Box, Typography, TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,13 +31,13 @@ export default function LoginPage() {
         login(data.access_token);
         setEmail("");
         setPassword("");
-        navigate("/dashboard"); // redirect after successful login
+        navigate("/dashboard");
       } else {
         const data = await response.json();
-        setError(data.detail || "Login failed.");
+        setError(data.detail || "login.error_generic");
       }
     } catch (err) {
-      setError("Network error.");
+      setError("login.error_network");
     }
   };
 
@@ -58,7 +60,7 @@ export default function LoginPage() {
           left: 0,
           width: "100%",
           height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.4)", // dark overlay
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
           zIndex: 1,
         },
         zIndex: 2,
@@ -83,17 +85,17 @@ export default function LoginPage() {
         }}
       >
         <Typography variant="h4" gutterBottom sx={{ color: "#00000" }}>
-          Login
+          {t("login.title")}
         </Typography>
 
         {error && (
           <Typography color="error" variant="body2">
-            {error}
+            {t(error)}
           </Typography>
         )}
 
         <TextField
-          label="Email"
+          label={t("login.email_label")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -101,7 +103,7 @@ export default function LoginPage() {
           sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
         />
         <TextField
-          label="Password"
+          label={t("login.password_label")}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -110,7 +112,7 @@ export default function LoginPage() {
         />
 
         <Button variant="contained" type="submit">
-          Login
+          {t("login.submit_button")}
         </Button>
       </Box>
     </Box>
