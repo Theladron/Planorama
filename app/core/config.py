@@ -2,6 +2,7 @@ from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Annotated, Any, Literal
 from functools import cached_property
+from pathlib import Path
 
 from pydantic import (
     AnyUrl,
@@ -22,13 +23,13 @@ def parse_cors(v: Any) -> list[str] | str:
 class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=Path(".env") if Path(".env").exists() else None,
         env_file_encoding="utf-8",
         extra="ignore",
         env_ignore_empty=True,
     )
     APP_NAME: str = "Planorama"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # API
     ORS_API_KEY: str
