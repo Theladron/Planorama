@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # Environment
     DOMAIN: str = "localhost"
-    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    ENVIRONMENT: Literal["local", "staging", "production"]
 
     @computed_field
     @property
