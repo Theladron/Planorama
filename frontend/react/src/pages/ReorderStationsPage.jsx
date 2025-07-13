@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -35,8 +36,8 @@ export default function ReorderStationsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const tripRes = await axios.get(`/api/trips/${tripId}`);
-      const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
+      const tripRes = await axios.get(`${backendURL}/api/trips/${tripId}`);
+      const stationsRes = await axios.get(`${backendURL}/api/stations/by-trip/${tripId}`);
       setTrip(tripRes.data);
       setStations(stationsRes.data);
 
@@ -89,7 +90,7 @@ export default function ReorderStationsPage() {
     setSubmitLoading(true);
 
     try {
-      const response = await axios.put("/api/stations/reorder", {
+      const response = await axios.put("${backendURL}/api/stations/reorder", {
         trip_id: Number(tripId),
         stations: Object.entries(dayAssignments).map(([link_id, day]) => ({
           link_id: Number(link_id),

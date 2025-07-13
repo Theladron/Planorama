@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { useState } from "react";
 import {
   Box,
@@ -37,7 +38,7 @@ export default function TripsCreationPage() {
     setLoading(true);
 
     try {
-      await axios.post("/api/trips/", {
+      await axios.post("${backendURL}/api/trips/", {
         trip_name: tripName,
         start_date: startDate,
         end_date: endDate,

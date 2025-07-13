@@ -1,3 +1,4 @@
+import { backendURL } from "../config";
 import React, { useContext } from "react";
 import { Box, Link as MuiLink } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";

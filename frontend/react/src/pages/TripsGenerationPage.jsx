@@ -1,4 +1,4 @@
-// TripsGenerationPage.jsx
+import { backendURL } from "../config";
 import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
@@ -102,7 +102,7 @@ export default function TripsGenerationPage() {
       return weatherCacheRef.current[cacheKey];
     }
     try {
-      const res = await axios.get("/api/weather", { params: { lat, lon } });
+      const res = await axios.get("${backendURL}/api/weather", { params: { lat, lon } });
       weatherCacheRef.current[cacheKey] = res.data;
       return res.data;
     } catch (error) {
@@ -113,7 +113,7 @@ export default function TripsGenerationPage() {
 
   const fetchAISuggestions = async ({ lat, lon, townName, language, contentType }) => {
     try {
-      const res = await axios.get("/api/ai-suggestions", {
+      const res = await axios.get("${backendURL}/api/ai-suggestions", {
         params: { lat, lon, town_name: townName, language, content_type: contentType },
       });
       return res.data || [];
@@ -198,8 +198,8 @@ export default function TripsGenerationPage() {
       try {
         setLoading(true);
         const [stationsRes, travelsRes] = await Promise.all([
-          axios.get(`/api/stations/by-trip/${tripId}`),
-          axios.get(`/api/travel/trip/${tripId}`),
+          axios.get(`${backendURL}/api/stations/by-trip/${tripId}`),
+          axios.get(`${backendURL}/api/travel/trip/${tripId}`),
         ]);
         setStations(stationsRes.data);
         setTravels(travelsRes.data);
@@ -225,7 +225,7 @@ export default function TripsGenerationPage() {
       if (!fromStation || !toStation) return null;
 
       try {
-        const res = await axios.get("/api/full-route-by-coords", {
+        const res = await axios.get("${backendURL}/api/full-route-by-coords", {
           params: {
             start_lat: fromStation.latitude,
             start_lon: fromStation.longitude,
