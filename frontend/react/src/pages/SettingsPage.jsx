@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import {
   Box,
   Typography,
-  Link as MuiLink,
   Button,
   Dialog,
   DialogTitle,
@@ -11,13 +10,16 @@ import {
   DialogActions,
   CircularProgress,
 } from "@mui/material";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
+import Sidebar from "../components/Sidebar";
 
 export default function SettingsPage() {
-  const { logout, user } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -46,7 +48,7 @@ export default function SettingsPage() {
       navigate("/login");
     } catch (err) {
       console.error("Error deleting account:", err);
-      setError("Failed to delete account. Please try again.");
+      setError(t("settings.error_delete"));
     } finally {
       setDeleting(false);
       setOpenConfirm(false);
@@ -75,45 +77,7 @@ export default function SettingsPage() {
         },
       }}
     >
-      <Box
-        component="nav"
-        sx={{
-          width: 200,
-          bgcolor: "rgba(0, 0, 0, 0.85)",
-          color: "#fff",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          p: 2,
-          pt: 10,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          boxShadow: "2px 0 8px rgba(0,0,0,0.8)",
-          zIndex: 1100,
-        }}
-      >
-        <Box>
-          <MuiLink component={RouterLink} to="/trips" underline="none" sx={linkStyle}>
-            Trips
-          </MuiLink>
-        </Box>
-
-        <Box sx={{ mb: 2 }}>
-          <MuiLink component={RouterLink} to="/settings" underline="none" sx={linkStyle}>
-            Settings
-          </MuiLink>
-          <MuiLink
-            component="button"
-            underline="none"
-            onClick={handleLogout}
-            sx={{ ...linkStyle, cursor: "pointer" }}
-          >
-            Logout
-          </MuiLink>
-        </Box>
-      </Box>
+      <Sidebar />
 
       <Box
         component="main"
@@ -130,8 +94,6 @@ export default function SettingsPage() {
           maxWidth: "900px",
         }}
       >
-
-
         <Button
           variant="contained"
           color="error"
@@ -139,7 +101,11 @@ export default function SettingsPage() {
           disabled={deleting}
           sx={{ mt: 3 }}
         >
-          {deleting ? <CircularProgress size={24} color="inherit" /> : "Delete Profile"}
+          {deleting ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            t("settings.delete_profile")
+          )}
         </Button>
 
         {error && (
@@ -149,18 +115,20 @@ export default function SettingsPage() {
         )}
 
         <Dialog open={openConfirm} onClose={handleCancel}>
-          <DialogTitle>Confirm Account Deletion</DialogTitle>
+          <DialogTitle>{t("settings.confirm_title")}</DialogTitle>
           <DialogContent>
-            <DialogContentText>
-              Are you sure you want to delete your profile? This action is irreversible.
-            </DialogContentText>
+            <DialogContentText>{t("settings.confirm_text")}</DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCancel} disabled={deleting}>
-              Cancel
+              {t("settings.cancel")}
             </Button>
             <Button onClick={handleConfirmDelete} color="error" disabled={deleting}>
-              {deleting ? <CircularProgress size={20} color="inherit" /> : "Delete"}
+              {deleting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                t("settings.delete")
+              )}
             </Button>
           </DialogActions>
         </Dialog>
@@ -168,11 +136,3 @@ export default function SettingsPage() {
     </Box>
   );
 }
-
-const linkStyle = {
-  display: "block",
-  mb: 2,
-  color: "#fff",
-  fontWeight: "bold",
-  "&:hover": { color: "#f0e6cc" },
-};

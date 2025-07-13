@@ -1,21 +1,23 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Typography, Link as MuiLink, CircularProgress } from "@mui/material";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Link as MuiLink,
+  CircularProgress,
+} from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
+import Sidebar from "../components/Sidebar";
 
 export default function DashboardPage() {
-  const { logout, user } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const { t } = useTranslation();
 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -35,7 +37,8 @@ export default function DashboardPage() {
     .filter((trip) => dayjs(trip.start_date).isAfter(dayjs()))
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0];
 
-  const tripSoon = nextTrip && dayjs(nextTrip.start_date).diff(dayjs(), "day") < 7;
+  const tripSoon =
+    nextTrip && dayjs(nextTrip.start_date).diff(dayjs(), "day") < 7;
 
   if (loading) {
     return (
@@ -76,61 +79,21 @@ export default function DashboardPage() {
         },
       }}
     >
-      {/* Sidebar */}
-      <Box
-        component="nav"
-        sx={{
-          width: 200,
-          bgcolor: "rgba(0, 0, 0, 0.85)",
-          color: "#fff",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          p: 2,
-          pt: 10,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          boxShadow: "2px 0 8px rgba(0,0,0,0.8)",
-          zIndex: 1100,
-        }}
-      >
-        <Box>
-          <MuiLink component={RouterLink} to="/trips" underline="none" sx={linkStyle}>
-            Trips
-          </MuiLink>
-        </Box>
+      <Sidebar />
 
-        <Box sx={{ mb: 2 }}>
-            <MuiLink component={RouterLink} to="/settings" underline="none" sx={linkStyle}>
-          Settings
-          </MuiLink>
-          <MuiLink
-            component="button"
-            underline="none"
-            onClick={handleLogout}
-            sx={{ ...linkStyle, cursor: "pointer" }}
-          >
-            Logout
-          </MuiLink>
-        </Box>
-      </Box>
-
-      {/* Main content */}
       <Box
         component="main"
         sx={{
-          ml: "320px", // Added margin-left more than sidebar width for breathing room
-          mt: "180px",  // Top margin to push content down below navbar if needed
+          ml: "320px",
+          mt: "180px",
           pr: 4,
           pb: 4,
           flexGrow: 1,
           position: "relative",
           zIndex: 1,
           color: "#fff",
-          textAlign: "left", // Align text left explicitly
-          maxWidth: "900px", // Optional max width for better readability
+          textAlign: "left",
+          maxWidth: "900px",
         }}
       >
         <Typography
@@ -143,40 +106,33 @@ export default function DashboardPage() {
             textShadow: "2px 2px 8px rgba(0,0,0,0.6)",
           }}
         >
-          Welcome, {user?.username}.
+          {t("dashboard.welcome", { username: user.username })}
         </Typography>
 
         {trips.length === 0 ? (
           <Typography variant="h6" sx={{ mt: 2 }}>
-            You have not added any trips yet.{" "}
+            {t("dashboard.no_trips")}{" "}
             <MuiLink
               component={RouterLink}
               to="/trips/new"
               sx={{ color: "#f0e6cc", fontWeight: "bold" }}
             >
-              Do you want to plan a new vacation trip?
+              {t("dashboard.plan_link")}
             </MuiLink>
           </Typography>
         ) : tripSoon ? (
           <Typography variant="h6" sx={{ mt: 2 }}>
-            Your vacation trip <strong>{nextTrip.trip_name}</strong> is coming up on{" "}
-            <strong>{dayjs(nextTrip.start_date).format("MMMM D, YYYY")}</strong>. Are you excited
-            yet?
+            {t("dashboard.trip_soon", {
+              tripName: nextTrip.trip_name,
+              date: dayjs(nextTrip.start_date).format("MMMM D, YYYY"),
+            })}
           </Typography>
         ) : (
           <Typography variant="h6" sx={{ mt: 2 }}>
-            None of your trips are coming up soon. Still more time to plan and get excited!
+            {t("dashboard.no_upcoming")}
           </Typography>
         )}
       </Box>
     </Box>
   );
 }
-
-const linkStyle = {
-  display: "block",
-  mb: 2,
-  color: "#fff",
-  fontWeight: "bold",
-  "&:hover": { color: "#f0e6cc" },
-};

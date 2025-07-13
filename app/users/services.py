@@ -58,6 +58,9 @@ def update_user(db: Session, user: User, update_data: UserUpdate):
     return user
 
 def update_language_preference(db: Session, user: User, new_language: str):
+    if new_language not in ["en", "de"]:
+        raise ValueError("Unsupported language. Allowed values are 'en' and 'de'.")
+
     user.language_preference = new_language
     db.add(user)
     db.commit()

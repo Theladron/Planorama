@@ -13,8 +13,10 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 export default function ReorderStationsPage() {
+  const { t } = useTranslation();
   const { tripId } = useParams();
   const [trip, setTrip] = useState(null);
   const [stations, setStations] = useState([]);
@@ -27,31 +29,32 @@ export default function ReorderStationsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const tripRes = await axios.get(`/api/trips/${tripId}`);
-        const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
-        setTrip(tripRes.data);
-        setStations(stationsRes.data);
-
-        const initialAssignments = {};
-        stationsRes.data.forEach((s) => {
-          initialAssignments[s.id] = String(s.day_number);
-        });
-        setDayAssignments(initialAssignments);
-      } catch (err) {
-        console.error(err);
-        setError(
-          err.response?.data?.detail ||
-            "Failed to load trip or stations data."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
   }, [tripId]);
+
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const tripRes = await axios.get(`/api/trips/${tripId}`);
+      const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
+      setTrip(tripRes.data);
+      setStations(stationsRes.data);
+
+      const initialAssignments = {};
+      stationsRes.data.forEach((s) => {
+        initialAssignments[s.link_id] = String(s.day_number);
+      });
+      setDayAssignments(initialAssignments);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.detail ||
+          t("reorderstations.error_load")
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function getTripDays() {
     if (!trip) return [];
@@ -79,31 +82,30 @@ export default function ReorderStationsPage() {
 
     const selectedDays = Object.values(dayAssignments);
     if (hasDuplicates(selectedDays)) {
-      setSubmitError("Each station must be assigned to a unique day.");
+      setSubmitError(t("reorderstations.error_unique_day"));
       return;
     }
 
     setSubmitLoading(true);
 
     try {
-      await axios.put("/api/stations/reorder", {
+      const response = await axios.put("/api/stations/reorder", {
         trip_id: Number(tripId),
-        stations: Object.entries(dayAssignments).map(([id, day]) => ({
-          station_id: Number(id),
+        stations: Object.entries(dayAssignments).map(([link_id, day]) => ({
+          link_id: Number(link_id),
           day_number: Number(day),
         })),
       });
 
-      setSubmitSuccess(true);
+      // Use updated stations from backend
+      setStations(response.data);
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1200);
+      setSubmitSuccess(true);
     } catch (err) {
       console.error(err);
       setSubmitError(
         err.response?.data?.detail ||
-          "Failed to reorder stations. Please try again."
+          t("reorderstations.error_generic")
       );
     } finally {
       setSubmitLoading(false);
@@ -184,20 +186,22 @@ export default function ReorderStationsPage() {
           textAlign="center"
           sx={{ userSelect: "none" }}
         >
-          Reorder Stations for {trip.trip_name}
+          {t("reorderstations.title", { tripName: trip.trip_name })}
         </Typography>
 
         {stations.map((station) => (
           <TextField
-            key={station.id}
+            key={station.link_id}
             select
             fullWidth
-            label={`Station: ${station.station_name}`}
-            value={dayAssignments[station.id] || ""}
+            label={t("reorderstations.station_label", {
+              stationName: station.station_name,
+            })}
+            value={dayAssignments[station.link_id] || ""}
             onChange={(e) =>
               setDayAssignments({
                 ...dayAssignments,
-                [station.id]: e.target.value,
+                [station.link_id]: e.target.value,
               })
             }
             margin="normal"
@@ -217,7 +221,7 @@ export default function ReorderStationsPage() {
                 value={String(day)}
                 sx={{ color: "#fdfae5", backgroundColor: "rgba(0,0,0,0.3)" }}
               >
-                Day {day}
+                {t("reorderstations.day_option", { day })}
               </MenuItem>
             ))}
           </TextField>
@@ -239,13 +243,13 @@ export default function ReorderStationsPage() {
           {submitLoading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            "Submit Reorder"
+            t("reorderstations.submit_button")
           )}
         </Button>
 
         <Snackbar
           open={submitSuccess}
-          autoHideDuration={1000}
+          autoHideDuration={1200}
           onClose={() => setSubmitSuccess(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
@@ -254,7 +258,7 @@ export default function ReorderStationsPage() {
             severity="success"
             sx={{ width: "100%" }}
           >
-            Stations reordered successfully!
+            {t("reorderstations.success_message")}
           </Alert>
         </Snackbar>
       </Card>
@@ -284,7 +288,7 @@ export default function ReorderStationsPage() {
             },
           }}
         >
-          Back to Trips
+          {t("reorderstations.back_button")}
         </Button>
       </Box>
     </Box>

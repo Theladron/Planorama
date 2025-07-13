@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -9,8 +9,10 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 export default function TripsCreationPage() {
+  const { t } = useTranslation();
   const [tripName, setTripName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -20,14 +22,14 @@ export default function TripsCreationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Token in localStorage:", localStorage.getItem("token"));
+
     if (!tripName || !startDate || !endDate) {
-      setError("Please fill out all fields.");
+      setError(t("tripscreation.error_fill_all"));
       return;
     }
 
     if (new Date(startDate) > new Date(endDate)) {
-      setError("Start date cannot be after end date.");
+      setError(t("tripscreation.error_start_after_end"));
       return;
     }
 
@@ -45,7 +47,7 @@ export default function TripsCreationPage() {
     } catch (err) {
       console.error("Failed to create trip:", err);
       setError(
-        err.response?.data?.detail || "Failed to create trip. Please try again."
+        err.response?.data?.detail || t("tripscreation.error_generic")
       );
     } finally {
       setLoading(false);
@@ -94,12 +96,12 @@ export default function TripsCreationPage() {
         }}
       >
         <Typography variant="h4" fontWeight="bold" mb={3} textAlign="center">
-          Create New Trip
+          {t("tripscreation.title")}
         </Typography>
 
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Trip Name"
+            label={t("tripscreation.label_trip_name")}
             variant="standard"
             fullWidth
             required
@@ -115,7 +117,7 @@ export default function TripsCreationPage() {
           />
 
           <TextField
-            label="Start Date"
+            label={t("tripscreation.label_start_date")}
             type="date"
             variant="standard"
             fullWidth
@@ -132,7 +134,7 @@ export default function TripsCreationPage() {
           />
 
           <TextField
-            label="End Date"
+            label={t("tripscreation.label_end_date")}
             type="date"
             variant="standard"
             fullWidth
@@ -161,7 +163,7 @@ export default function TripsCreationPage() {
             disabled={loading}
             sx={{ fontWeight: "bold" }}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Create"}
+            {loading ? <CircularProgress size={24} color="inherit" /> : t("tripscreation.button_create")}
           </Button>
         </form>
       </Card>
@@ -191,7 +193,7 @@ export default function TripsCreationPage() {
             },
           }}
         >
-          Back to Trips
+          {t("tripscreation.button_back_to_trips")}
         </Button>
       </Box>
     </Box>
