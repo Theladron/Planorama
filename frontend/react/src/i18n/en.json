@@ -13,18 +13,25 @@
     "error_network": "Network error."
   },
   "register": {
-    "title": "Register",
-    "username_label": "Username",
-    "email_label": "Email",
-    "password_label": "Password",
-    "repeat_password_label": "Repeat Password",
-    "submit_button": "Register",
-    "error_mismatch": "Passwords do not match.",
-    "error_generic": "Registration failed.",
-    "error_network": "Network error.",
-    "success_message": "{{username}} created. You can now log in.",
-    "login_link_text": "Log in"
-  },
+  "title": "Register",
+  "username_label": "Username",
+  "email_label": "Email",
+  "password_label": "Password",
+  "repeat_password_label": "Repeat Password",
+  "submit_button": "Register",
+  "error_mismatch": "Passwords do not match.",
+  "error_generic": "Registration failed.",
+  "error_network": "Network error.",
+  "success_message": "{{username}} created. You can now log in.",
+  "login_link_text": "Log in",
+  "error_invalid_email": "Invalid email address.",
+  "error_password_length": "Password must be at least 8 characters long",
+  "error_password_uppercase": "Password must contain at least one uppercase letter",
+  "error_password_lowercase": "Password must contain at least one lowercase letter",
+  "error_password_number": "Password must contain at least one number",
+  "error_password_symbol": "Password must contain at least one symbol"
+}
+,
   "dashboard": {
   "welcome": "Welcome, {{username}}.",
   "no_trips": "You have not added any trips yet.",

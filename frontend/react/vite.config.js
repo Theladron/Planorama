@@ -6,7 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'https://planorama-9mr0.onrender.com',
+      '/api': {
+        target: process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
-})
+});

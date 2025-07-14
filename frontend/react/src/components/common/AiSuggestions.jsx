@@ -28,7 +28,7 @@ const AiSuggestionPage = ({ lat, lon, townName, language, contentType }) => {
       setError(null);
 
       try {
-        const response = await axios.get("/api/ai-suggestions", {
+        const response = await axios.get(`${backendURL}/api/ai-suggestions`, {
           params: {
             lat,
             lon,
@@ -52,7 +52,15 @@ const AiSuggestionPage = ({ lat, lon, townName, language, contentType }) => {
 
   if (loading) {
     return (
-      <Box textAlign="center" mt={2}>
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          bgcolor: "black",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -78,23 +86,30 @@ const AiSuggestionPage = ({ lat, lon, townName, language, contentType }) => {
     <Grid container spacing={2} mt={1}>
       {suggestions.map((item, index) => (
         <Grid item xs={12} sm={6} md={4} key={index}>
-          <Card>
+          <Card style={{
+                backgroundColor: "rgba(250, 201, 72, 0.15)",
+                backdropFilter: "blur(3px)",
+                border: "1px solid rgba(250, 201, 72, 0.2)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                borderRadius: "8px",
+                color: "#f0e6cc",
+              }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 {item.title}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2">
                 {item.description}
               </Typography>
               {item.lat && item.lon && (
-                <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                <Typography variant="caption" display="block" mt={1}>
                   📍 {item.lat.toFixed(4)}, {item.lon.toFixed(4)}
                 </Typography>
               )}
             </CardContent>
             {item.url && (
               <CardActions>
-                <Button size="small" color="primary" href={item.url} target="_blank" rel="noopener noreferrer">
+                <Button size="small" href={item.url} target="_blank" rel="noopener noreferrer">
                   {t("ai_suggestions.more_info", { defaultValue: "More Info" })}
                 </Button>
               </CardActions>

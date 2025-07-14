@@ -8,7 +8,7 @@ export default function PrivateRoute({ children }) {
 
   if (loading) {
     // While checking auth state, show a loading indicator or null to avoid flicker
-    return <div>Loading...</div>; // Or your spinner component
+    return <div>Loading...</div>;
   }
 
   // If not authenticated after loading, redirect to login

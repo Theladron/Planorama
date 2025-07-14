@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, model_validator, field_validator
 from typing import Optional
+import re
 
 class UserBase(BaseModel):
     username: str
@@ -9,6 +10,19 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+    @field_validator("password")
+    def password_complexity(cls, password):
+        if len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not re.search(r"[A-Z]", password):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"[a-z]", password):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r"\d", password):
+            raise ValueError("Password must contain at least one number")
+        if not re.search(r"[^\w\s]", password):
+            raise ValueError("Password must contain at least one symbol")
+        return password
 
 class UserSchema(UserBase):
     id: int

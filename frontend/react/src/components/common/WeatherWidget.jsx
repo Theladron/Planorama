@@ -31,7 +31,7 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
         if (fetchCachedWeather) {
           data = await fetchCachedWeather(lat, lon);
         } else {
-          const response = await axios.get("/api/weather", {
+          const response = await axios.get(`${backendURL}/api/weather`, {
             params: { lat, lon },
           });
           data = response.data;

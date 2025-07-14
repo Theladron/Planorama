@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/token", {
+      const response = await fetch(`${backendURL}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({

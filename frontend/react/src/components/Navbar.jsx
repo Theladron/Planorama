@@ -32,7 +32,7 @@ export default function Navbar({ hasSidebar }) {
 
       if (isAuthenticated) {
         // Update backend user language preference
-        await axios.patch("/api/users/me/language", {
+        await axios.patch(`${backendURL}/api/users/me/language`, {
           language_preference: lng,
         });
       }
@@ -93,12 +93,16 @@ export default function Navbar({ hasSidebar }) {
               🇩🇪
             </IconButton>
 
-            <Button component={Link} to="/login" color="inherit">
-              {t("navbar.login")}
-            </Button>
-            <Button component={Link} to="/register" color="inherit">
-              {t("navbar.register")}
-            </Button>
+            {!isAuthenticated && (
+  <>
+    <Button component={Link} to="/login" color="inherit">
+      {t("navbar.login")}
+    </Button>
+    <Button component={Link} to="/register" color="inherit">
+      {t("navbar.register")}
+    </Button>
+  </>
+)}
           </>
 
 
