@@ -3,6 +3,21 @@ import { Box, Typography, TextField, Button, Link as MuiLink } from "@mui/materi
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { backendURL } from "../config";
+
+function validatePassword(password, t) {
+  if (password.length < 8) return t("register.error_password_length");
+  if (!/[A-Z]/.test(password)) return t("register.error_password_uppercase");
+  if (!/[a-z]/.test(password)) return t("register.error_password_lowercase");
+  if (!/\d/.test(password)) return t("register.error_password_number");
+  if (!/[^\w\s]/.test(password)) return t("register.error_password_symbol");
+  return null; // valid
+}
+
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 export default function RegisterPage() {
   const { t } = useTranslation();
 
@@ -14,42 +29,54 @@ export default function RegisterPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
+  e.preventDefault();
+  setError("");
+  setSuccessMessage("");
 
-    if (password !== passwordRepeat) {
-      setError(t("register.error_mismatch"));
-      return;
+  if (!validateEmail(email)) {
+    setError(t("register.error_invalid_email") || "Invalid email address");
+    return;
+  }
+
+  if (password !== passwordRepeat) {
+    setError(t("register.error_mismatch"));
+    return;
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    setError(passwordError);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${backendURL}/api/users/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password }),
+    });
+
+    if (response.ok) {
+      setSuccessMessage(t("register.success_message", { username }));
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setPasswordRepeat("");
+    } else {
+      const data = await response.json();
+      setError(data.detail || t("register.error_generic"));
     }
+  } catch (err) {
+    setError(t("register.error_network"));
+  }
+};
 
-    try {
-      const response = await fetch("${backendURL}/api/users/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      if (response.ok) {
-        setSuccessMessage(t("register.success_message", { username }));
-        setUsername("");
-        setEmail("");
-        setPassword("");
-        setPasswordRepeat("");
-      } else {
-        const data = await response.json();
-        setError(data.detail || t("register.error_generic"));
-      }
-    } catch (err) {
-      setError(t("register.error_network"));
-    }
-  };
 
   return (
     <Box
       sx={{
         height: "100vh",
-        backgroundImage: "url('${backendURL}/images/home_background.jpg')",
+        backgroundImage: `url('${backendURL}/images/home_background.jpg')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

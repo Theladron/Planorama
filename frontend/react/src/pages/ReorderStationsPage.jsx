@@ -90,7 +90,7 @@ export default function ReorderStationsPage() {
     setSubmitLoading(true);
 
     try {
-      const response = await axios.put("${backendURL}/api/stations/reorder", {
+      const response = await axios.put(`${backendURL}/api/stations/reorder`, {
         trip_id: Number(tripId),
         stations: Object.entries(dayAssignments).map(([link_id, day]) => ({
           link_id: Number(link_id),

@@ -44,7 +44,7 @@ export default function SettingsPage() {
     setDeleting(true);
     setError(null);
     try {
-      await axios.delete("${backendURL}/api/users/me");
+      await axios.delete(`${backendURL}/api/users/me`);
       logout();
       navigate("/login");
     } catch (err) {

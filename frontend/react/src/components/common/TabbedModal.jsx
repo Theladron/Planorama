@@ -76,8 +76,10 @@ const MultiTabModal = ({
         },
       }}
     >
-      <DialogTitle sx={{ position: "relative", pr: 6 }}>
-        <Typography variant="h6">{stationName}</Typography>
+      <DialogTitle sx={{ position: "relative",display: "flex", alignItems: "center", pr: 6 }}>
+          <Typography variant="h7">{t("tabbedmodal.visitDay")} {visitDay}</Typography>
+          <Typography variant="h6"sx={{ transform: "translateX(13em)" }}>{stationName}</Typography>
+
         <IconButton
           aria-label={t("tabbedmodal.close")}
           onClick={onClose}
@@ -111,9 +113,6 @@ const MultiTabModal = ({
         </Tabs>
 
         <TabPanel value={tabIndex} index={0}>
-          <Typography variant="subtitle1">
-            {t("tabbedmodal.visitDay")} <strong>{visitDay}</strong>
-          </Typography>
           <Box mt={2}>{weatherWidget}</Box>
         </TabPanel>
 

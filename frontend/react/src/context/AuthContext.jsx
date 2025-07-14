@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/users/me");
+      const res = await axios.get(`${backendURL}/api/users/me`);
       const userData = res.data;
       setUser(userData);
       setIsAuthenticated(true);

@@ -32,7 +32,7 @@ export default function Navbar({ hasSidebar }) {
 
       if (isAuthenticated) {
         // Update backend user language preference
-        await axios.patch("/api/users/me/language", {
+        await axios.patch(`${backendURL}/api/users/me/language`, {
           language_preference: lng,
         });
       }

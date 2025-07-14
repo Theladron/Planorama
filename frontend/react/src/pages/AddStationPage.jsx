@@ -38,10 +38,10 @@ export default function AddStationPage() {
       setLoading(true);
       setError(null);
       try {
-        const tripRes = await axios.get(`/api/trips/${tripId}`);
+        const tripRes = await axios.get(`${backendURL}/api/trips/${tripId}`);
         setTrip(tripRes.data);
 
-        const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
+        const stationsRes = await axios.get(`${backendURL}/api/stations/by-trip/${tripId}`);
         setTripStations(stationsRes.data);
       } catch (err) {
         console.error(err);
@@ -89,7 +89,7 @@ export default function AddStationPage() {
     setSubmitLoading(true);
 
     try {
-      await axios.post("/api/stations/", {
+      await axios.post(`${backendURL}/api/stations/`, {
         trip_id: Number(tripId),
         station_name: townName.trim(),
         day_number: Number(selectedDay),
@@ -99,7 +99,7 @@ export default function AddStationPage() {
       setTownName("");
       setSelectedDay("");
 
-      const stationsRes = await axios.get(`/api/stations/by-trip/${tripId}`);
+      const stationsRes = await axios.get(`${backendURL}/api/stations/by-trip/${tripId}`);
       setTripStations(stationsRes.data);
     } catch (err) {
       console.error(err);

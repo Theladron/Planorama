@@ -59,7 +59,7 @@ export default function TripsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get("${backendURL}/api/trips/me");
+        const res = await axios.get(`${backendURL}/api/trips/me`);
         setTrips(res.data);
 
         const dates = {};

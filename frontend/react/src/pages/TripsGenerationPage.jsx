@@ -102,7 +102,7 @@ export default function TripsGenerationPage() {
       return weatherCacheRef.current[cacheKey];
     }
     try {
-      const res = await axios.get("${backendURL}/api/weather", { params: { lat, lon } });
+      const res = await axios.get(`${backendURL}/api/weather`, { params: { lat, lon } });
       weatherCacheRef.current[cacheKey] = res.data;
       return res.data;
     } catch (error) {
@@ -113,7 +113,7 @@ export default function TripsGenerationPage() {
 
   const fetchAISuggestions = async ({ lat, lon, townName, language, contentType }) => {
     try {
-      const res = await axios.get("${backendURL}/api/ai-suggestions", {
+      const res = await axios.get(`${backendURL}/api/ai-suggestions`, {
         params: { lat, lon, town_name: townName, language, content_type: contentType },
       });
       return res.data || [];
@@ -225,7 +225,7 @@ export default function TripsGenerationPage() {
       if (!fromStation || !toStation) return null;
 
       try {
-        const res = await axios.get("${backendURL}/api/full-route-by-coords", {
+        const res = await axios.get(`${backendURL}/api/full-route-by-coords`, {
           params: {
             start_lat: fromStation.latitude,
             start_lon: fromStation.longitude,
@@ -352,12 +352,16 @@ export default function TripsGenerationPage() {
             left: 20,
             background: "white",
             padding: "8px 12px",
+            border: "1px solid rgba(250, 201, 72, 0.25)",
             borderRadius: 6,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            boxShadow: "0 6px 20px rgba(250, 201, 72, 0.1)",
             zIndex: 1000,
             fontSize: 14,
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            backgroundColor: "rgba(250, 201, 72, 0.2)",
+            backdropFilter: "blur(3px)",
+            textShadow: "1px 1px 4px rgba(0, 0, 0, 0.5)",
           }}
+
         >
           <div><strong>{t("tripsgeneration.legend", "Legend")}</strong></div>
           <div>{t("tripsgeneration.legend_info", "Click on a route or icon to see more information.")}</div>
@@ -397,14 +401,15 @@ export default function TripsGenerationPage() {
       <Dialog open={!!selectedRoute} onClose={() => setSelectedRoute(null)} maxWidth="sm" fullWidth
           PaperProps={{
       sx: {
-      backgroundColor: "rgba(250, 201, 72, 0.2)",
-      backdropFilter: "blur(4px)",
-      border: "1px solid rgba(250, 201, 72, 0.25)",
-      borderRadius: 3,
-      boxShadow: "0 6px 20px rgba(250, 201, 72, 0.1)",
-      color: "#f0e6cc",
-      textShadow: "1px 1px 4px rgba(0, 0, 0, 0.5)",
-    },
+        backgroundColor: "rgba(250, 201, 72, 0.2)",
+        backdropFilter: "blur(4px)",
+        border: "1px solid rgba(250, 201, 72, 0.25)",
+        borderRadius: "12px",
+        p: 2,
+        color: "#f0e6cc",
+        boxShadow: "0 6px 20px rgba(250, 201, 72, 0.1)",
+        textShadow: "1px 1px 4px rgba(0, 0, 0, 0.5)",
+      },
   }}>
         <DialogTitle>{t("tripsgeneration.dialog_route_info_title")}</DialogTitle>
         <DialogContent dividers>
