@@ -93,12 +93,16 @@ export default function Navbar({ hasSidebar }) {
               🇩🇪
             </IconButton>
 
-            <Button component={Link} to="/login" color="inherit">
-              {t("navbar.login")}
-            </Button>
-            <Button component={Link} to="/register" color="inherit">
-              {t("navbar.register")}
-            </Button>
+            {!isAuthenticated && (
+  <>
+    <Button component={Link} to="/login" color="inherit">
+      {t("navbar.login")}
+    </Button>
+    <Button component={Link} to="/register" color="inherit">
+      {t("navbar.register")}
+    </Button>
+  </>
+)}
           </>
 
 
