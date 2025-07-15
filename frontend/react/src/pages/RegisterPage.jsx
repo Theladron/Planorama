@@ -43,7 +43,7 @@ export default function RegisterPage() {
     return;
   }
 
-  const passwordError = validatePassword(password);
+  const passwordError = validatePassword(password, t);
   if (passwordError) {
     setError(passwordError);
     return;
