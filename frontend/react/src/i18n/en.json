@@ -186,6 +186,7 @@
     "interestPrompt": "What are you interested in?",
     "interestPlaceholder": "e.g. hiking, museums, nightlife...",
     "rbnb": "Rbnb",
-    "search": "Search"
+    "search": "Search",
+    "loadingSuggestions": "Loading suggestions, please wait..."
   }
 }

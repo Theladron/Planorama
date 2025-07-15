@@ -78,6 +78,8 @@ const SetupPanes = () => {
 };
 
 export default function TripsGenerationPage() {
+  const [isActivityLoading, setIsActivityLoading] = useState(false);
+  const [isOvernightLoading, setIsOvernightLoading] = useState(false);
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -132,66 +134,80 @@ export default function TripsGenerationPage() {
   };
 
   const handleOvernightCategoryChange = async (category) => {
-    if (!selectedMarker) return;
-    const stationId = selectedMarker.id;
-    const cacheKey = `${stationId}_overnight_${category}`;
-    if (aiCacheRef.current[cacheKey]) return;
+  if (!selectedMarker) return;
 
-    const data = await fetchAISuggestions({
-      lat: selectedMarker.latitude,
-      lon: selectedMarker.longitude,
-      townName: getStationName(selectedMarker),
-      language: i18n.language,
-      contentType: category,
-    });
+  const stationId = selectedMarker.id;
+  const cacheKey = `${stationId}_overnight_${category}`;
 
-    aiCacheRef.current[cacheKey] = data;
-    setAiData((prev) => ({
-      ...prev,
-      [stationId]: {
-        ...prev[stationId],
-        overnight: {
-          ...(prev[stationId]?.overnight || {}),
-          [category]: data,
-        },
-        activities: {
-          ...(prev[stationId]?.activities || {}),
-        },
+  if (aiCacheRef.current[cacheKey]) return;
+
+  setIsOvernightLoading(true);  // 🔄 Start loader
+
+  const data = await fetchAISuggestions({
+    lat: selectedMarker.latitude,
+    lon: selectedMarker.longitude,
+    townName: getStationName(selectedMarker),
+    language: i18n.language,
+    contentType: category,
+  });
+
+  setIsOvernightLoading(false);  // ✅ End loader
+
+  aiCacheRef.current[cacheKey] = data;
+  setAiData((prev) => ({
+    ...prev,
+    [stationId]: {
+      ...prev[stationId],
+      overnight: {
+        ...(prev[stationId]?.overnight || {}),
+        [category]: data,
       },
-    }));
-  };
+      activities: {
+        ...(prev[stationId]?.activities || {}),
+      },
+    },
+  }));
+};
+
 
   const handleActivitySearch = async (query) => {
-    if (!selectedMarker || !query) return;
-    const stationId = selectedMarker.id;
-    const label = i18n.language.startsWith("de") ? "Aktivität" : "activity";
-    const contentType = `${label}: ${query}`;
-    const cacheKey = `${stationId}_activity_${query.toLowerCase()}`;
-    if (aiCacheRef.current[cacheKey]) return;
+  if (!selectedMarker || !query) return;
 
-    const data = await fetchAISuggestions({
-      lat: selectedMarker.latitude,
-      lon: selectedMarker.longitude,
-      townName: getStationName(selectedMarker),
-      language: i18n.language,
-      contentType,
-    });
+  const stationId = selectedMarker.id;
+  const label = i18n.language.startsWith("de") ? "Aktivität" : "activity";
+  const contentType = `${label}: ${query}`;
+  const cacheKey = `${stationId}_activity_${query.toLowerCase()}`;
 
-    aiCacheRef.current[cacheKey] = data;
-    setAiData((prev) => ({
-      ...prev,
-      [stationId]: {
-        ...prev[stationId],
-        activities: {
-          ...(prev[stationId]?.activities || {}),
-          [query]: data,
-        },
-        overnight: {
-          ...(prev[stationId]?.overnight || {}),
-        },
+  if (aiCacheRef.current[cacheKey]) return;
+
+  setIsActivityLoading(true);  // 🔄 Start loader
+
+  const data = await fetchAISuggestions({
+    lat: selectedMarker.latitude,
+    lon: selectedMarker.longitude,
+    townName: getStationName(selectedMarker),
+    language: i18n.language,
+    contentType,
+  });
+
+  setIsActivityLoading(false); // ✅ End loader
+
+  aiCacheRef.current[cacheKey] = data;
+  setAiData((prev) => ({
+    ...prev,
+    [stationId]: {
+      ...prev[stationId],
+      activities: {
+        ...(prev[stationId]?.activities || {}),
+        [query]: data,
       },
-    }));
-  };
+      overnight: {
+        ...(prev[stationId]?.overnight || {}),
+      },
+    },
+  }));
+};
+
 
   useEffect(() => {
     async function fetchTripData() {
@@ -385,6 +401,8 @@ export default function TripsGenerationPage() {
         onClose={() => setSelectedMarker(null)}
         stationName={getStationName(selectedMarker)}
         visitDay={selectedMarker?.day_number}
+        activityLoading={isActivityLoading}
+        overnightLoading={isOvernightLoading}
         weatherWidget={
           <WeatherWidget
             lat={selectedMarker?.latitude}

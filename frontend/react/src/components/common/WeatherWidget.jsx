@@ -114,40 +114,54 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
         </Typography>
       </Box>
 
-      <Grid container spacing={0.5} justifyContent="center">
-        {forecast.map((day, index) => (
-          <Grid item xs={6} sm={4} md={3} key={index}>
-            <Card
-              sx={{
-                backgroundColor: "rgba(250, 201, 72, 0.15)",
-                backdropFilter: "blur(3px)",
-                border: "1px solid rgba(250, 201, 72, 0.2)",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-                borderRadius: "8px",
-                color: "#f0e6cc",
-              }}
-            >
-              <CardContent sx={{ textAlign: "center", py: 1.5 }}>
-                <Typography variant="subtitle2">
-                  {new Date(day.date).toLocaleDateString(undefined, {
-                    weekday: "short",
-                  })}
-                </Typography>
-                <Tooltip
-                  title={t(`weatherwidget.codes.${day.description.toLowerCase()}`, {
-                    defaultValue: day.description,
-                  })}
-                >
-                  <Typography fontSize="1.6rem">{day.icon}</Typography>
-                </Tooltip>
-                <Typography variant="body2">
-                  {day.temp_min}° / {day.temp_max}°
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <Box
+  display="flex"
+  justifyContent="space-between"
+  flexWrap="nowrap"
+  overflowX="auto"
+  gap={0.5}
+  mt={2}
+>
+  {forecast.slice(0, 6).map((day, index) => (
+    <Box
+      key={index}
+      sx={{
+        flex: "0 0 16%", // force 6 per row
+        minWidth: 0,
+      }}
+    >
+      <Card
+        sx={{
+          backgroundColor: "rgba(250, 201, 72, 0.15)",
+          backdropFilter: "blur(3px)",
+          border: "1px solid rgba(250, 201, 72, 0.2)",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+          borderRadius: "8px",
+          color: "#f0e6cc",
+          height: "100%",
+        }}
+      >
+        <CardContent sx={{ textAlign: "center", py: 1 }}>
+          <Typography variant="subtitle2">
+            {new Date(day.date).toLocaleDateString(undefined, {
+              weekday: "short",
+            })}
+          </Typography>
+          <Tooltip
+            title={t(`weatherwidget.codes.${day.description.toLowerCase()}`, {
+              defaultValue: day.description,
+            })}
+          >
+            <Typography fontSize="1.6rem">{day.icon}</Typography>
+          </Tooltip>
+          <Typography variant="body2">
+            {day.temp_min}° / {day.temp_max}°
+          </Typography>
+        </CardContent>
+      </Card>
+    </Box>
+  ))}
+</Box>
     </Box>
   );
 };
