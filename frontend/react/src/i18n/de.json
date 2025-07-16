@@ -187,5 +187,35 @@
     "rbnb": "Rbnb",
     "search": "Suchen",
     "loadingSuggestions": "Lade Vorschläge, bitte warten..."
+  },
+  "transportModal": {
+    "title": "Transportmöglichkeiten",
+    "close": "Schließen",
+    "car": "Auto",
+    "publicTransport": "Öffentliche Verkehrsmittel",
+    "plane": "Fliegen",
+    "searchPublicTransport": "Öffentliche Verkehrsmittel suchen",
+    "searchFlights": "Flüge suchen",
+    "loading": "Lade Vorschläge, bitte warten...",
+    "noCarRoutes": "Keine Autorouten verfügbar.",
+    "noPublicTransportRoutes": "Keine öffentlichen Verkehrsmittel verfügbar.",
+    "noFlightRoutes": "Keine Flugverbindungen verfügbar.",
+    "noNearbyAirport": "Keine nahegelegenen Flughäfen für Flugvorschläge.",
+    "route": "Route",
+    "unknownTransport": "Unbekanntes Transportmittel",
+    "departure": "Abfahrt",
+    "price": "Preis",
+    "airlineUnknown": "Unbekannte Fluggesellschaft",
+    "estimatedTime": "Geschätzte Zeit",
+    "turnByTurn": "Detaillierte Wegbeschreibung"
+
+  },
+  "ai_transport": {
+    "fetch_error": "Transportvorschläge konnten nicht geladen werden.",
+    "no_results": "Keine Transportmöglichkeiten gefunden.",
+    "unknown_transport": "Unbekanntes Transportmittel",
+    "departure": "Abfahrt",
+    "price": "Preis",
+    "more_info": "Mehr Infos"
   }
 }

@@ -52,10 +52,10 @@ def update_user(db: Session, user: User, update_data: UserUpdate):
             raise ValueError("Old password is incorrect")
         user.password_hash = hash_password(update_data.new_password)
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
 
 def update_language_preference(db: Session, user: User, new_language: str):
     if new_language not in ["en", "de"]:

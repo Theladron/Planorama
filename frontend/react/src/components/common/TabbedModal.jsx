@@ -14,7 +14,8 @@ import {
   Link,
   Button,
   Stack,
-  CircularProgress
+  CircularProgress,
+  Paper,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
@@ -26,6 +27,18 @@ function TabPanel({ children, value, index }) {
     </div>
   );
 }
+
+const glassCardStyles = {
+  backgroundColor: "rgba(250, 201, 72, 0.3)",
+  backdropFilter: "blur(6px)",
+  border: "1px solid rgba(250, 201, 72, 0.4)",
+  borderRadius: "12px",
+  boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.25)",
+  color: "#f0e6cc",
+  padding: 2,
+  mb: 2,
+  minWidth: 0,
+};
 
 const MultiTabModal = ({
   open,
@@ -83,7 +96,7 @@ const MultiTabModal = ({
         <Typography variant="h7">
           {t("tabbedmodal.visitDay")} {visitDay}
         </Typography>
-        <Typography variant="h6" sx={{ transform: "translateX(13em)" }}>
+        <Typography sx={{ transform: "translateX(13em)" }}>
           {stationName}
         </Typography>
         <IconButton
@@ -148,30 +161,27 @@ const MultiTabModal = ({
 
           {overnightLoading ? (
             <Box
-  display="flex"
-  flexDirection="column"
-  alignItems="center"
-  justifyContent="center"
-  mt={4}
-  mb={2}
->
-  <Typography
-    variant="body2"
-    sx={{ color: "#f0e6cc", mb: 2 }}
-  >
-    {t("tabbedmodal.loadingSuggestions")}
-  </Typography>
-  <CircularProgress color="inherit" />
-</Box>
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              mt={4}
+              mb={2}
+            >
+              <Typography variant="body2" sx={{ color: "#f0e6cc", mb: 2 }}>
+                {t("tabbedmodal.loadingSuggestions")}
+              </Typography>
+              <CircularProgress color="inherit" />
+            </Box>
           ) : (
             overnightOptions.map((option, idx) => (
-              <Box key={idx} mt={2}>
-                <Typography variant="subtitle2">{option.title}</Typography>
-                <Typography variant="body2">{option.description}</Typography>
-                <Link href={option.url} target="_blank" rel="noopener" underline="hover" color="#f0e6cc">
-                  {t("tabbedmodal.visitLink")}
+              <Paper key={idx} sx={{ ...glassCardStyles, mt: 2 }}>
+                <Link href={option.url} target="_blank" rel="noopener" underline="hover" color="#f0e6cc" sx={{ fontSize: '1.2rem' }}>
+                  {option.title}
                 </Link>
-              </Box>
+                <Typography variant="body2" sx={{ mb: 1 }}>{option.description}</Typography>
+
+              </Paper>
             ))
           )}
         </TabPanel>
@@ -198,32 +208,28 @@ const MultiTabModal = ({
 
           {activityLoading ? (
             <Box
-  display="flex"
-  flexDirection="column"
-  alignItems="center"
-  justifyContent="center"
-  mt={4}
-  mb={2}
->
-  <Typography
-    variant="body2"
-    sx={{ color: "#f0e6cc", mb: 2 }}
-  >
-    {t("tabbedmodal.loadingSuggestions")}
-  </Typography>
-  <CircularProgress color="inherit" />
-</Box>
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              mt={4}
+              mb={2}
+            >
+              <Typography variant="body2" sx={{ color: "#f0e6cc", mb: 2 }}>
+                {t("tabbedmodal.loadingSuggestions")}
+              </Typography>
+              <CircularProgress color="inherit" />
+            </Box>
           ) : (
             activityOptions.map((activity, idx) => (
-              <Box key={idx} mt={2}>
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+              <Paper key={idx} sx={{ ...glassCardStyles, mt: 2 }}>
+                <Link href={activity.url} target="_blank" rel="noopener" underline="hover" color="#f0e6cc" sx={{ fontSize: '1.2rem' }}>
                   {activity.title}
-                </Typography>
-                <Typography variant="body2">{activity.description}</Typography>
-                <Link href={activity.url} target="_blank" rel="noopener" underline="hover" color="#f0e6cc">
-                  {t("tabbedmodal.visitLink")}
                 </Link>
-              </Box>
+
+                <Typography variant="body2" sx={{ mb: 1 }}>{activity.description}</Typography>
+
+              </Paper>
             ))
           )}
         </TabPanel>

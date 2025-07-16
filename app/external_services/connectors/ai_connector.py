@@ -13,3 +13,13 @@ class AiConnector:
         content_type: str) -> Optional[List]:
         return ai_suggestions.fetch_local_items(self.api_key, town_name, lat, lon,
                                                 language, content_type)
+
+    def fetch_public_transport(self, start_city: str,
+        start_lat: float,
+        start_lon: float,
+        end_city: str,
+        end_lat: float,
+        end_lon: float,
+        language: str) -> Optional[List]:
+        return ai_suggestions.fetch_public_transport(self.api_key, start_city, start_lat, start_lon,
+                                                    end_city, end_lat, end_lon, language)

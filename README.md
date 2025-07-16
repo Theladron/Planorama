@@ -36,97 +36,97 @@ Planorama is a smart travel planning backend powered by FastAPI and AI. It integ
 <br>
 <br>
 project_root/<br>
-├── app/
-│   ├── activities/
-│   │   ├── api.py
-│   │   ├── models.py
-│   │   ├── schemas.py
-│   │   └── services.py
-│   ├── auth/  # Feature module (api/models/schemas/services)
-│   │   └── ...
-│   ├── core/
-│   │   ├── config.py, database.py, security.py, ...
-│   ├── custom_docs/  # Custom OpenAPI docs logic
-│   │   └── api.py, services.py
-│   ├── external_services/
-│   │   ├── chatgpt.py, weather_api.py, ...
-│   │   └── connectors/
-│   │       └── openroute_connector.py
-│   ├── quotes/        # Feature module
-│   │   └── ...
-│   ├── stations/      # Feature module
-│   │   └── ...
-│   ├── travel/        # Feature module
-│   │   └── ...
-│   ├── trips/         # Feature module
-│   │   └── ...
-│   ├── users/         # Feature module
-│   │   └── ...
-│   ├── static/
-│   ├── templates/
-│   ├── utils/
-│   ├── __init__.py
-│   └── main.py
-├── docker/
-│   ├── development/
-│   ├── postgres/
-│   └── production/
-├── frontend/
-│   └── react/
-│       ├── public/
-│       │   ├── vite.svg
-│       │   └── images/
-│       │       └── home_background.jpg
-│       └── src/
-│           ├── assets/
-│           │   └── react.svg
-│           ├── components/
-│           │   ├── Navbar.jsx
-│           │   ├── PrivateRoute.jsx
-│           │   ├── Sidebar.jsx
-│           │   └── common/
-│           │       ├── AiSuggestions.jsx
-│           │       ├── TabbedModal.jsx
-│           │       └── WeatherWidget.jsx
-│           ├── context/
-│           │   └── AuthContext.jsx
-│           ├── I18n/
-│           │   ├── de.json
-│           │   └── en.json
-│           ├── pages/
-│           │   ├── AddStationPage.jsx
-│           │   ├── DashBoardPage.jsx
-│           │   ├── HomePage.jsx
-│           │   ├── LoginPage.jsx
-│           │   ├── RegisterPage.jsx
-│           │   ├── ReorderStationsPage.jsx
-│           │   ├── SettingsPage.jsx
-│           │   ├── TripsCreationPage.jsx
-│           │   ├── TripsGenerationPage.jsx
-│           │   └── TripsPage.jsx
-│           ├── app.css
-│           ├── app.jsx
-│           ├── config.js
-│           ├── i18n.js
-│           ├── index.css
-│           └── main.jsx
-├── migrations/
-│   ├── versions/
-│   ├── env.py
-│   ├── README
-│   └── script.py.mako
-├── tests/
-│   ├── test_auth.py
-│   └── test_trip.py
-├── .env / .env.example
-├── .gitignore
-├── .pylintrc
-├── alembic.ini
-├── LICENSE
-├── pre-commit-config.yaml
-├── pyproject.toml
-├── README.md
-└── requirements.txt
+├── app/  
+│   ├── activities/  
+│   │   ├── api.py  
+│   │   ├── models.py  
+│   │   ├── schemas.py  
+│   │   └── services.py  
+│   ├── auth/  # Feature module (api/models/schemas/services)  
+│   │   └── ...  
+│   ├── core/  
+│   │   ├── config.py, database.py, security.py, ...  
+│   ├── custom_docs/  # Custom OpenAPI docs logic  
+│   │   └── api.py, services.py  
+│   ├── external_services/  
+│   │   ├── chatgpt.py, weather_api.py, ...  
+│   │   └── connectors/  
+│   │       └── openroute_connector.py  
+│   ├── quotes/        # Feature module  
+│   │   └── ...  
+│   ├── stations/      # Feature module  
+│   │   └── ...  
+│   ├── travel/        # Feature module  
+│   │   └── ...  
+│   ├── trips/         # Feature module  
+│   │   └── ...  
+│   ├── users/         # Feature module  
+│   │   └── ...  
+│   ├── static/  
+│   ├── templates/  
+│   ├── utils/  
+│   ├── __init__.py  
+│   └── main.py  
+├── docker/  
+│   ├── development/  
+│   ├── postgres/  
+│   └── production/  
+├── frontend/  
+│   └── react/  
+│       ├── public/  
+│       │   ├── vite.svg  
+│       │   └── images/  
+│       │       └── home_background.jpg  
+│       └── src/  
+│           ├── assets/  
+│           │   └── react.svg  
+│           ├── components/  
+│           │   ├── Navbar.jsx  
+│           │   ├── PrivateRoute.jsx  
+│           │   ├── Sidebar.jsx  
+│           │   └── common/  
+│           │       ├── AiSuggestions.jsx  
+│           │       ├── TabbedModal.jsx  
+│           │       └── WeatherWidget.jsx  
+│           ├── context/  
+│           │   └── AuthContext.jsx  
+│           ├── I18n/  
+│           │   ├── de.json  
+│           │   └── en.json  
+│           ├── pages/  
+│           │   ├── AddStationPage.jsx  
+│           │   ├── DashBoardPage.jsx  
+│           │   ├── HomePage.jsx  
+│           │   ├── LoginPage.jsx  
+│           │   ├── RegisterPage.jsx  
+│           │   ├── ReorderStationsPage.jsx  
+│           │   ├── SettingsPage.jsx  
+│           │   ├── TripsCreationPage.jsx  
+│           │   ├── TripsGenerationPage.jsx  
+│           │   └── TripsPage.jsx  
+│           ├── app.css  
+│           ├── app.jsx  
+│           ├── config.js  
+│           ├── i18n.js  
+│           ├── index.css  
+│           └── main.jsx  
+├── migrations/  
+│   ├── versions/  
+│   ├── env.py  
+│   ├── README  
+│   └── script.py.mako  
+├── tests/  
+│   ├── test_auth.py  
+│   └── test_trip.py  
+├── .env / .env.example  
+├── .gitignore  
+├── .pylintrc  
+├── alembic.ini  
+├── LICENSE  
+├── pre-commit-config.yaml  
+├── pyproject.toml  
+├── README.md  
+└── requirements.txt  
 
 
 </details>
