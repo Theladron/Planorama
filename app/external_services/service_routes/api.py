@@ -61,3 +61,32 @@ def get_ai_suggestions(
         raise HTTPException(status_code=404, detail="No suggestions could be generated.")
 
     return suggestions
+
+
+@frontend_router.get("/ai-transport",
+                     summary="Get AI-powered public transport route suggestions",
+                     include_in_schema=False)
+def get_ai_public_transport(
+    start_city: str = Query(..., description="Name of the starting city"),
+    start_lat: float = Query(..., description="Latitude of the starting location"),
+    start_lon: float = Query(..., description="Longitude of the starting location"),
+    end_city: str = Query(..., description="Name of the destination city"),
+    end_lat: float = Query(..., description="Latitude of the destination location"),
+    end_lon: float = Query(..., description="Longitude of the destination location"),
+    language: str = Query("en", description="Language for the result, e.g., 'en' or 'de'"),
+    current_user: User = Depends(get_current_active_user)
+):
+    transport_suggestions = ai_connector.fetch_public_transport(
+        start_city=start_city,
+        start_lat=start_lat,
+        start_lon=start_lon,
+        end_city=end_city,
+        end_lat=end_lat,
+        end_lon=end_lon,
+        language=language
+    )
+
+    if not transport_suggestions:
+        raise HTTPException(status_code=404, detail="No public transport suggestions could be generated.")
+
+    return transport_suggestions

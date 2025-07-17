@@ -25,6 +25,7 @@ import {
 import { useTranslation } from "react-i18next";
 import WeatherWidget from "../components/common/WeatherWidget";
 import TabbedModal from "../components/common/TabbedModal";
+import TransportModal from "../components/common/TransportModal";
 
 // Leaflet icon fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,7 +38,6 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Custom icons
 const greenIcon = new L.Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
@@ -62,28 +62,27 @@ const redIcon = new L.Icon({
   className: "leaflet-red-icon",
 });
 
-// Create custom panes on map load
 const SetupPanes = () => {
   const map = useMap();
-
   useEffect(() => {
     map.createPane("aiPane");
     map.getPane("aiPane").style.zIndex = 500;
-
     map.createPane("stationsPane");
     map.getPane("stationsPane").style.zIndex = 600;
   }, [map]);
-
   return null;
 };
 
 export default function TripsGenerationPage() {
+  const [isActivityLoading, setIsActivityLoading] = useState(false);
+  const [isOvernightLoading, setIsOvernightLoading] = useState(false);
+  const [isTransportLoading, setIsTransportLoading] = useState(false);
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tripId = searchParams.get("tripId");
   const { token } = useContext(AuthContext);
-
+  const [hasSearchedPublicTransport, setHasSearchedPublicTransport] = useState(false)
   const [stations, setStations] = useState([]);
   const [travels, setTravels] = useState([]);
   const [routesData, setRoutesData] = useState({});
@@ -92,23 +91,20 @@ export default function TripsGenerationPage() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [aiData, setAiData] = useState({});
+  const [aiTransportData, setAiTransportData] = useState({});
+  const [aiOvernightMarkers, setAiOvernightMarkers] = useState([]);
+  const [aiActivityMarkers, setAiActivityMarkers] = useState([]);
 
   const weatherCacheRef = useRef({});
   const aiCacheRef = useRef({});
+  const transportCacheRef = useRef({});
 
-  const getCachedWeatherForCoords = async (lat, lon) => {
-    const cacheKey = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
-    if (weatherCacheRef.current[cacheKey]) {
-      return weatherCacheRef.current[cacheKey];
-    }
-    try {
-      const res = await axios.get(`${backendURL}/api/weather`, { params: { lat, lon } });
-      weatherCacheRef.current[cacheKey] = res.data;
-      return res.data;
-    } catch (error) {
-      console.error("Failed to fetch weather:", error);
-      return null;
-    }
+  const getStationById = (id) => stations.find((s) => s.id === id);
+  const getStationName = (station) => {
+    if (!station) return "";
+    return i18n.language.startsWith("de") && station.station_name_de
+      ? station.station_name_de
+      : station.station_name || "";
   };
 
   const fetchAISuggestions = async ({ lat, lon, townName, language, contentType }) => {
@@ -123,74 +119,187 @@ export default function TripsGenerationPage() {
     }
   };
 
-  const getStationName = (station) => {
-    if (!station) return "";
-    if (i18n.language.startsWith("de") && station.station_name_de) {
-      return station.station_name_de;
+  async function fetchAiTransportRoutes({ startLat, startLon, startCity, endLat, endLon, endCity, language }) {
+  try {
+    const response = await axios.get(`${backendURL}/api/ai-transport`, {
+      params: {
+        start_lat: startLat,
+        start_lon: startLon,
+        start_city: startCity,
+        end_lat: endLat,
+        end_lon: endLon,
+        end_city: endCity,
+        language,
+      },
+    });
+    return response.data || [];
+  } catch (err) {
+    console.error("AI transport fetch error:", err);
+    throw err;
+  }
+}
+
+  const getCachedWeatherForCoords = async (lat, lon) => {
+    const key = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+    if (weatherCacheRef.current[key]) return weatherCacheRef.current[key];
+    try {
+      const res = await axios.get(`${backendURL}/api/weather`, { params: { lat, lon } });
+      weatherCacheRef.current[key] = res.data;
+      return res.data;
+    } catch (err) {
+      console.error("Weather fetch error:", err);
+      return null;
     }
-    return station.station_name || "";
   };
 
-  const handleOvernightCategoryChange = async (category) => {
+  const handleTransportSearch = async (travelId) => {
+  const travel = travels.find((t) => t.id === travelId);
+  setHasSearchedPublicTransport(true);
+  if (!travel) return;
+
+  const from = getStationById(travel.from_station_id);
+  const to = getStationById(travel.to_station_id);
+  if (!from || !to) return;
+
+  const key = `${travelId}_transport`;
+  if (transportCacheRef.current[key]) {
+    setAiTransportData((prev) => ({ ...prev, [travelId]: transportCacheRef.current[key] }));
+    return;
+  }
+
+  setIsTransportLoading(true);
+
+  try {
+    const data = await fetchAiTransportRoutes({
+      startLat: from.latitude,
+      startLon: from.longitude,
+      startCity: getStationName(from),
+      endLat: to.latitude,
+      endLon: to.longitude,
+      endCity: getStationName(to),
+      language: i18n.language,
+    });
+
+    console.log("AI Transport suggestions (external):", data);
+    transportCacheRef.current[key] = data;
+    setAiTransportData((prev) => ({ ...prev, [travelId]: data }));
+  } catch (err) {
+    console.error("Failed to fetch AI transport suggestions:", err);
+  } finally {
+    setIsTransportLoading(false);
+  }
+};
+
+  const handleActivitySubmit = async (query) => {
     if (!selectedMarker) return;
-    const stationId = selectedMarker.id;
-    const cacheKey = `${stationId}_overnight_${category}`;
-    if (aiCacheRef.current[cacheKey]) return;
+    const key = `${selectedMarker.id}_activities_${query}`;
+    if (aiCacheRef.current[key]) {
+      const cached = aiCacheRef.current[key];
+      setAiData((prev) => ({
+        ...prev,
+        [selectedMarker.id]: {
+          ...prev[selectedMarker.id],
+          activities: {
+            ...prev[selectedMarker.id]?.activities,
+            [query]: cached,
+          },
+        },
+      }));
+      setAiActivityMarkers((prev) => [
+        ...prev,
+        ...cached.map((item) => ({
+          lat: item.lat,
+          lon: item.lon,
+          name: item.name,
+        })),
+      ]);
+      return;
+    }
 
-    const data = await fetchAISuggestions({
+    setIsActivityLoading(true);
+    const result = await fetchAISuggestions({
       lat: selectedMarker.latitude,
       lon: selectedMarker.longitude,
       townName: getStationName(selectedMarker),
       language: i18n.language,
-      contentType: category,
+      contentType: query,
     });
-
-    aiCacheRef.current[cacheKey] = data;
+    setIsActivityLoading(false);
+    aiCacheRef.current[key] = result;
     setAiData((prev) => ({
       ...prev,
-      [stationId]: {
-        ...prev[stationId],
-        overnight: {
-          ...(prev[stationId]?.overnight || {}),
-          [category]: data,
-        },
+      [selectedMarker.id]: {
+        ...prev[selectedMarker.id],
         activities: {
-          ...(prev[stationId]?.activities || {}),
+          ...prev[selectedMarker.id]?.activities,
+          [query]: result,
         },
       },
     }));
+    setAiActivityMarkers((prev) => [
+      ...prev,
+      ...result.map((item) => ({
+        lat: item.lat,
+        lon: item.lon,
+        name: item.name,
+      })),
+    ]);
   };
 
-  const handleActivitySearch = async (query) => {
-    if (!selectedMarker || !query) return;
-    const stationId = selectedMarker.id;
-    const label = i18n.language.startsWith("de") ? "Aktivität" : "activity";
-    const contentType = `${label}: ${query}`;
-    const cacheKey = `${stationId}_activity_${query.toLowerCase()}`;
-    if (aiCacheRef.current[cacheKey]) return;
+  const handleOvernightCategoryChange = async (cat) => {
+    if (!selectedMarker) return;
+    const key = `${selectedMarker.id}_overnight_${cat}`;
+    if (aiCacheRef.current[key]) {
+      const cached = aiCacheRef.current[key];
+      setAiData((prev) => ({
+        ...prev,
+        [selectedMarker.id]: {
+          ...prev[selectedMarker.id],
+          overnight: {
+            ...prev[selectedMarker.id]?.overnight,
+            [cat]: cached,
+          },
+        },
+      }));
+      setAiOvernightMarkers((prev) => [
+        ...prev,
+        ...cached.map((item) => ({
+          lat: item.lat,
+          lon: item.lon,
+          name: item.name,
+        })),
+      ]);
+      return;
+    }
 
-    const data = await fetchAISuggestions({
+    setIsOvernightLoading(true);
+    const result = await fetchAISuggestions({
       lat: selectedMarker.latitude,
       lon: selectedMarker.longitude,
       townName: getStationName(selectedMarker),
       language: i18n.language,
-      contentType,
+      contentType: cat,
     });
-
-    aiCacheRef.current[cacheKey] = data;
+    setIsOvernightLoading(false);
+    aiCacheRef.current[key] = result;
     setAiData((prev) => ({
       ...prev,
-      [stationId]: {
-        ...prev[stationId],
-        activities: {
-          ...(prev[stationId]?.activities || {}),
-          [query]: data,
-        },
+      [selectedMarker.id]: {
+        ...prev[selectedMarker.id],
         overnight: {
-          ...(prev[stationId]?.overnight || {}),
+          ...prev[selectedMarker.id]?.overnight,
+          [cat]: result,
         },
       },
     }));
+    setAiOvernightMarkers((prev) => [
+      ...prev,
+      ...result.map((item) => ({
+        lat: item.lat,
+        lon: item.lon,
+        name: item.name,
+      })),
+    ]);
   };
 
   useEffect(() => {
@@ -210,75 +319,55 @@ export default function TripsGenerationPage() {
         setLoading(false);
       }
     }
-    if (tripId) {
-      fetchTripData();
-    } else {
+    if (tripId) fetchTripData();
+    else {
       setError(t("tripsgeneration.error_no_trip_id"));
       setLoading(false);
     }
   }, [tripId, t]);
 
   useEffect(() => {
-    async function fetchRouteForTravel(travel) {
-      const fromStation = stations.find((s) => s.id === travel.from_station_id);
-      const toStation = stations.find((s) => s.id === travel.to_station_id);
-      if (!fromStation || !toStation) return null;
-
-      try {
-        const res = await axios.get(`${backendURL}/api/full-route-by-coords`, {
-          params: {
-            start_lat: fromStation.latitude,
-            start_lon: fromStation.longitude,
-            end_lat: toStation.latitude,
-            end_lon: toStation.longitude,
-          },
-        });
-        return { travelId: travel.id, data: res.data };
-      } catch (error) {
-        console.error("Error fetching route:", error);
-        return {
-          travelId: travel.id,
-          data: {
-            polyline: [
-              [fromStation.latitude, fromStation.longitude],
-              [toStation.latitude, toStation.longitude],
-            ],
-            duration: travel.time_estimated || t("tripsgeneration.unknown_duration"),
-            directions: [],
-          },
-        };
-      }
-    }
-
     async function fetchAllRoutes() {
       if (!travels.length || !stations.length) return;
-      const results = await Promise.all(travels.map(fetchRouteForTravel));
-      const newRoutes = {};
-      results.forEach((result) => {
-        if (result?.travelId && result.data) {
-          newRoutes[result.travelId] = result.data;
-        }
+      const results = await Promise.all(
+        travels.map(async (travel) => {
+          const from = getStationById(travel.from_station_id);
+          const to = getStationById(travel.to_station_id);
+          if (!from || !to) return null;
+          try {
+            const res = await axios.get(`${backendURL}/api/full-route-by-coords`, {
+              params: {
+                start_lat: from.latitude,
+                start_lon: from.longitude,
+                end_lat: to.latitude,
+                end_lon: to.longitude,
+              },
+            });
+            return { travelId: travel.id, data: res.data };
+          } catch {
+            return {
+              travelId: travel.id,
+              data: {
+                polyline: [[from.latitude, from.longitude], [to.latitude, to.longitude]],
+                duration: travel.time_estimated || t("tripsgeneration.unknown_duration"),
+                directions: [],
+              },
+            };
+          }
+        })
+      );
+      const routeMap = {};
+      results.forEach((r) => {
+        if (r) routeMap[r.travelId] = r.data;
       });
-      setRoutesData(newRoutes);
+      setRoutesData(routeMap);
     }
     fetchAllRoutes();
-  }, [travels, stations, token, t]);
+  }, [travels, stations, t]);
 
   const center = stations.length ? [stations[0].latitude, stations[0].longitude] : [20, 0];
-
-  const aiMarkers = Object.entries(aiData).flatMap(([stationId, suggestions]) => {
-    const activityMarkers = Object.values(suggestions.activities || {}).flat().map((item, idx) => ({
-      ...item,
-      type: "activity",
-      key: `act_${stationId}_${idx}`,
-    }));
-    const overnightMarkers = Object.values(suggestions.overnight || {}).flat().map((item, idx) => ({
-      ...item,
-      type: "overnight",
-      key: `overnight_${stationId}_${idx}`,
-    }));
-    return [...activityMarkers, ...overnightMarkers];
-  });
+  const selectedStationAiData = aiData[selectedMarker?.id] || { activities: {}, overnight: {} };
+  const selectedTransportAiData = aiTransportData[selectedRoute?.travel.id] || [];
 
   if (loading)
     return (
@@ -286,15 +375,12 @@ export default function TripsGenerationPage() {
         <CircularProgress />
       </Box>
     );
-
   if (error)
     return (
       <Typography color="error" sx={{ p: 2, textAlign: "center" }}>
         {error}
       </Typography>
     );
-
-  const selectedStationAiData = aiData[selectedMarker?.id] || { activities: {}, overnight: {} };
 
   return (
     <>
@@ -304,47 +390,37 @@ export default function TripsGenerationPage() {
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {stations.map((station) => (
+        {stations.map((s) => (
           <Marker
-            key={station.id}
-            position={[station.latitude, station.longitude]}
+            key={s.id}
+            position={[s.latitude, s.longitude]}
             pane="stationsPane"
-            eventHandlers={{ click: () => setSelectedMarker(station) }}
+            eventHandlers={{ click: () => setSelectedMarker(s) }}
           />
         ))}
-        {travels.map((travel) => {
-          const route = routesData[travel.id];
-          if (!route) return null;
-          return (
+        {travels.map((travel) =>
+          routesData[travel.id] ? (
             <Polyline
               key={travel.id}
-              positions={route.polyline || []}
+              positions={routesData[travel.id].polyline}
               color="blue"
               weight={4}
               opacity={0.7}
-              eventHandlers={{ click: () => setSelectedRoute({ travel, route }) }}
+              eventHandlers={{ click: () => setSelectedRoute({ travel, route: routesData[travel.id] }) }}
             />
-          );
-        })}
-        {aiMarkers.map((item) => (
-          <Marker
-            key={item.key}
-            position={[item.lat, item.lon]}
-            pane="aiPane"
-            icon={item.type === "activity" ? greenIcon : redIcon}
-          >
-            <Popup>
-              <Typography variant="subtitle2" gutterBottom>{item.title}</Typography>
-              {item.url && (
-                <Link href={item.url} target="_blank" rel="noopener noreferrer">
-                  Website
-                </Link>
-              )}
-            </Popup>
+          ) : null
+        )}
+        {aiOvernightMarkers.map((m, idx) => (
+          <Marker key={`overnight-${idx}`} position={[m.lat, m.lon]} icon={redIcon}>
+            <Popup>{m.name}</Popup>
           </Marker>
         ))}
-
-        {/* Legend */}
+        {aiActivityMarkers.map((m, idx) => (
+          <Marker key={`activity-${idx}`} position={[m.lat, m.lon]} icon={greenIcon}>
+            <Popup>{m.name}</Popup>
+          </Marker>
+        ))}
+    {/* Legend */}
         <div
           style={{
             position: "absolute",
@@ -378,6 +454,7 @@ export default function TripsGenerationPage() {
             alt="Green marker"
             style={{ width: 13, height: 20, marginRight: 6 }}/>{t("tripsgeneration.activities", "Activity")}</div>
         </div>
+
       </MapContainer>
 
       <TabbedModal
@@ -385,54 +462,29 @@ export default function TripsGenerationPage() {
         onClose={() => setSelectedMarker(null)}
         stationName={getStationName(selectedMarker)}
         visitDay={selectedMarker?.day_number}
-        weatherWidget={
-          <WeatherWidget
-            lat={selectedMarker?.latitude}
-            lon={selectedMarker?.longitude}
-            fetchCachedWeather={getCachedWeatherForCoords}
-          />
-        }
+        activityLoading={isActivityLoading}
+        overnightLoading={isOvernightLoading}
+        weatherWidget={<WeatherWidget lat={selectedMarker?.latitude} lon={selectedMarker?.longitude} fetchCachedWeather={getCachedWeatherForCoords} />}
         overnightOptions={Object.values(selectedStationAiData.overnight || {}).flat()}
         activityOptions={Object.values(selectedStationAiData.activities || {}).flat()}
-        onActivitySubmit={handleActivitySearch}
+        onActivitySubmit={handleActivitySubmit}
         onOvernightCategoryChange={handleOvernightCategoryChange}
       />
 
-      <Dialog open={!!selectedRoute} onClose={() => setSelectedRoute(null)} maxWidth="sm" fullWidth
-          PaperProps={{
-      sx: {
-        backgroundColor: "rgba(250, 201, 72, 0.2)",
-        backdropFilter: "blur(4px)",
-        border: "1px solid rgba(250, 201, 72, 0.25)",
-        borderRadius: "12px",
-        p: 2,
-        color: "#f0e6cc",
-        boxShadow: "0 6px 20px rgba(250, 201, 72, 0.1)",
-        textShadow: "1px 1px 4px rgba(0, 0, 0, 0.5)",
-      },
-  }}>
-        <DialogTitle>{t("tripsgeneration.dialog_route_info_title")}</DialogTitle>
-        <DialogContent dividers>
-          <Typography>
-            <strong>{t("tripsgeneration.label_transport")}</strong> {selectedRoute?.travel.method_of_transport}
-          </Typography>
-          <Typography>
-            <strong>{t("tripsgeneration.label_estimated_time")}</strong> {selectedRoute?.route.duration || t("tripsgeneration.unknown_duration")}
-          </Typography>
-          <Typography sx={{ mt: 2, mb: 1 }}>
-            <strong>{t("tripsgeneration.label_directions")}</strong>
-          </Typography>
-          {selectedRoute?.route.directions.length > 0 ? (
-            <ol>
-              {selectedRoute.route.directions.map((step, idx) => (
-                <li key={idx}>{step.instruction}</li>
-              ))}
-            </ol>
-          ) : (
-            <Typography>{t("tripsgeneration.no_directions")}</Typography>
-          )}
-        </DialogContent>
-      </Dialog>
+      <TransportModal
+        open={!!selectedRoute}
+        onClose={() => setSelectedRoute(null)}
+        turnByTurnDirections={selectedRoute?.route?.directions || []}
+        estimatedTime={
+          selectedRoute?.route?.duration ||
+          selectedRoute?.travel.time_estimated ||
+          t("tripsgeneration.unknown_duration")
+        }
+        publicTransportRoutes={selectedTransportAiData}
+        loadingPublicTransport={isTransportLoading}
+        onSearchPublicTransport={() => handleTransportSearch(selectedRoute?.travel.id)}
+        asSearchedPublicTransport={hasSearchedPublicTransport}
+      />
     </>
   );
 }

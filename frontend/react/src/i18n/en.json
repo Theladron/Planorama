@@ -186,6 +186,36 @@
     "interestPrompt": "What are you interested in?",
     "interestPlaceholder": "e.g. hiking, museums, nightlife...",
     "rbnb": "Rbnb",
-    "search": "Search"
+    "search": "Search",
+    "loadingSuggestions": "Loading suggestions, please wait..."
+  },
+  "transportModal": {
+    "title": "Transport Options",
+    "close": "Close",
+    "car": "Car",
+    "publicTransport": "Public Transport",
+    "plane": "Plane",
+    "searchPublicTransport": "Search Public Transport",
+    "searchFlights": "Search Flights",
+    "loading": "Loading suggestions, please wait...",
+    "noCarRoutes": "No car routes available.",
+    "noPublicTransportRoutes": "No public transport routes available.",
+    "noFlightRoutes": "No flight routes available.",
+    "noNearbyAirport": "No nearby airports to suggest flights.",
+    "route": "Route",
+    "unknownTransport": "Unknown Transport",
+    "departure": "Departure",
+    "price": "Price",
+    "airlineUnknown": "Unknown Airline",
+    "estimatedTime": "Estimated Time",
+    "turnByTurn": "Turn-by-turn Directions"
+  },
+  "ai_transport": {
+    "fetch_error": "Failed to fetch transport routes.",
+    "no_results": "No transport routes found.",
+    "unknown_transport": "Unknown Transport",
+    "departure": "Departure",
+    "price": "Price",
+    "more_info": "More Info"
   }
 }

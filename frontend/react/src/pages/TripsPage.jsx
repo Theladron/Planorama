@@ -351,7 +351,7 @@ export default function TripsPage() {
                             <Typography sx={{ flex: 1, mt: -3}}>
                               {flagEmoji}{" "}
                               {i18n.language === "de" ? station.station_name_de : station.station_name},{" "}
-                              {station.city} {station.country}
+                              {station.city}
 
                             <IconButton onClick={() => handleDeleteStation(station.link_id, trip.id)} color="error">
                               🗑

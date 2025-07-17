@@ -115,7 +115,7 @@ export default function DashboardPage() {
             {t("dashboard.no_trips")}{" "}
             <MuiLink
               component={RouterLink}
-              to="/trips/new"
+              to="/trips/create"
               sx={{ color: "#f0e6cc", fontWeight: "bold" }}
             >
               {t("dashboard.plan_link")}

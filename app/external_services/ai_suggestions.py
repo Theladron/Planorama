@@ -2,35 +2,22 @@ import requests
 import json
 import re
 import time
+from datetime import datetime
+
 
 def fetch_local_items(
-        api_key: str,
-        town_name: str,
-        lat: float,
-        lon: float,
-        language: str,
-        content_type: str,
-        max_retries: int = 3,
-        retry_delay: float = 1.0
+    api_key: str,
+    town_name: str,
+    lat: float,
+    lon: float,
+    language: str,
+    content_type: str,
+    max_retries: int = 3,
+    retry_delay: float = 1.0
 ) -> list:
     """
     Fetches real-world geographic data (e.g., campsites, hotels) near a town using Perplexity AI.
-
-    Parameters:
-        api_key (str): Your Perplexity API key.
-        town_name (str): Name of the town to search near.
-        lat (float): Latitude of the location.
-        lon (float): Longitude of the location.
-        language (str): 'en' or 'de' for English or German prompt.
-        content_type (str): What to search for (e.g., 'campsites', 'hotels', 'activities').
-        max_retries (int): Number of retries if extraction/parsing fails (default 3).
-        retry_delay (float): Delay in seconds between retries (default 1 second).
-
-    Returns:
-        list[dict]: List of parsed location entries with title, url, description, lat, lon.
     """
-
-    # Prompt templates
     prompts = {
         "en": f"""You must return exactly three real and verifiable {content_type} in or near 
                 {town_name} (latitude {lat}, longitude {lon}), using only real search results. 
@@ -73,9 +60,76 @@ Folge dieser Struktur:
 Verwerfe alle Orte ohne echte Koordinaten oder funktionierende URL. Gib nur das JSON zurück."""
     }
 
-    prompt = prompts.get(language.lower())
+    return _query_perplexity(api_key, prompts.get(language.lower()), lat, lon, max_retries, retry_delay)
+
+
+def fetch_public_transport(
+    api_key: str,
+    start_city: str,
+    start_lat: float,
+    start_lon: float,
+    end_city: str,
+    end_lat: float,
+    end_lon: float,
+    language: str = "en",
+    max_retries: int = 3,
+    retry_delay: float = 1.0
+) -> list:
+    """
+    Fetches public transport options between two cities using Perplexity AI.
+    """
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    prompts = {
+        "en": f"""You must return exactly three real and verifiable public transport route options from {start_city} (latitude {start_lat}, longitude {start_lon}) to {end_city} (latitude {end_lat}, longitude {end_lon}) as of the current time: {current_time}.
+
+Use only real search results. The output must be a JSON array with exactly three entries. Each entry must contain:
+
+- "method_of_transport": e.g. "train", "bus", "tram", "ferry"
+- "url": a real and working link to buy tickets or view the route
+- "description": a short summary of the route, including key stops or transfers and estimated duration
+- "departure_time": a real and verifiable scheduled departure time in 24h format (e.g. "15:42") that is not in the past
+- "price": a rough real-world price in euros (e.g. "€29.90" or a range like "€19–49")
+
+Strictly output only the JSON array in this exact format:
+
+[
+  {{
+    "method_of_transport": "train",
+    "url": "https://...",
+    "description": "Take ICE from Hamburg Hbf to Berlin Hbf, direct route.",
+    "departure_time": "14:45",
+    "price": "€29.90"
+  }},
+  ...
+]
+
+Do not include markdown, explanations, commentary, or anything outside the JSON array. Reject entries with missing or unverifiable data.""",
+
+        "de": f"""Gib genau drei echte und überprüfbare öffentliche Verkehrsverbindungen von {start_city} (Breitengrad {start_lat}, Längengrad {start_lon}) nach {end_city} (Breitengrad {end_lat}, Längengrad {end_lon}) an – mit Abfahrtszeitpunkt zum aktuellen Zeitpunkt: {current_time}.
+
+Nutze ausschließlich echte Suchergebnisse. Das Ergebnis muss ein JSON-Array mit genau drei Einträgen sein. Jeder Eintrag muss Folgendes enthalten:
+
+- "method_of_transport": z.B. "Zug", "Bus", "Tram", "Fähre"
+- "url": funktionierender Link zum Ticket oder zur Routenansicht
+- "description": Kurzbeschreibung mit Umstiegen und Dauer
+- "departure_time": geplante Abfahrtszeit im 24h-Format (z.B. "15:42"), die in der Zukunft liegt
+- "price": realistischer Preis in Euro (z.B. "€29.90" oder "€19–49")
+
+Gib ausschließlich das JSON-Array in diesem Format aus – ohne Erklärung, Kommentare oder sonstigen Text."""
+    }
+
+    return _query_perplexity(api_key, prompts.get(language.lower()), start_lat, start_lon, max_retries, retry_delay)
+
+
+def _query_perplexity(api_key: str,
+                      prompt: str,
+                      lat: float,
+                      lon: float,
+                      max_retries: int,
+                      retry_delay: float) -> list:
     if not prompt:
-        raise ValueError("Invalid language. Use 'en' or 'de'.")
+        raise ValueError("Invalid or missing language prompt.")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -111,7 +165,6 @@ Verwerfe alle Orte ohne echte Koordinaten oder funktionierende URL. Gib nur das 
         except (KeyError, IndexError) as e:
             raise ValueError("Invalid response format.") from e
 
-        # Try to extract JSON block and parse
         match = re.search(r"(\[\s*{.*?}\s*\])", raw_content, re.DOTALL)
         if match:
             raw_block = match.group(1)
@@ -120,8 +173,7 @@ Verwerfe alle Orte ohne echte Koordinaten oder funktionierende URL. Gib nur das 
                 result_data = json.loads(cleaned_block)
                 return result_data
             except json.JSONDecodeError:
-                pass  # parsing failed, will retry
-        # If no match or parsing failed:
+                pass  # retry
         if attempt < max_retries - 1:
             time.sleep(retry_delay)
         else:
