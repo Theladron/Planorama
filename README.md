@@ -1,15 +1,17 @@
 # Planorama
-<br>
-<br>
+
+
+
+Planorama is a smart travel planning backend powered by FastAPI and AI. It integrates user-generated itineraries, location data, weather, and route optimization into a seamless travel planning API.
+
+> ⚠️ This project is under active development. Expect breaking changes until v1.0 is released.
+
+---
 
 ## 🔗 Test the current Deployed Version
 Test the current working version of Planorama on Render:<br>
 [Backend](https://planorama-9mr0.onrender.com)<br>
 [Frontend](https://planorama-1.onrender.com) (Start up the Backend first, then you can use the frontend)<br><br>
-
-Planorama is a smart travel planning backend powered by FastAPI and AI. It integrates user-generated itineraries, location data, weather, and route optimization into a seamless travel planning API.
-
-> ⚠️ This project is under active development. Expect breaking changes until v1.0 is released.
 
 ---
 
@@ -134,6 +136,8 @@ project_root/<br>
 
 <br>
 
+---
+
 ## 🔧 Setup (Development)
 
 ```bash
@@ -160,6 +164,8 @@ npm install
 npm run dev
 ```
 
+---
+
 ## 📌 Roadmap
 
 * [x] FastAPI scaffolding
@@ -176,7 +182,7 @@ npm run dev
 
 * [x] AI suggestion generation
 
-* [ ] AI route generation
+* [x] AI route generation
 
 * [ ] Sphinx docs
 
@@ -184,10 +190,14 @@ npm run dev
 
 * [ ] Dockerization
 
+---
+
 ## 🤝 Contributing
 
     Contributions are allways welcome! Especially in the frontend, my proficiency with React is limited and suggestions are welcome.
     Please fork the repo, create a feature branch, and submit a pull request to dev. Use conventional commit messages and make sure all tests pass.
+
+---
 
 ## 🪪 License
 
