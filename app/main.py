@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config_loader import settings
 from app.core.database import import_all_models
@@ -49,3 +50,9 @@ app.include_router(admin_station_router, prefix="/api")
 app.include_router(travel_router, prefix="/api")
 app.include_router(frontend_router, prefix="/api")
 app.include_router(custom_docs_router)
+
+
+@app.get("/")
+async def root():
+    """Redirect to docs"""
+    return RedirectResponse(url="/api/docs")

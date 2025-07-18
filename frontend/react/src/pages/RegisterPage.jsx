@@ -76,7 +76,7 @@ export default function RegisterPage() {
     <Box
       sx={{
         height: "100vh",
-        backgroundImage: `url('${backendURL}/images/home_background.jpg')`,
+        backgroundImage: `url('/images/home_background.jpg')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

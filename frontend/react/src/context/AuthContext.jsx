@@ -25,6 +25,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchUser = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+    setLoading(false);
+    return;
+    }
+
     setLoading(true);
     try {
       const res = await axios.get(`${backendURL}/api/users/me`);
