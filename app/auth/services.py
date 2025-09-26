@@ -15,7 +15,7 @@ ALGORITHM = settings.ALGORITHM
 
 
 def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
-    user = get_user_by_email(db, email)
+    user = get_user_by_email(db, (email or "").strip().lower())
     if not user:
         return None
     if not verify_password(password, user.password_hash):
@@ -32,9 +32,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-async def get_token_from_auth_header(authorization: str = Header(None)) -> str:
+async def get_token_from_auth_header(request: Request) -> str:
+    authorization = request.headers.get("Authorization")
+
     if authorization is None or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+
     return authorization[7:]
 
 

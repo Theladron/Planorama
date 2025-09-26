@@ -1,0 +1,32 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment folders (optional)
+venv/
+.env/
+env/
+
+# Environment variable files
+.env
+.env.deployment
+!.env.example
+
+# PyCharm project settings
+.idea/
+
+# Log files
+*.log
+
+# Alembic migration caches
+alembic/versions/*.pyc
+
+# Pytest
+.pytest_cache/
+.cache/
+
+test2.py
+
+frontend/react/README.md
+
+alembic.ini~

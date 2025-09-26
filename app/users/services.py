@@ -12,13 +12,14 @@ def get_user(db: Session, user_id: int):
 
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter_by(email=email).first()
+    normalized_email = (email or "").strip().lower()
+    return db.query(User).filter_by(email=normalized_email).first()
 
 
 def create_user(db: Session, user: UserCreate):
     try:
         db_user = User(
-            email=str(user.email),
+            email=str(user.email).strip().lower(),
             username=user.username,
             password_hash=hash_password(user.password)
         )
