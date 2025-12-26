@@ -28,19 +28,20 @@ jobs:
 
       - name: Configure SSH
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ vars.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
+          mkdir -p "$HOME/.ssh" || true
+          chmod 700 "$HOME/.ssh" || true
+          echo "${{ secrets.AWS_EC2_SSH_PRIVATE_KEY }}" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          ssh-keyscan -H ${{ vars.AWS_EC2_HOST }} >> "$HOME/.ssh/known_hosts"
           # Create SSH config with keep-alive options to prevent connection timeout during long builds
-          cat > ~/.ssh/config << EOF
+          cat > "$HOME/.ssh/config" << EOF
           Host ${{ vars.AWS_EC2_HOST }}
             ServerAliveInterval 30
             ServerAliveCountMax 60
             TCPKeepAlive yes
             Compression yes
           EOF
-          chmod 600 ~/.ssh/config
+          chmod 600 "$HOME/.ssh/config"
 
       - name: Deploy to EC2
         env:
@@ -111,7 +112,7 @@ jobs:
           EOF
           
           # Deploy code and .env file to EC2
-          ssh -i ~/.ssh/deploy_key -o ServerAliveInterval=30 -o ServerAliveCountMax=60 ${EC2_USER}@${EC2_HOST} << ENDSSH
+          ssh -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 ${EC2_USER}@${EC2_HOST} << ENDSSH
             set -e
             
             # Create app directory if it doesn't exist
@@ -141,7 +142,7 @@ jobs:
           ENDSSH
           
           # Upload .env file to EC2 (after git reset to ensure it's not overwritten)
-          scp -i ~/.ssh/deploy_key -o ServerAliveInterval=30 -o ServerAliveCountMax=60 /tmp/.env ${EC2_USER}@${EC2_HOST}:${APP_PATH}/.env
+          scp -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 /tmp/.env ${EC2_USER}@${EC2_HOST}:${APP_PATH}/.env
           
           # Clean up local temp file
           rm /tmp/.env
@@ -149,7 +150,7 @@ jobs:
           echo ".env file uploaded successfully"
           
           # Continue with container deployment
-          ssh -i ~/.ssh/deploy_key -o ServerAliveInterval=30 -o ServerAliveCountMax=60 ${EC2_USER}@${EC2_HOST} << ENDSSH
+          ssh -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 ${EC2_USER}@${EC2_HOST} << ENDSSH
             set -e
             cd ${APP_PATH}
             
