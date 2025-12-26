@@ -77,39 +77,10 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 - Never commit `.env` files to the repository (they're in `.gitignore`)
 - All secrets and variables are securely stored in GitHub and only used during deployment
 
-### EC2 Setup
+## Notes
 
-See [EC2_DEPLOYMENT_CHECKLIST.md](./EC2_DEPLOYMENT_CHECKLIST.md) for detailed EC2 setup instructions.
-
-## Production HTTPS Setup
-
-For production deployments with HTTPS, see [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md) for detailed instructions on setting up SSL/TLS termination using AWS Application Load Balancer or nginx reverse proxy.
-
-### EC2 Setup Requirements
-
-1. Install Docker and Docker Compose on EC2
-2. Clone your repository to the deployment path
-3. Configure SSH access (copy your public key to EC2)
-4. The `.env` file will be automatically created during deployment - no manual setup needed
-
-### Production HTTPS Setup
-
-When setting `ENVIRONMENT=production`, the application generates HTTPS URLs, but you need to configure SSL/TLS termination:
-
-**Option 1: AWS Application Load Balancer (Recommended)**
-- Set up an AWS ALB with SSL certificate (ACM)
-- Point your domain to the ALB
-- Configure ALB to forward traffic to EC2 instance (port 80/443 → port 80/5173)
-- Containers serve HTTP internally; ALB handles HTTPS termination
-
-**Option 2: Nginx Reverse Proxy in Docker**
-- Add an nginx service to `docker-compose.yml` that handles SSL
-- Mount SSL certificates into the nginx container
-- Update port mappings so nginx is the entry point
-
-**Important Notes:**
+- The `.env` file is automatically created during deployment - don't create it manually
+- For production, configure SSL/TLS termination using AWS Application Load Balancer or nginx reverse proxy
 - `ENVIRONMENT=production` changes URL generation to use `https://` but doesn't enable HTTPS on the server
-- Docker containers can still serve HTTP internally - SSL termination happens at the reverse proxy/load balancer
 - Update `BACKEND_CORS_ORIGINS` to use HTTPS URLs in production
-- Update `DOMAIN` to your actual production domain (e.g., `api.yourdomain.com`)
 
