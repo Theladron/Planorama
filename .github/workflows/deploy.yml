@@ -1,19 +1,30 @@
 name: Deploy to AWS
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:  # Allow manual triggering
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggering (bypasses CI check)
 
 jobs:
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
     environment: Planorama  # Use GitHub Environment
+    # Only deploy if CI workflow completed successfully (when triggered by workflow_run)
+    # Manual triggers (workflow_dispatch) always run
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # When triggered by workflow_run, checkout the commit from the CI workflow
+          # When triggered manually (workflow_dispatch), checkout normally
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Configure SSH
         run: |
@@ -24,6 +35,8 @@ jobs:
 
       - name: Deploy to EC2
         env:
+          # GitHub context (automatically available)
+          GITHUB_REPOSITORY: ${{ github.repository }}
           # EC2 Connection (these should be in Environment Secrets, not Variables)
           EC2_HOST: ${{ vars.AWS_EC2_HOST }}
           EC2_USER: ${{ vars.AWS_EC2_USER }}
@@ -100,12 +113,15 @@ jobs:
             
             cd ${APP_PATH}
             
+            # Add safe directory to avoid "dubious ownership" error
+            git config --global --add safe.directory ${APP_PATH}
+            
             # Clone repository if not already cloned, otherwise pull latest
             if [ ! -d ".git" ]; then
               echo "Repository not found. Cloning repository..."
               # Note: For private repos, ensure git credentials are configured on EC2
               # or clone manually once, then the workflow will handle updates
-              git clone https://github.com/${{ github.repository }}.git .
+              git clone https://github.com/${GITHUB_REPOSITORY}.git .
             else
               echo "Pulling latest code..."
               git fetch origin

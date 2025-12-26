@@ -1,4 +1,3 @@
-import { backendURL } from "../../config";
 import React, { useState } from "react";
 import {
   Dialog,

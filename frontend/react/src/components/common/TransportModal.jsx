@@ -41,12 +41,12 @@ const TransportModal = ({
   turnByTurnDirections = [],  // Array of strings for car directions
   estimatedTime = "",         // String for estimated trip duration
   publicTransportRoutes = [],
-  planeRoutes = [],
-  canUsePlane = false,
+  planeRoutes: _planeRoutes = [],
+  canUsePlane: _canUsePlane = false,
   onSearchPublicTransport,
-  onSearchPlane,
+  onSearchPlane: _onSearchPlane,
   loadingPublicTransport = false,
-  loadingPlane = false,
+  loadingPlane: _loadingPlane = false,
   hasSearchedPublicTransport = false,
 }) => {
   const { t } = useTranslation();

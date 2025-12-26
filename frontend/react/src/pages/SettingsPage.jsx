@@ -15,11 +15,6 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   const handleDeleteClick = () => {
     setOpenConfirm(true);
   };

@@ -82,6 +82,7 @@ export function AuthProvider({ children }) {
   // Initial auth check on mount
   useEffect(() => {
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

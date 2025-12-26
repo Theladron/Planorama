@@ -21,7 +21,7 @@ export const useTripData = (tripId, t) => {
         setStations(stationsRes);
         setTravels(travelsRes);
         setError(null);
-      } catch (err) {
+      } catch {
         setError(t("tripsgeneration.error_load_failed"));
       } finally {
         setLoading(false);

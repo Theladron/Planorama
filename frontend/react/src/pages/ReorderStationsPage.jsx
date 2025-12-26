@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Button, CircularProgress, Alert, TextField, MenuItem, Snackbar } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTrip } from "../hooks/useTrip";
 import { useStations } from "../hooks/useStations";
@@ -14,7 +14,6 @@ import { LoadingSpinner } from "../components/common/LoadingSpinner";
 export default function ReorderStationsPage() {
   const { t } = useTranslation();
   const { tripId } = useParams();
-  const navigate = useNavigate();
 
   const { trip, loading: tripLoading, error: tripError } = useTrip(tripId);
   const { stations, setStations } = useStations(tripId);

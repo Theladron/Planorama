@@ -64,7 +64,7 @@ export default function TripsPage() {
   const handleDeleteStationWithError = async (linkId, tripId) => {
     try {
       await handleDeleteStation(linkId, tripId);
-    } catch (err) {
+    } catch {
       alert("Error deleting station.");
     }
   };

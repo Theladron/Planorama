@@ -16,7 +16,7 @@ Runs on every push and pull request to `main` and `develop` branches.
 
 ### `deploy.yml` - Deployment to AWS EC2
 
-Runs on push to `main` branch or can be manually triggered.
+Runs automatically after the CI workflow completes successfully on `main` branch, or can be manually triggered (which bypasses the CI check).
 
 **Uses GitHub Environment:** `Planorama`
 
@@ -53,12 +53,13 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 **Note:** PostgreSQL server host should be `postgres` for Docker Compose deployments (this is the Docker service name that containers use to communicate. **Do not use `localhost`** when running in Docker, as `localhost` inside a container refers to that container itself.)
 
 **What it does:**
-1. Creates a `.env` file from GitHub Secrets and uploads it to EC2
-2. SSH into EC2 instance
-3. Pull latest code from `main` branch
-4. Verify `.env` file exists
-5. Rebuild Docker containers
-6. Restart services
+1. Runs automatically after CI workflow completes successfully on `main` branch
+2. Creates a `.env` file from GitHub Environment variables/secrets and uploads it to EC2
+3. SSH into EC2 instance
+4. Clone repository if needed, or pull latest code from `main` branch
+5. Verify `.env` file exists
+6. Rebuild Docker containers
+7. Restart services
 
 ## Setup
 

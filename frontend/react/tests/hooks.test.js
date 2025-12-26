@@ -81,7 +81,7 @@ describe('Custom Hooks', () => {
         await act(async () => {
           try {
             await result.current.login('test@example.com', 'wrong');
-          } catch (e) {
+          } catch {
             // Expected to throw
           }
         });
@@ -100,7 +100,7 @@ describe('Custom Hooks', () => {
         await act(async () => {
           try {
             await result.current.login('test@example.com', 'wrong');
-          } catch (e) {
+          } catch {
             // Expected to fail
           }
         });
@@ -171,7 +171,7 @@ describe('Custom Hooks', () => {
         await act(async () => {
           try {
             await result.current.register('user', 'test@example.com', 'password');
-          } catch (e) {
+          } catch {
             // Expected to throw
           }
         });

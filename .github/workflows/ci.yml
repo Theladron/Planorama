@@ -30,6 +30,19 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run pytest
+        env:
+          # Required environment variables for pytest
+          POSTGRESQL_USERNAME: postgres
+          POSTGRESQL_PASSWORD: postgres
+          POSTGRESQL_SERVER: localhost
+          POSTGRESQL_PORT: 5432
+          POSTGRESQL_DATABASE: test_planorama
+          ORS_API_KEY: test-ors-api-key
+          AI_API_KEY: test-ai-api-key
+          JWT_SECRET_KEY: test-jwt-secret-key-for-ci
+          DOMAIN: localhost:8000
+          ENVIRONMENT: local
+          DEBUG: False
         run: |
           pytest -v --cov=app --cov-report=term-missing --cov-report=xml
 

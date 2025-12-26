@@ -1,4 +1,3 @@
-import { backendURL } from "../config";
 import React, { useContext } from "react";
 import { Box, Link as MuiLink } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -8,7 +7,7 @@ import { useTranslation } from "react-i18next";
 export default function Sidebar() {
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
