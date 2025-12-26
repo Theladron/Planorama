@@ -129,7 +129,7 @@ export default function TripsGenerationPage() {
         publicTransportRoutes={selectedTransportAiData}
         loadingPublicTransport={isTransportLoading}
         onSearchPublicTransport={() => handleTransportSearch(selectedRoute?.travel.id)}
-        asSearchedPublicTransport={hasSearchedPublicTransport}
+        hasSearchedPublicTransport={hasSearchedPublicTransport}
       />
     </>
   );

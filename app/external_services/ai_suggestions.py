@@ -85,11 +85,13 @@ def fetch_public_transport(
 
 Use only real search results. The output must be a JSON array with exactly three entries. Each entry must contain:
 
-- "method_of_transport": e.g. "train", "bus", "tram", "ferry"
+- "method_of_transport": e.g. "train", "bus", "tram", "ferry", "flight" or "plane"
 - "url": a real and working link to buy tickets or view the route
 - "description": a short summary of the route, including key stops or transfers and estimated duration
 - "departure_time": a real and verifiable scheduled departure time in 24h format (e.g. "15:42") that is not in the past
 - "price": a rough real-world price in euros (e.g. "€29.90" or a range like "€19–49")
+
+IMPORTANT: If feasible (if there are airports near {start_city} and {end_city} that make sense to use), include at least one flight route. Also include at least one bus route if available. Prioritize diverse transportation methods.
 
 Strictly output only the JSON array in this exact format:
 
@@ -110,11 +112,13 @@ Do not include markdown, explanations, commentary, or anything outside the JSON 
 
 Nutze ausschließlich echte Suchergebnisse. Das Ergebnis muss ein JSON-Array mit genau drei Einträgen sein. Jeder Eintrag muss Folgendes enthalten:
 
-- "method_of_transport": z.B. "Zug", "Bus", "Tram", "Fähre"
+- "method_of_transport": z.B. "Zug", "Bus", "Tram", "Fähre", "Flug" oder "Flugzeug"
 - "url": funktionierender Link zum Ticket oder zur Routenansicht
 - "description": Kurzbeschreibung mit Umstiegen und Dauer
 - "departure_time": geplante Abfahrtszeit im 24h-Format (z.B. "15:42"), die in der Zukunft liegt
 - "price": realistischer Preis in Euro (z.B. "€29.90" oder "€19–49")
+
+WICHTIG: Falls machbar (wenn es Flughäfen in der Nähe von {start_city} und {end_city} gibt, die Sinn ergeben), schließe mindestens eine Flugroute ein. Schließe auch mindestens eine Busverbindung ein, falls verfügbar. Priorisiere vielfältige Verkehrsmittel.
 
 Gib ausschließlich das JSON-Array in diesem Format aus – ohne Erklärung, Kommentare oder sonstigen Text."""
     }
