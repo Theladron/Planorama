@@ -40,7 +40,7 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 - `DEBUG`: (Optional) Debug mode (`True` or `False`, defaults to `False`)
 - `ADMIN_EMAIL`: Admin user email for seeding
 - `ADMIN_USERNAME`: Admin user username for seeding
-- `VITE_BACKEND_URL`: (Optional) Backend URL for frontend build
+- `VITE_BACKEND_URL`: (Optional) Backend URL for frontend build. Should include port 8000 (e.g., `http://13.51.172.110:8000`). Defaults to `http://localhost:8000`
 
 *Environment Secrets (Sensitive - store as Secrets, not Variables):*
 - `AWS_EC2_SSH_PRIVATE_KEY`: Private SSH key for EC2 access (entire `.pem` file content, including `-----BEGIN` and `-----END` lines with all newlines preserved)
@@ -54,12 +54,14 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 
 **What it does:**
 1. Runs automatically after CI workflow completes successfully on `main` branch
-2. Creates a `.env` file from GitHub Environment variables/secrets and uploads it to EC2
+2. Creates a `.env` file from GitHub Environment variables/secrets and uploads it to EC2 (always overwrites with latest values)
 3. SSH into EC2 instance
 4. Clone repository if needed, or pull latest code from `main` branch
 5. Verify `.env` file exists
-6. Rebuild Docker containers
+6. Rebuild Docker containers (ensures build-time variables like `VITE_BACKEND_URL` are updated)
 7. Restart services
+
+**Note:** If you change environment variables in GitHub Environment settings, you need to trigger a new deployment (push to `main` or manually trigger the workflow) for the changes to take effect, as the `.env` file is recreated and containers are rebuilt on each deployment.
 
 ## Setup
 
@@ -81,6 +83,9 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 
 - The `.env` file is automatically created during deployment - don't create it manually
 - **EC2 Security Group**: Must allow SSH (port 22) from GitHub Actions IP ranges (see https://api.github.com/meta for current IPs) or use 0.0.0.0/0 for testing
+- **Port Configuration**:
+  - Frontend: Accessible on port 80 (standard HTTP). Update `docker-compose.yml` frontend service to map `"80:80"` instead of `"5173:80"` for production
+  - Backend: Accessible on port 8000. `VITE_BACKEND_URL` must include the port: `http://YOUR_EC2_IP:8000`
 - For production, configure SSL/TLS termination using AWS Application Load Balancer or nginx reverse proxy
 - `ENVIRONMENT=production` changes URL generation to use `https://` but doesn't enable HTTPS on the server
 - Update `BACKEND_CORS_ORIGINS` to use HTTPS URLs in production

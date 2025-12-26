@@ -3,6 +3,7 @@ Seed script for initial admin user creation.
 This script creates an admin user if one doesn't already exist.
 """
 import os
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, import_all_models
 from app.core.security import hash_password
@@ -23,7 +24,7 @@ def seed_admin_user():
     
     db: Session = SessionLocal()
     try:
-        existing_admin = db.query(User).filter_by(email=admin_email).first()
+        existing_admin = db.query(User).filter_by(email=admin_email.lower().strip()).first()
         if existing_admin:
             print(f"Admin user with email '{admin_email}' already exists. Skipping creation.")
             if not existing_admin.is_admin:
@@ -44,6 +45,9 @@ def seed_admin_user():
         db.commit()
         db.refresh(admin_user)
         print(f"✓ Admin user '{admin_username}' ({admin_email}) created successfully.")
+    except IntegrityError as error:
+        print(f"Admin user with email '{admin_email}' already exists (detected via IntegrityError). Skipping creation.")
+        db.rollback()
     except Exception as error:
         print(f"ERROR: Failed to create admin user: {error}")
         db.rollback()

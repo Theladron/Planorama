@@ -48,7 +48,7 @@ jobs:
             echo "  ServerAliveCountMax 60"
             echo "  TCPKeepAlive yes"
             echo "  Compression yes"
-            echo "  LogLevel DEBUG3"
+            echo "  LogLevel ERROR"
           } > "$HOME/.ssh/config"
           chmod 600 "$HOME/.ssh/config"
           echo "SSH configuration completed"
@@ -183,12 +183,29 @@ jobs:
             echo "Starting containers..."
             docker compose up -d
             
-            echo "Waiting for services to be healthy..."
-            sleep 10
+            echo "Waiting for services to start..."
+            sleep 15
             
-            # Optional: Run migrations (uncomment when ready)
-            # echo "Running database migrations..."
-            # docker compose exec -T backend alembic upgrade head || echo "Migration failed, check logs"
+            echo "Checking container status..."
+            docker compose ps
+            
+            echo "Checking container logs for errors..."
+            echo "=== Backend logs (last 50 lines) ==="
+            docker compose logs --tail=50 backend || true
+            echo "=== Frontend logs (last 50 lines) ==="
+            docker compose logs --tail=50 frontend || true
+            
+            echo "Verifying containers are running..."
+            if ! docker compose ps | grep -q "planorama_backend.*Up"; then
+              echo "ERROR: Backend container is not running!"
+              docker compose logs backend
+              exit 1
+            fi
+            if ! docker compose ps | grep -q "planorama_frontend.*Up"; then
+              echo "ERROR: Frontend container is not running!"
+              docker compose logs frontend
+              exit 1
+            fi
             
             echo "Deployment completed successfully"
           ENDSSH
