@@ -137,8 +137,7 @@ def _query_perplexity(api_key: str,
     }
 
     payload = {
-        "model": "sonar-reasoning",
-        "usage_tier": "low",
+        "model": "sonar",
         "web_search_options": {
             "search_context_size": "high",
             "user_location": {

@@ -1,0 +1,83 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: planorama_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRESQL_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRESQL_DATABASE:-Planorama}
+    ports:
+      - "${POSTGRESQL_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRESQL_USERNAME:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - planorama_network
+
+  # Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    container_name: planorama_backend
+    environment:
+      # Database
+      POSTGRESQL_USERNAME: ${POSTGRESQL_USERNAME:-postgres}
+      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD:-postgres}
+      POSTGRESQL_SERVER: postgres
+      POSTGRESQL_PORT: ${POSTGRESQL_PORT:-5432}
+      POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:-Planorama}
+      # API Keys
+      ORS_API_KEY: ${ORS_API_KEY}
+      AI_API_KEY: ${AI_API_KEY}
+      # Security
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      # Environment
+      ENVIRONMENT: ${ENVIRONMENT:-local}
+      DOMAIN: ${DOMAIN:-localhost:8000}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:5173,http://localhost:80}
+      DEBUG: ${DEBUG:-False}
+      # Admin User Seeding
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@planorama.com}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - planorama_network
+    restart: unless-stopped
+
+  # Frontend Service
+  frontend:
+    build:
+      context: frontend/react
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:8000}
+    container_name: planorama_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - planorama_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  planorama_network:
+    driver: bridge
+
