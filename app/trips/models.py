@@ -19,7 +19,7 @@ class Trip(Base):
     trip_countries: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
-    created_at: Mapped[date] = mapped_column(Date, server_default=func.now(), nullable=False)
+    created_at: Mapped[date] = mapped_column(Date, server_default=func.current_date(), nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="trips")
     travels: Mapped[list["Travel"]] = relationship("Travel",

@@ -1,3 +1,4 @@
+"""External service connector initialization."""
 from app.core.config_loader import settings
 from app.external_services.connectors.openroute_connector import OpenRouteConnector
 from app.external_services.connectors.googletrans_connector import GoogleTranslateConnector

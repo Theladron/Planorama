@@ -1,3 +1,4 @@
+"""FastAPI application entry point."""
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -19,9 +20,9 @@ openapi_tags = [
 ]
 
 app = FastAPI(
-    openapi_url=None,  # Disable default openapi.json
-    docs_url=None,     # Disable default /docs
-    redoc_url=None,    # Disable default /redoc
+    openapi_url=None,
+    docs_url=None,
+    redoc_url=None,
     openapi_tags=openapi_tags,
     debug=settings.DEBUG,
 )
@@ -51,5 +52,9 @@ app.include_router(custom_docs_router)
 
 @app.get("/")
 async def root():
-    """Redirect to docs"""
+    """Redirect root path to API documentation.
+    
+    Returns:
+        RedirectResponse to /api/docs endpoint.
+    """
     return RedirectResponse(url="/api/docs")

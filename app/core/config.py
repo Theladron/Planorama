@@ -1,3 +1,4 @@
+"""Configuration settings for the FastAPI application."""
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Annotated, Any, Literal
@@ -14,6 +15,17 @@ from pydantic import (
 
 
 def parse_cors(value: Any) -> list[str] | str:
+    """Parse CORS origins from various input formats.
+    
+    Args:
+        value: String with comma-separated origins, or a list of strings.
+        
+    Returns:
+        List of origin strings or a single string, depending on input format.
+        
+    Raises:
+        ValueError: If the input format is not recognized.
+    """
     if isinstance(value, str) and not value.startswith("["):
         return [item.strip() for item in value.split(",")]
     elif isinstance(value, list | str):
@@ -21,6 +33,12 @@ def parse_cors(value: Any) -> list[str] | str:
     raise ValueError(value)
 
 class Settings(BaseSettings):
+    """Application settings loaded from environment variables.
+    
+    This class manages all configuration settings for the application,
+    including API keys, database connections, security settings, and
+    CORS configuration.
+    """
 
     model_config = SettingsConfigDict(
         env_file=Path(".env") if Path(".env").exists() else None,
@@ -31,22 +49,24 @@ class Settings(BaseSettings):
     APP_NAME: str = "Planorama"
     DEBUG: bool = False
 
-    # API
     ORS_API_KEY: str
     AI_API_KEY: str
 
-    # Security
     ALGORITHM: str = "HS256"
     JWT_SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # Environment
     DOMAIN: str
     ENVIRONMENT: Literal["local", "staging", "production"]
 
     @computed_field
     @property
     def server_host(self) -> str:
+        """Compute the server host URL based on environment.
+        
+        Returns:
+            HTTP URL for local environment, HTTPS URL for production/staging.
+        """
         if self.ENVIRONMENT == "local":
             return f"http://{self.DOMAIN}"
         return f"https://{self.DOMAIN}"
@@ -63,6 +83,11 @@ class Settings(BaseSettings):
 
     @cached_property
     def SQLALCHEMY_DATABASE_URI(self):
+        """Build the SQLAlchemy database URI from configuration.
+        
+        Returns:
+            MultiHostUrl object representing the PostgreSQL connection string.
+        """
         return MultiHostUrl.build(
             scheme="postgresql+psycopg2",
             username=self.POSTGRESQL_USERNAME,

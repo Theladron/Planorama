@@ -26,6 +26,13 @@ alembic/versions/*.pyc
 # Pytest
 .pytest_cache/
 .cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Sphinx documentation build
+docs/_build/
+docs/.doctrees/
 
 test2.py
 

@@ -1,17 +1,21 @@
 from googletrans import Translator
 from typing import Optional
 
+"""Google Translate integration for text translation."""
+from googletrans import Translator
+from typing import Optional
+
 async def translate_text(translator: Translator, text: str, target_lang: str, origin_lang: str) -> Optional[str]:
-    """
-    Translates a given text to the specified language using Google Translate.
-
+    """Translate text to a target language using Google Translate.
+    
     Args:
-        translator (googletrans.Translator): Google Translate translator instance.
-        text (str): The text to translate.
-        target_lang (str): Target language code (e.g., 'en' for English, 'de' for German).
-
+        translator: Google Translate translator instance.
+        text: The text to translate.
+        target_lang: Target language code (e.g., 'en' for English, 'de' for German).
+        origin_lang: Source language code (e.g., 'en', 'de', or 'auto').
+        
     Returns:
-        Optional[str]: Translated text, or None if translation failed.
+        Translated text if successful, None if translation failed.
     """
     try:
         result = await translator.translate(text, src=origin_lang, dest=target_lang)

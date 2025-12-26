@@ -13,7 +13,16 @@ import_all_models()
 
 
 def seed_admin_user():
-    """Create an admin user if it doesn't exist."""
+    """Create an admin user if it doesn't exist.
+    
+    Reads admin credentials from environment variables (ADMIN_EMAIL,
+    ADMIN_USERNAME, ADMIN_PASSWORD) and creates a user account with
+    admin privileges if one doesn't already exist.
+    
+    Note:
+        If the admin user already exists, the function will skip creation
+        and optionally update the existing user to have admin privileges.
+    """
     admin_email = os.getenv("ADMIN_EMAIL", "admin@planorama.com")
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
     admin_password = os.getenv("ADMIN_PASSWORD")

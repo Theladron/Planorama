@@ -178,18 +178,21 @@ npm run dev
 
 * [x] React MUI frontend
 
-* [ ] Pytest coverage
+* [x] Pytest coverage
 
 * [x] AI suggestion generation
 
 * [x] AI route generation
 
-* [ ] Sphinx docs
+* [x] Sphinx docs
 
 * [x] Render deployment
 
-* [ ] Dockerization
+* [x] Dockerization
 
+* [x] Github Workflows
+
+* [x] AWS EC2 deployment
 ---
 
 ## 🤝 Contributing

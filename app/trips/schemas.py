@@ -37,5 +37,7 @@ class TripSchema(TripBase):
     created_at: date
 
 class TripUpdate(BaseModel):
+    trip_name: Optional[str] = None
+    trip_countries: Optional[List[str]] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None

@@ -1,3 +1,4 @@
+"""AI-powered suggestions using Perplexity API."""
 import requests
 import json
 import re
@@ -15,8 +16,24 @@ def fetch_local_items(
     max_retries: int = 3,
     retry_delay: float = 1.0
 ) -> list:
-    """
-    Fetches real-world geographic data (e.g., campsites, hotels) near a town using Perplexity AI.
+    """Fetch local items (campsites, hotels, etc.) near a location using Perplexity AI.
+    
+    Args:
+        api_key: Perplexity API key.
+        town_name: Name of the town or location.
+        lat: Latitude coordinate.
+        lon: Longitude coordinate.
+        language: Language code ('en' or 'de').
+        content_type: Type of content to fetch (e.g., 'campsites', 'hotels').
+        max_retries: Maximum number of retry attempts.
+        retry_delay: Delay between retries in seconds.
+        
+    Returns:
+        List of dictionaries with title, url, description, lat, lon for each item.
+        
+    Raises:
+        ValueError: If language prompt is invalid or JSON cannot be extracted.
+        RuntimeError: If API request fails.
     """
     prompts = {
         "en": f"""You must return exactly three real and verifiable {content_type} in or near 
@@ -75,8 +92,27 @@ def fetch_public_transport(
     max_retries: int = 3,
     retry_delay: float = 1.0
 ) -> list:
-    """
-    Fetches public transport options between two cities using Perplexity AI.
+    """Fetch public transport options between two cities using Perplexity AI.
+    
+    Args:
+        api_key: Perplexity API key.
+        start_city: Starting city name.
+        start_lat: Starting latitude.
+        start_lon: Starting longitude.
+        end_city: Destination city name.
+        end_lat: Destination latitude.
+        end_lon: Destination longitude.
+        language: Language code ('en' or 'de'), defaults to 'en'.
+        max_retries: Maximum number of retry attempts.
+        retry_delay: Delay between retries in seconds.
+        
+    Returns:
+        List of dictionaries with method_of_transport, url, description,
+        departure_time, and price for each route option.
+        
+    Raises:
+        ValueError: If language prompt is invalid or JSON cannot be extracted.
+        RuntimeError: If API request fails.
     """
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -132,6 +168,23 @@ def _query_perplexity(api_key: str,
                       lon: float,
                       max_retries: int,
                       retry_delay: float) -> list:
+    """Query Perplexity AI API with retry logic.
+    
+    Args:
+        api_key: Perplexity API key.
+        prompt: Prompt text to send to the API.
+        lat: Latitude for location context.
+        lon: Longitude for location context.
+        max_retries: Maximum number of retry attempts.
+        retry_delay: Delay between retries in seconds.
+        
+    Returns:
+        Parsed JSON array from API response.
+        
+    Raises:
+        ValueError: If prompt is invalid or JSON cannot be extracted after retries.
+        RuntimeError: If API request fails.
+    """
     if not prompt:
         raise ValueError("Invalid or missing language prompt.")
 
@@ -176,7 +229,7 @@ def _query_perplexity(api_key: str,
                 result_data = json.loads(cleaned_block)
                 return result_data
             except json.JSONDecodeError:
-                pass  # retry
+                pass
         if attempt < max_retries - 1:
             time.sleep(retry_delay)
         else:

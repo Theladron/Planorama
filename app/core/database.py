@@ -1,3 +1,4 @@
+"""Database configuration and session management."""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.core.config_loader import settings
@@ -7,10 +8,18 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class Base(DeclarativeBase):
-    pass
+    """Base class for all SQLAlchemy models."""
 
 
 def get_db():
+    """Get a database session.
+    
+    Yields:
+        Database session instance.
+        
+    Note:
+        The session is automatically closed after use.
+    """
     db = SessionLocal()
     try:
         yield db
@@ -19,6 +28,11 @@ def get_db():
 
 
 def import_all_models():
+    """Import all SQLAlchemy models to ensure they are registered.
+    
+    This function must be called before creating database tables
+    to ensure all models are properly registered with SQLAlchemy.
+    """
     import app.users.models
     import app.trips.models
     import app.activities.models

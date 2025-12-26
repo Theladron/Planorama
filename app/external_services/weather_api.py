@@ -1,3 +1,4 @@
+"""Weather forecast API integration using Open-Meteo."""
 import requests
 from typing import Optional, List, Dict
 
@@ -27,6 +28,17 @@ WEATHER_CODES = {
 
 
 def get_weather_forecast(lat: float, lon: float) -> Optional[Dict]:
+    """Get weather forecast for a specific location.
+    
+    Args:
+        lat: Latitude coordinate.
+        lon: Longitude coordinate.
+        
+    Returns:
+        Dictionary containing current weather, today's forecast, and
+        multi-day forecast with temperature, weather codes, and icons.
+        Returns None if the API request fails.
+    """
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": lat,

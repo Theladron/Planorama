@@ -1,9 +1,19 @@
+"""OpenRouteService API integration for geocoding and routing."""
 import openrouteservice
 from typing import Optional, List
 
 
 def geocode_town(client: openrouteservice.Client,
                  town_name: str) -> Optional[dict]:
+    """Geocode a town name to get coordinates and country.
+    
+    Args:
+        client: OpenRouteService client instance.
+        town_name: Name of the town to geocode.
+        
+    Returns:
+        Dictionary with 'lat', 'lon', and 'country' keys, or None if not found.
+    """
     results = client.pelias_search(text=town_name, size=1)  # type: ignore[attr-defined]
     features = results.get("features")
     if not features:
@@ -18,6 +28,18 @@ def geocode_town(client: openrouteservice.Client,
 def get_route_directions(
     client: openrouteservice.Client, start_town: str, end_town: str
 ) -> Optional[tuple[list[str], str]]:
+    """Get driving directions between two towns.
+    
+    Args:
+        client: OpenRouteService client instance.
+        start_town: Starting town name.
+        end_town: Destination town name.
+        
+    Returns:
+        Tuple of (directions_list, readable_duration) if successful, None otherwise.
+        Directions list contains step-by-step instructions.
+        Duration is formatted as "Xh Ym" or "Ym".
+    """
     start_loc = geocode_town(client, start_town)
     end_loc = geocode_town(client, end_town)
     if not start_loc or not end_loc:
@@ -35,8 +57,6 @@ def get_route_directions(
 
         if not steps or duration_sec is None:
             return None
-
-        # Convert duration (in seconds) to "Xh Ym"
         hours = int(duration_sec // 3600)
         minutes = int((duration_sec % 3600) // 60)
         readable_duration = f"{hours}h {minutes}m" if hours else f"{minutes}m"
@@ -54,6 +74,19 @@ def get_full_route_data_by_coords(
     end_lat: float,
     end_lon: float
 ) -> Optional[dict]:
+    """Get full route data including polyline coordinates between two points.
+    
+    Args:
+        client: OpenRouteService client instance.
+        start_lat: Starting latitude.
+        start_lon: Starting longitude.
+        end_lat: Destination latitude.
+        end_lon: Destination longitude.
+        
+    Returns:
+        Dictionary with 'polyline', 'duration', and 'directions' keys, or None if failed.
+        Polyline contains decoded coordinate pairs for route visualization.
+    """
     try:
         route = client.directions(
             coordinates=[(start_lon, start_lat), (end_lon, end_lat)],
@@ -67,7 +100,6 @@ def get_full_route_data_by_coords(
             [coord[1], coord[0]] for coord in
             openrouteservice.convert.decode_polyline(geometry)['coordinates']
         ]
-        print("Decoded polyline:", decoded_coords[:5])
         steps = route_data['segments'][0]['steps']
         duration_sec = route_data['summary']['duration']
         readable_duration = (

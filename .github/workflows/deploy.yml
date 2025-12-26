@@ -178,6 +178,10 @@ jobs:
             docker compose down || true
             
             echo "Building containers (this may take several minutes)..."
+            # Docker Compose uses Docker's layer caching automatically:
+            # - Unchanged layers are reused from cache (very fast)
+            # - Only changed layers are rebuilt
+            # - This means if only frontend files changed, backend layers are reused and vice versa
             docker compose build
 
             echo "Starting containers..."

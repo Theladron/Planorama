@@ -1,3 +1,4 @@
+"""Station management service functions."""
 from sqlalchemy.orm import Session, joinedload
 from app.stations.models import Station
 from app.trips.models import Trip
@@ -16,18 +17,56 @@ from app.core.connector_loader import openroute_connector, googletrans_connector
 
 
 def get_station(db: Session, station_id: int):
+    """Retrieve a station by its ID.
+    
+    Args:
+        db: Database session.
+        station_id: Unique station identifier.
+        
+    Returns:
+        Station object if found, None otherwise.
+    """
     return db.query(Station).filter(Station.id == station_id).first()
 
 
 def get_trip(db: Session, trip_id: int):
+    """Retrieve a trip by its ID.
+    
+    Args:
+        db: Database session.
+        trip_id: Unique trip identifier.
+        
+    Returns:
+        Trip object if found, None otherwise.
+    """
     return db.query(Trip).filter_by(id=trip_id).first()
 
 
 def get_all_stations(db: Session):
+    """Retrieve all stations from the database.
+    
+    Args:
+        db: Database session.
+        
+    Returns:
+        List of all Station objects.
+    """
     return db.query(Station).all()
 
 
 def get_user_language_preference(db: Session, user_id: int):
+    """Retrieve a user's language preference.
+    
+    Args:
+        db: Database session.
+        user_id: Unique user identifier.
+        
+    Returns:
+        User's language preference code ('en' or 'de'), defaults to 'en'.
+        
+    Raises:
+        HTTPException: If user not found.
+    """
     user = db.query(User).filter_by(id=user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -35,9 +74,18 @@ def get_user_language_preference(db: Session, user_id: int):
 
 
 def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> List[TripStation]:
-    """
-    Retrieve TripStation objects linked to a trip owned by user,
-    ordered by day_number.
+    """Retrieve TripStation objects linked to a trip owned by user.
+    
+    Args:
+        db: Database session.
+        trip_id: Unique trip identifier.
+        user_id: Unique user identifier for authorization.
+        
+    Returns:
+        List of StationWithLinkIdSchema objects ordered by day_number.
+        
+    Raises:
+        HTTPException: If trip_id is invalid or user is unauthorized.
     """
     if trip_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid trip ID")
@@ -69,6 +117,19 @@ def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> L
 
 
 async def create_station(db: Session, station_data: StationCreate, user_id: int) -> Station:
+    """Create a new station and link it to a trip.
+    
+    Args:
+        db: Database session.
+        station_data: StationCreate schema with station information.
+        user_id: Unique user identifier for authorization.
+        
+    Returns:
+        Created or existing Station object.
+        
+    Raises:
+        HTTPException: If validation fails, location lookup fails, or unauthorized.
+    """
     if station_data.trip_id <= 0 or station_data.day_number <= 0:
         raise HTTPException(status_code=400, detail="Trip ID and day number must be positive integers")
 
@@ -185,6 +246,19 @@ def delete_station(
     link_id: int,
     user_id: int
 ):
+    """Delete a station link from a trip.
+    
+    Args:
+        db: Database session.
+        link_id: Unique TripStation link identifier.
+        user_id: Unique user identifier for authorization.
+        
+    Returns:
+        Dictionary with success message.
+        
+    Raises:
+        HTTPException: If link_id is invalid, link not found, or unauthorized.
+    """
     if link_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid TripStation link ID")
 
@@ -232,6 +306,18 @@ def delete_station(
 
 
 def admin_delete_station(db: Session, station_id: int):
+    """Delete a station and all its links (admin only).
+    
+    Args:
+        db: Database session.
+        station_id: Unique station identifier.
+        
+    Returns:
+        Dictionary with success message including number of affected trips.
+        
+    Raises:
+        HTTPException: If station_id is invalid or station not found.
+    """
     if station_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid station ID")
 
@@ -272,6 +358,20 @@ def reorder_stations(
     reorder_items: List[TripStationReorderItem],
     user_id: int
 ) -> List[TripStation]:
+    """Reorder stations within a trip by updating day numbers.
+    
+    Args:
+        db: Database session.
+        trip_id: Unique trip identifier.
+        reorder_items: List of TripStationReorderItem with new day numbers.
+        user_id: Unique user identifier for authorization.
+        
+    Returns:
+        List of reordered StationWithLinkIdSchema objects.
+        
+    Raises:
+        HTTPException: If validation fails, stations not found, or unauthorized.
+    """
     if trip_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid trip ID")
 
@@ -334,6 +434,19 @@ def reorder_stations(
 
 
 def get_stations_by_trip(db: Session, trip_id: int, user_id: int) -> List[Station]:
+    """Retrieve all stations for a specific trip in order.
+    
+    Args:
+        db: Database session.
+        trip_id: Unique trip identifier.
+        user_id: Unique user identifier for authorization.
+        
+    Returns:
+        List of Station objects ordered by day_number.
+        
+    Raises:
+        HTTPException: If trip_id is invalid or user is unauthorized.
+    """
     if trip_id <= 0:
         raise HTTPException(status_code=400, detail="Invalid trip ID")
 
@@ -359,6 +472,13 @@ def get_stations_by_trip(db: Session, trip_id: int, user_id: int) -> List[Statio
 
 
 def _remove_country_if_unused(db: Session, trip: Trip, country: str | None):
+    """Remove a country from trip_countries if no stations reference it.
+    
+    Args:
+        db: Database session.
+        trip: Trip object to update.
+        country: Country name to check and potentially remove.
+    """
     if not country or not trip.trip_countries:
         return
 
