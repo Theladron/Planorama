@@ -43,7 +43,7 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 - `VITE_BACKEND_URL`: (Optional) Backend URL for frontend build
 
 *Environment Secrets (Sensitive - store as Secrets, not Variables):*
-- `AWS_EC2_SSH_PRIVATE_KEY`: Private SSH key for EC2 access (entire `.pem` file content)
+- `AWS_EC2_SSH_PRIVATE_KEY`: Private SSH key for EC2 access (entire `.pem` file content, including `-----BEGIN` and `-----END` lines with all newlines preserved)
 - `POSTGRESQL_PASSWORD`: PostgreSQL database password
 - `ORS_API_KEY`: OpenRouteService API key
 - `AI_API_KEY`: AI service API key
