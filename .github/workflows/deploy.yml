@@ -111,7 +111,7 @@ jobs:
           EOF
           
           # Deploy code and .env file to EC2
-          ssh -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 ${EC2_USER}@${EC2_HOST} << ENDSSH
+          ssh -T -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o ConnectTimeout=30 ${EC2_USER}@${EC2_HOST} << ENDSSH
             set -e
             
             # Create app directory if it doesn't exist
@@ -149,7 +149,7 @@ jobs:
           echo ".env file uploaded successfully"
           
           # Continue with container deployment
-          ssh -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 ${EC2_USER}@${EC2_HOST} << ENDSSH
+          ssh -T -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o ConnectTimeout=30 ${EC2_USER}@${EC2_HOST} << ENDSSH
             set -e
             cd ${APP_PATH}
             

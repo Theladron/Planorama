@@ -80,6 +80,7 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 ## Notes
 
 - The `.env` file is automatically created during deployment - don't create it manually
+- **EC2 Security Group**: Must allow SSH (port 22) from GitHub Actions IP ranges (see https://api.github.com/meta for current IPs) or use 0.0.0.0/0 for testing
 - For production, configure SSL/TLS termination using AWS Application Load Balancer or nginx reverse proxy
 - `ENVIRONMENT=production` changes URL generation to use `https://` but doesn't enable HTTPS on the server
 - Update `BACKEND_CORS_ORIGINS` to use HTTPS URLs in production
