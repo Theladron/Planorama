@@ -32,8 +32,8 @@ admin_user_router = APIRouter(
 def user_post(user: UserCreate, db: Session = Depends(get_db)):
     try:
         return create_user(db, user)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"User creation failed: {str(e)}")
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=f"User creation failed: {str(error)}")
 
 
 @user_router.get(
@@ -60,8 +60,8 @@ def update_current_user(
     try:
         updated_user = update_user(db, current_user, update_data)
         return updated_user
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
 
 
 @user_router.patch(

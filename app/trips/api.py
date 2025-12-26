@@ -65,8 +65,8 @@ def create_new_trip(
 ):
     try:
         return create_trip(db, trip_data, current_user.id)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=str(error))
 
 
 @trip_router.put(
@@ -86,8 +86,8 @@ def update_user_trip(
         raise HTTPException(status_code=404, detail="Trip not found or unauthorized")
     try:
         return update_trip(db, trip_id, trip_update)
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
 
 
 @trip_router.delete(

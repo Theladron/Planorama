@@ -11,7 +11,5 @@ class TestValidationUtils:
 
     def test_placeholder(self):
         """Placeholder test - add validation functions to test."""
-        # TODO: Add validation functions to app/external_services/validation_utils.py
-        # Example: validate_coordinates, validate_email, etc.
         assert True
 

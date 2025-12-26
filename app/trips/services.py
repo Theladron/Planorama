@@ -27,9 +27,9 @@ def create_trip(db: Session, trip_data: TripCreate, user_id: int):
         db.commit()
         db.refresh(db_trip)
         return db_trip
-    except SQLAlchemyError as e:
+    except SQLAlchemyError as error:
         db.rollback()
-        raise Exception("Trip creation failed: " + str(e))
+        raise Exception("Trip creation failed: " + str(error))
 
 
 def delete_trip(db: Session, trip_id: int):
@@ -46,7 +46,6 @@ def update_trip(db: Session, trip_id: int, trip_update: TripUpdate):
 
     update_data = trip_update.model_dump(exclude_unset=True)
 
-    # Validate: check stations for day bounds
     new_start = update_data.get("start_date", trip.start_date)
     new_end = update_data.get("end_date", trip.end_date)
 
@@ -58,7 +57,6 @@ def update_trip(db: Session, trip_id: int, trip_update: TripUpdate):
         if station_date < new_start or station_date > new_end:
             raise ValueError(f"Station on day {station.day} falls outside the new trip range")
 
-    # Apply updates
     for key, value in update_data.items():
         setattr(trip, key, value)
 

@@ -153,8 +153,8 @@ def user_delete_station(
 
     try:
         return delete_station(db, link_id, current_user.id)
-    except HTTPException as e:
-        raise e
+    except HTTPException as error:
+        raise error
     except Exception:
         raise HTTPException(status_code=500, detail="Unexpected error occurred")
 

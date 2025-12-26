@@ -155,7 +155,6 @@ function hideAuthInputs() {
     });
 }
 
-// Run once after a short delay (after Swagger UI loads)
 setTimeout(hideAuthInputs, 1000);
 
 // Also observe DOM changes to hide inputs if modal opens later

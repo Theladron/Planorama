@@ -13,12 +13,12 @@ from pydantic import (
 )
 
 
-def parse_cors(v: Any) -> list[str] | str:
-    if isinstance(v, str) and not v.startswith("["):
-        return [i.strip() for i in v.split(",")]
-    elif isinstance(v, list | str):
-        return v
-    raise ValueError(v)
+def parse_cors(value: Any) -> list[str] | str:
+    if isinstance(value, str) and not value.startswith("["):
+        return [item.strip() for item in value.split(",")]
+    elif isinstance(value, list | str):
+        return value
+    raise ValueError(value)
 
 class Settings(BaseSettings):
 

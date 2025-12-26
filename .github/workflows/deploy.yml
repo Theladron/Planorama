@@ -1,0 +1,156 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    environment: Planorama  # Use GitHub Environment
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AWS_EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ vars.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        env:
+          # EC2 Connection (these should be in Environment Secrets, not Variables)
+          EC2_HOST: ${{ vars.AWS_EC2_HOST }}
+          EC2_USER: ${{ vars.AWS_EC2_USER }}
+          EC2_APP_PATH: ${{ vars.AWS_EC2_APP_PATH }}
+          # Database
+          POSTGRESQL_USERNAME: ${{ vars.POSTGRESQL_USERNAME }}
+          POSTGRESQL_PASSWORD: ${{ secrets.POSTGRESQL_PASSWORD }}
+          POSTGRESQL_SERVER: ${{ vars.POSTGRESQL_SERVER }}
+          POSTGRESQL_PORT: ${{ vars.POSTGRESQL_PORT }}
+          POSTGRESQL_DATABASE: ${{ vars.POSTGRESQL_DATABASE }}
+          # API Keys (these should be in Environment Secrets)
+          ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          # Security (JWT_SECRET_KEY should be in Environment Secrets)
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          ACCESS_TOKEN_EXPIRE_MINUTES: ${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}
+          ALGORITHM: ${{ vars.ALGORITHM }}
+          # Environment
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          DOMAIN: ${{ vars.DOMAIN }}
+          BACKEND_CORS_ORIGINS: ${{ vars.BACKEND_CORS_ORIGINS }}
+          DEBUG: ${{ vars.DEBUG }}
+          # Admin User (ADMIN_PASSWORD should be in Environment Secrets)
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          ADMIN_USERNAME: ${{ vars.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          # Frontend
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
+        run: |
+          APP_PATH="${EC2_APP_PATH:-/opt/planorama}"
+          
+          # Create .env file content locally with variable expansion
+          cat > /tmp/.env << EOF
+          # Database Configuration
+          POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME}
+          POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+          POSTGRESQL_SERVER=${POSTGRESQL_SERVER:-postgres}
+          POSTGRESQL_PORT=${POSTGRESQL_PORT:-5432}
+          POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+          
+          # API Keys
+          ORS_API_KEY=${ORS_API_KEY}
+          AI_API_KEY=${AI_API_KEY}
+          
+          # Security
+          JWT_SECRET_KEY=${JWT_SECRET_KEY}
+          ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+          ALGORITHM=${ALGORITHM:-HS256}
+          
+          # Environment
+          ENVIRONMENT=${ENVIRONMENT}
+          DOMAIN=${DOMAIN}
+          BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+          DEBUG=${DEBUG:-False}
+          
+          # Admin User Seeding
+          ADMIN_EMAIL=${ADMIN_EMAIL}
+          ADMIN_USERNAME=${ADMIN_USERNAME}
+          ADMIN_PASSWORD=${ADMIN_PASSWORD}
+          
+          # Frontend
+          VITE_BACKEND_URL=${VITE_BACKEND_URL}
+          EOF
+          
+          # Deploy code and .env file to EC2
+          ssh -i ~/.ssh/deploy_key ${EC2_USER}@${EC2_HOST} << ENDSSH
+            set -e
+            
+            # Create app directory if it doesn't exist
+            if [ ! -d "${APP_PATH}" ]; then
+              echo "Creating app directory ${APP_PATH}..."
+              mkdir -p ${APP_PATH}
+            fi
+            
+            cd ${APP_PATH}
+            
+            # Clone repository if not already cloned, otherwise pull latest
+            if [ ! -d ".git" ]; then
+              echo "Repository not found. Cloning repository..."
+              # Note: For private repos, ensure git credentials are configured on EC2
+              # or clone manually once, then the workflow will handle updates
+              git clone https://github.com/${{ github.repository }}.git .
+            else
+              echo "Pulling latest code..."
+              git fetch origin
+              git reset --hard origin/main
+            fi
+            
+            echo "Code updated successfully"
+          ENDSSH
+          
+          # Upload .env file to EC2 (after git reset to ensure it's not overwritten)
+          scp -i ~/.ssh/deploy_key /tmp/.env ${EC2_USER}@${EC2_HOST}:${APP_PATH}/.env
+          
+          # Clean up local temp file
+          rm /tmp/.env
+          
+          echo ".env file uploaded successfully"
+          
+          # Continue with container deployment
+          ssh -i ~/.ssh/deploy_key ${EC2_USER}@${EC2_HOST} << ENDSSH
+            set -e
+            cd ${APP_PATH}
+            
+            echo "Verifying .env file exists..."
+            if [ ! -f .env ]; then
+              echo "ERROR: .env file not found!"
+              exit 1
+            fi
+            echo ".env file verified"
+            
+            echo "Stopping containers..."
+            docker compose down || true
+            
+            echo "Building containers..."
+            docker compose build
+            
+            echo "Starting containers..."
+            docker compose up -d
+            
+            echo "Waiting for services to be healthy..."
+            sleep 10
+            
+            # Optional: Run migrations (uncomment when ready)
+            # echo "Running database migrations..."
+            # docker compose exec -T backend alembic upgrade head || echo "Migration failed, check logs"
+            
+            echo "Deployment completed successfully"
+          ENDSSH
+

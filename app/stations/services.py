@@ -50,21 +50,21 @@ def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> L
         db.query(TripStation)
         .filter_by(trip_id=trip_id)
         .order_by(TripStation.day_number)
-        .options(joinedload(TripStation.station))  # eager load station relationship
+        .options(joinedload(TripStation.station))
         .all()
     )
     return [
         StationWithLinkIdSchema(
-            id=ts.station.id,
-            station_name=ts.station.station_name,
-            station_name_de=ts.station.station_name_de,
-            latitude=ts.station.latitude,
-            longitude=ts.station.longitude,
-            country=ts.station.country,
-            link_id=ts.id,  # this is the TripStation.id
-            day_number=ts.day_number,
+            id=trip_station.station.id,
+            station_name=trip_station.station.station_name,
+            station_name_de=trip_station.station.station_name_de,
+            latitude=trip_station.station.latitude,
+            longitude=trip_station.station.longitude,
+            country=trip_station.station.country,
+            link_id=trip_station.id,
+            day_number=trip_station.day_number,
         )
-        for ts in trip_stations
+        for trip_station in trip_stations
     ]
 
 
@@ -80,7 +80,6 @@ async def create_station(db: Session, station_data: StationCreate, user_id: int)
     if station_data.day_number > duration_days:
         raise HTTPException(status_code=400, detail="Day number is out of trip range")
 
-    # Check if day already has a station linked
     existing_trip_station = get_trip_station_by_trip_and_day(db, station_data.trip_id, station_data.day_number)
     if existing_trip_station:
         raise HTTPException(status_code=400, detail=f"A station already exists on day {station_data.day_number}.")
@@ -118,16 +117,16 @@ async def create_station(db: Session, station_data: StationCreate, user_id: int)
 
     if existing_station:
         all_trip_stations = get_trip_stations_for_trip(db, station_data.trip_id)
-        all_trip_stations.sort(key=lambda ts: ts.day_number)
+        all_trip_stations.sort(key=lambda trip_station: trip_station.day_number)
 
-        ordered_station_ids = [ts.station_id for ts in all_trip_stations]
+        ordered_station_ids = [trip_station.station_id for trip_station in all_trip_stations]
         insert_index = next(
-            (i for i, ts in enumerate(all_trip_stations) if ts.day_number > station_data.day_number),
+            (index for index, trip_station in enumerate(all_trip_stations) if trip_station.day_number > station_data.day_number),
             len(all_trip_stations)
         )
 
         new_order_station_ids = ordered_station_ids.copy()
-        new_order_day_numbers = [ts.day_number for ts in all_trip_stations]
+        new_order_day_numbers = [trip_station.day_number for trip_station in all_trip_stations]
         new_order_station_ids.insert(insert_index, existing_station.id)
         new_order_day_numbers.insert(insert_index, station_data.day_number)
 
@@ -205,7 +204,6 @@ def delete_station(
 
     _remove_country_if_unused(db, trip, country_to_check)
 
-    # Remove adjacent duplicates (same station on consecutive days)
     trip_station_links = (
         db.query(TripStation)
         .filter(TripStation.trip_id == trip.id)
@@ -215,15 +213,15 @@ def delete_station(
 
     to_delete_links = []
     previous_station_name = None
-    for ts in trip_station_links:
-        current_name = ts.station.station_name
+    for trip_station in trip_station_links:
+        current_name = trip_station.station.station_name
         if current_name == previous_station_name:
-            to_delete_links.append(ts)
+            to_delete_links.append(trip_station)
         else:
             previous_station_name = current_name
 
-    for ts in to_delete_links:
-        db.delete(ts)
+    for trip_station in to_delete_links:
+        db.delete(trip_station)
 
     db.commit()
 
@@ -248,7 +246,7 @@ def admin_delete_station(db: Session, station_id: int):
         db.commit()
         return {"detail": "Station deleted (no links existed)"}
 
-    affected_trip_ids = {ts.trip_id for ts in trip_station_links}
+    affected_trip_ids = {trip_station.trip_id for trip_station in trip_station_links}
     country_to_check = station.country
 
     for link in trip_station_links:
@@ -302,29 +300,28 @@ def reorder_stations(
     if len(trip_stations) != len(reorder_items):
         raise HTTPException(status_code=404, detail="One or more TripStations not found")
 
-    for ts in trip_stations:
-        if ts.trip_id != trip_id:
+    for trip_station in trip_stations:
+        if trip_station.trip_id != trip_id:
             raise HTTPException(status_code=400, detail="TripStation does not belong to specified trip")
 
     id_to_day = {item.link_id: item.day_number for item in reorder_items}
-    for ts in trip_stations:
-        ts.day_number = id_to_day[ts.id]
+    for trip_station in trip_stations:
+        trip_station.day_number = id_to_day[trip_station.id]
 
     db.flush()
 
-    # Remove adjacent duplicates (by station name)
     all_trip_stations = get_trip_stations_for_trip(db, trip_id)
     to_delete: List[TripStation] = []
     previous_name = None
-    for ts in all_trip_stations:
-        current_name = ts.station.station_name
+    for trip_station in all_trip_stations:
+        current_name = trip_station.station.station_name
         if current_name == previous_name:
-            to_delete.append(ts)
+            to_delete.append(trip_station)
         else:
             previous_name = current_name
 
-    for ts in to_delete:
-        db.delete(ts)
+    for trip_station in to_delete:
+        db.delete(trip_station)
 
     db.commit()
 
@@ -349,14 +346,14 @@ def get_stations_by_trip(db: Session, trip_id: int, user_id: int) -> List[Statio
         .order_by(TripStation.day_number)\
         .all()
 
-    station_ids = [ts.station_id for ts in trip_stations]
+    station_ids = [trip_station.station_id for trip_station in trip_stations]
 
     if not station_ids:
         return []
 
     stations = db.query(Station).filter(Station.id.in_(station_ids)).all()
-    stations_by_id = {s.id: s for s in stations}
-    ordered_stations = [stations_by_id[sid] for sid in station_ids if sid in stations_by_id]
+    stations_by_id = {station.id: station for station in stations}
+    ordered_stations = [stations_by_id[station_id] for station_id in station_ids if station_id in stations_by_id]
 
     return ordered_stations
 
@@ -369,7 +366,7 @@ def _remove_country_if_unused(db: Session, trip: Trip, country: str | None):
 
     trip_stations = get_trip_stations_for_trip(db, trip.id)
 
-    station_ids = [ts.station_id for ts in trip_stations]
+    station_ids = [trip_station.station_id for trip_station in trip_stations]
 
     if not station_ids:
         if country in trip.trip_countries:

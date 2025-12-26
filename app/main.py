@@ -9,7 +9,7 @@ from app.trips.api import trip_router, admin_trip_router
 from app.stations.api import station_router, admin_station_router
 from app.travel.api import travel_router
 from app.external_services.service_routes.api import frontend_router
-from app.custom_docs.api import router as custom_docs_router  # import custom docs
+from app.custom_docs.api import router as custom_docs_router
 
 openapi_tags = [
     {"name": "Users", "description": "User operations"},
@@ -26,10 +26,8 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
-# Import models
 import_all_models()
 
-# CORS
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
@@ -39,10 +37,9 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Include routers
 app.include_router(auth_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
-app.include_router(admin_user_router, prefix="/api")  # Admin routes
+app.include_router(admin_user_router, prefix="/api")
 app.include_router(trip_router, prefix="/api")
 app.include_router(admin_trip_router, prefix="/api")
 app.include_router(station_router, prefix="/api")

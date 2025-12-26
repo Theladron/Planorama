@@ -161,8 +161,8 @@ def _query_perplexity(api_key: str,
 
         try:
             raw_content = response.json()["choices"][0]["message"]["content"]
-        except (KeyError, IndexError) as e:
-            raise ValueError("Invalid response format.") from e
+        except (KeyError, IndexError) as error:
+            raise ValueError("Invalid response format.") from error
 
         match = re.search(r"(\[\s*{.*?}\s*\])", raw_content, re.DOTALL)
         if match:

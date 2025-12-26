@@ -25,15 +25,12 @@ class TestAuthAPI:
 
     def test_register_user_success(self, client, mock_db):
         """Test successful user registration."""
-        # Override database dependency - get_db is a generator
         def override_get_db():
             yield mock_db
         app.dependency_overrides[get_db] = override_get_db
 
-        # Mock the service function at the API level where it's used
         with patch('app.users.api.create_user') as mock_create_user:
             from app.users.models import User
-            # Create a simple object that can be serialized
             mock_user = type('User', (), {
                 'id': 1,
                 'username': 'testuser',
@@ -47,7 +44,6 @@ class TestAuthAPI:
             mock_create_user.return_value = mock_user
 
             try:
-                # Make request
                 response = client.post(
                     "/api/users/",
                     json={
@@ -57,29 +53,25 @@ class TestAuthAPI:
                     }
                 )
 
-                # Assertions
                 assert response.status_code == 200
                 data = response.json()
                 assert "id" in data
                 assert data["username"] == "testuser"
                 assert data["email"] == "test@example.com"
-                assert "password" not in data  # Password should not be in response
+                assert "password" not in data
             finally:
                 app.dependency_overrides.clear()
 
     def test_register_user_duplicate_email(self, client, mock_db):
         """Test registration with duplicate email."""
-        # Override database dependency - get_db is a generator
         def override_get_db():
             yield mock_db
         app.dependency_overrides[get_db] = override_get_db
 
-        # Mock the service function at the API level where it's used
         with patch('app.users.api.create_user') as mock_create_user:
             mock_create_user.side_effect = Exception("Email already exists")
 
             try:
-                # Make request
                 response = client.post(
                     "/api/users/",
                     json={
@@ -89,19 +81,16 @@ class TestAuthAPI:
                     }
                 )
 
-                # Assertions
                 assert response.status_code == 400
             finally:
                 app.dependency_overrides.clear()
 
     def test_login_success(self, client, mock_db):
         """Test successful login."""
-        # Override database dependency - get_db is a generator
         def override_get_db():
             yield mock_db
         app.dependency_overrides[get_db] = override_get_db
 
-        # Mock the service function at the API level where it's used
         with patch('app.auth.api.authenticate_user') as mock_authenticate:
             from app.users.models import User
             mock_user = type('User', (), {
@@ -111,7 +100,6 @@ class TestAuthAPI:
             mock_authenticate.return_value = mock_user
 
             try:
-                # Make request (using OAuth2PasswordRequestForm format)
                 response = client.post(
                     "/api/auth/token",
                     data={
@@ -120,7 +108,6 @@ class TestAuthAPI:
                     }
                 )
 
-                # Assertions
                 assert response.status_code == 200
                 data = response.json()
                 assert "access_token" in data
@@ -130,17 +117,14 @@ class TestAuthAPI:
 
     def test_login_invalid_credentials(self, client, mock_db):
         """Test login with invalid credentials."""
-        # Override database dependency - get_db is a generator
         def override_get_db():
             yield mock_db
         app.dependency_overrides[get_db] = override_get_db
 
-        # Mock the service function at the API level where it's used
         with patch('app.auth.api.authenticate_user') as mock_authenticate:
             mock_authenticate.return_value = None
 
             try:
-                # Make request
                 response = client.post(
                     "/api/auth/token",
                     data={
@@ -149,7 +133,6 @@ class TestAuthAPI:
                     }
                 )
 
-                # Assertions
                 assert response.status_code == 401
             finally:
                 app.dependency_overrides.clear()

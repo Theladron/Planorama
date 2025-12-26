@@ -58,19 +58,18 @@ def get_weather_forecast(lat: float, lon: float) -> Optional[Dict]:
         }
         today_desc, today_icon = WEATHER_CODES.get(today["weathercode"], ("Unknown", "❓"))
 
-        # Create full forecast for the next 7 days
         forecast = []
-        for i in range(len(daily["time"])):
-            code = daily["weathercode"][i]
+        for day_index in range(len(daily["time"])):
+            code = daily["weathercode"][day_index]
             desc, icon = WEATHER_CODES.get(code, ("Unknown", "❓"))
             forecast.append({
-                "date": daily["time"][i],
-                "temp_min": daily["temperature_2m_min"][i],
-                "temp_max": daily["temperature_2m_max"][i],
+                "date": daily["time"][day_index],
+                "temp_min": daily["temperature_2m_min"][day_index],
+                "temp_max": daily["temperature_2m_max"][day_index],
                 "description": desc,
                 "icon": icon,
-                "sunrise": daily["sunrise"][i],
-                "sunset": daily["sunset"][i],
+                "sunrise": daily["sunrise"][day_index],
+                "sunset": daily["sunset"][day_index],
             })
 
         return {

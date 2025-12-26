@@ -27,8 +27,8 @@ def create_user(db: Session, user: UserCreate):
         db.commit()
         db.refresh(db_user)
         return db_user
-    except Exception as e:
-        print(f"Error creating user: {e}")
+    except Exception as error:
+        print(f"Error creating user: {error}")
         raise
 
 

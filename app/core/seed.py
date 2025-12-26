@@ -8,13 +8,11 @@ from app.core.database import SessionLocal, import_all_models
 from app.core.security import hash_password
 from app.users.models import User
 
-# Import all models to ensure they're registered
 import_all_models()
 
 
 def seed_admin_user():
     """Create an admin user if it doesn't exist."""
-    # Get admin credentials from environment variables
     admin_email = os.getenv("ADMIN_EMAIL", "admin@planorama.com")
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
     admin_password = os.getenv("ADMIN_PASSWORD")
@@ -25,18 +23,14 @@ def seed_admin_user():
     
     db: Session = SessionLocal()
     try:
-        # Check if admin user already exists
         existing_admin = db.query(User).filter_by(email=admin_email).first()
         if existing_admin:
             print(f"Admin user with email '{admin_email}' already exists. Skipping creation.")
-            # Ensure existing admin has admin privileges
             if not existing_admin.is_admin:
                 existing_admin.is_admin = True
                 db.commit()
                 print(f"Updated user '{admin_email}' to have admin privileges.")
             return
-        
-        # Create new admin user
         admin_user = User(
             email=admin_email.lower().strip(),
             username=admin_username,
@@ -50,8 +44,8 @@ def seed_admin_user():
         db.commit()
         db.refresh(admin_user)
         print(f"✓ Admin user '{admin_username}' ({admin_email}) created successfully.")
-    except Exception as e:
-        print(f"ERROR: Failed to create admin user: {e}")
+    except Exception as error:
+        print(f"ERROR: Failed to create admin user: {error}")
         db.rollback()
         raise
     finally:

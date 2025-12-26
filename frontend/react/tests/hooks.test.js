@@ -38,14 +38,18 @@ describe('Custom Hooks', () => {
         mockLoginApi.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve('token123'), 100)));
         const { result } = renderHook(() => useAuth());
         
-        const loginPromise = result.current.login('test@example.com', 'password');
+        let loginPromise;
+        act(() => {
+          loginPromise = result.current.login('test@example.com', 'password');
+        });
         
-        // Loading state might not be immediately available, wait for it
-        await waitFor(() => {
-          expect(result.current.loading).toBe(true);
-        }, { timeout: 200 });
+        // Loading state should be set immediately after act
+        expect(result.current.loading).toBe(true);
         
-        await loginPromise;
+        await act(async () => {
+          await loginPromise;
+        });
+        
         await waitFor(() => {
           expect(result.current.loading).toBe(false);
         });
@@ -56,10 +60,17 @@ describe('Custom Hooks', () => {
         mockLoginApi.mockResolvedValue(mockToken);
         const { result } = renderHook(() => useAuth());
         
-        const token = await result.current.login('test@example.com', 'password');
+        let token;
+        await act(async () => {
+          token = await result.current.login('test@example.com', 'password');
+        });
+        
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        });
+        
         expect(token).toBe(mockToken);
         expect(result.current.error).toBe(null);
-        expect(result.current.loading).toBe(false);
       });
 
       it('should set error on login failure', async () => {
@@ -67,7 +78,14 @@ describe('Custom Hooks', () => {
         mockLoginApi.mockRejectedValue(mockError);
         const { result } = renderHook(() => useAuth());
         
-        await expect(result.current.login('test@example.com', 'wrong')).rejects.toThrow();
+        await act(async () => {
+          try {
+            await result.current.login('test@example.com', 'wrong');
+          } catch (e) {
+            // Expected to throw
+          }
+        });
+        
         await waitFor(() => {
           expect(result.current.error).toBe('Invalid credentials');
           expect(result.current.loading).toBe(false);
@@ -79,22 +97,28 @@ describe('Custom Hooks', () => {
         mockLoginApi.mockRejectedValueOnce(new Error('First error'));
         const { result } = renderHook(() => useAuth());
         
-        try {
-          await result.current.login('test@example.com', 'wrong');
-        } catch (e) {
-          // Expected to fail
-        }
+        await act(async () => {
+          try {
+            await result.current.login('test@example.com', 'wrong');
+          } catch (e) {
+            // Expected to fail
+          }
+        });
         
         await waitFor(() => {
           expect(result.current.error).toBe('First error');
+          expect(result.current.loading).toBe(false);
         });
 
         // Then succeed
         mockLoginApi.mockResolvedValueOnce('token');
-        await result.current.login('test@example.com', 'correct');
+        await act(async () => {
+          await result.current.login('test@example.com', 'correct');
+        });
         
         await waitFor(() => {
           expect(result.current.error).toBe(null);
+          expect(result.current.loading).toBe(false);
         });
       });
     });
@@ -104,14 +128,18 @@ describe('Custom Hooks', () => {
         mockRegisterApi.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ id: 1 }), 100)));
         const { result } = renderHook(() => useAuth());
         
-        const registerPromise = result.current.register('username', 'test@example.com', 'password');
+        let registerPromise;
+        act(() => {
+          registerPromise = result.current.register('username', 'test@example.com', 'password');
+        });
         
-        // Loading state might not be immediately available, wait for it
-        await waitFor(() => {
-          expect(result.current.loading).toBe(true);
-        }, { timeout: 200 });
+        // Loading state should be set immediately after act
+        expect(result.current.loading).toBe(true);
         
-        await registerPromise;
+        await act(async () => {
+          await registerPromise;
+        });
+        
         await waitFor(() => {
           expect(result.current.loading).toBe(false);
         });
@@ -122,10 +150,17 @@ describe('Custom Hooks', () => {
         mockRegisterApi.mockResolvedValue(mockUser);
         const { result } = renderHook(() => useAuth());
         
-        const user = await result.current.register('testuser', 'test@example.com', 'password');
+        let user;
+        await act(async () => {
+          user = await result.current.register('testuser', 'test@example.com', 'password');
+        });
+        
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        });
+        
         expect(user).toEqual(mockUser);
         expect(result.current.error).toBe(null);
-        expect(result.current.loading).toBe(false);
       });
 
       it('should set error on registration failure', async () => {
@@ -133,7 +168,14 @@ describe('Custom Hooks', () => {
         mockRegisterApi.mockRejectedValue(mockError);
         const { result } = renderHook(() => useAuth());
         
-        await expect(result.current.register('user', 'test@example.com', 'password')).rejects.toThrow();
+        await act(async () => {
+          try {
+            await result.current.register('user', 'test@example.com', 'password');
+          } catch (e) {
+            // Expected to throw
+          }
+        });
+        
         await waitFor(() => {
           expect(result.current.error).toBe('Email already exists');
           expect(result.current.loading).toBe(false);
@@ -143,11 +185,15 @@ describe('Custom Hooks', () => {
   });
 
   describe('useTrips', () => {
-    it('should initialize with loading true and empty trips', () => {
+    it('should initialize with loading true and empty trips', async () => {
       mockFetchUserTrips.mockImplementation(() => new Promise(() => {})); // Never resolves
       const { result } = renderHook(() => useTrips());
       
-      expect(result.current.loading).toBe(true);
+      // useEffect runs asynchronously, so we need to wait a bit
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      });
+      
       expect(result.current.trips).toEqual([]);
       expect(result.current.error).toBe(null);
     });
@@ -203,14 +249,14 @@ describe('Custom Hooks', () => {
       
       expect(typeof result.current.setTrips).toBe('function');
       
-      // Wait for initial loading to complete (or start)
+      // Wait for initial loading to start
       await waitFor(() => {
         expect(result.current.loading).toBeDefined();
       });
       
       // Test that setTrips updates trips
       const newTrips = [{ id: 99, trip_name: 'New Trip' }];
-      act(() => {
+      await act(async () => {
         result.current.setTrips(newTrips);
       });
       

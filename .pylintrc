@@ -1,0 +1,184 @@
+[MAIN]
+
+# Python code to execute, usually for sys.path manipulation
+init-hook='import sys; sys.path.append(".")'
+
+# Files or directories to be skipped
+ignore=migrations,
+       tests,
+       __pycache__,
+       htmlcov
+
+# Use multiple processes to speed up Pylint
+jobs=0
+
+# Control the amount of potential inferred values when inferring a single object
+limit-inference-results=100
+
+# List of plugins (as comma separated values of python module names) to load
+load-plugins=
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# Minimum Python version to use for version dependent checks
+py-version=3.12
+
+# When enabled, pylint would attempt to guess common misconfiguration
+suggestion-mode=yes
+
+# Allow loading of arbitrary C extensions
+unsafe-load-any-extension=no
+
+
+[MESSAGES CONTROL]
+
+# Disable messages for FastAPI/Pydantic/SQLAlchemy common patterns
+disable=raw-checker-failed,
+        bad-inline-option,
+        locally-disabled,
+        file-ignored,
+        suppressed-message,
+        useless-suppression,
+        deprecated-pragma,
+        use-symbolic-message-instead,
+        # FastAPI/Pydantic/SQLAlchemy patterns
+        too-few-public-methods,
+        too-many-arguments,
+        too-many-locals,
+        too-many-branches,
+        too-many-instance-attributes,
+        too-many-public-methods,
+        too-many-return-statements,
+        # SQLAlchemy dynamic attributes
+        no-member,
+        # Pydantic validators
+        unused-argument,
+        # FastAPI Depends() pattern
+        import-outside-toplevel,
+        # Docstrings (optional, but useful for API docs)
+        missing-module-docstring,
+        missing-class-docstring,
+        missing-function-docstring,
+        # Allow redefined-builtin for common names
+        redefined-builtin,
+        # Line endings (Windows compatibility)
+        unexpected-line-ending-format
+
+
+[FORMAT]
+
+# Expected format of line ending (disabled - allow both LF and CRLF)
+# expected-line-ending-format=LF
+
+# Maximum number of characters on a single line
+max-line-length=120
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+
+[BASIC]
+
+# Naming style matching correct argument names
+argument-naming-style=snake_case
+
+# Naming style matching correct attribute names
+attr-naming-style=snake_case
+
+# Naming style matching correct class names
+class-naming-style=PascalCase
+
+# Naming style matching correct constant names
+const-naming-style=UPPER_CASE
+
+# Naming style matching correct function names
+function-naming-style=snake_case
+
+# Good variable names which should always be accepted
+good-names=Run,
+           _,
+           id,
+           db,
+           pk
+
+# Naming style matching correct method names
+method-naming-style=snake_case
+
+# Naming style matching correct module names
+module-naming-style=snake_case
+
+# Naming style matching correct variable names
+variable-naming-style=snake_case
+
+
+[DESIGN]
+
+# Maximum number of arguments for function / method
+max-args=7
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Maximum number of boolean expressions in an if statement
+max-bool-expr=5
+
+# Maximum number of branch for function / method body
+max-branches=15
+
+# Maximum number of locals for function / method body
+max-locals=20
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of public methods for a class
+max-public-methods=30
+
+# Maximum number of return / yield for function / method body
+max-returns=8
+
+# Maximum number of statements in function / method body
+max-statements=60
+
+# Minimum number of public methods for a class
+min-public-methods=1
+
+
+[IMPORTS]
+
+# Force import order to recognize modules as third party libraries
+known-third-party=fastapi,
+                  pydantic,
+                  pydantic_settings,
+                  sqlalchemy,
+                  alembic,
+                  starlette,
+                  uvicorn,
+                  jwt,
+                  argon2,
+                  requests,
+                  httpx
+
+
+[TYPECHECK]
+
+# List of members which are set dynamically and missed by pylint
+generated-members=REQUEST,
+                  RESPONSE,
+                  SESSION,
+                  query
+
+# Tells whether missing members accessed in mixin class should be ignored
+ignore-mixin-members=yes
+
+# Tells whether to warn about missing members when owner is inferred to be None
+ignore-none=yes
+
+# List of class names for which member attributes should not be checked
+ignored-classes=optparse.Values,
+                thread._local,
+                _thread._local,
+                SQLObject,
+                Base,
+                DeclarativeBase
