@@ -28,19 +28,18 @@ jobs:
 
       - name: Configure SSH
         run: |
-          mkdir -p "$HOME/.ssh" || true
-          chmod 700 "$HOME/.ssh" || true
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
           echo "${{ secrets.AWS_EC2_SSH_PRIVATE_KEY }}" > "$HOME/.ssh/deploy_key"
           chmod 600 "$HOME/.ssh/deploy_key"
-          ssh-keyscan -H ${{ vars.AWS_EC2_HOST }} >> "$HOME/.ssh/known_hosts"
-          # Create SSH config with keep-alive options to prevent connection timeout during long builds
-          cat > "$HOME/.ssh/config" << EOF
-          Host ${{ vars.AWS_EC2_HOST }}
-            ServerAliveInterval 30
-            ServerAliveCountMax 60
-            TCPKeepAlive yes
-            Compression yes
-          EOF
+          ssh-keyscan -H ${{ vars.AWS_EC2_HOST }} >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+          {
+            echo "Host ${{ vars.AWS_EC2_HOST }}"
+            echo "  ServerAliveInterval 30"
+            echo "  ServerAliveCountMax 60"
+            echo "  TCPKeepAlive yes"
+            echo "  Compression yes"
+          } > "$HOME/.ssh/config"
           chmod 600 "$HOME/.ssh/config"
 
       - name: Deploy to EC2
