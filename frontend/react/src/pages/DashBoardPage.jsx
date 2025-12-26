@@ -1,45 +1,24 @@
-import { backendURL } from "../config";
-import React, { useContext, useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Link as MuiLink,
-  CircularProgress,
-} from "@mui/material";
+import React from "react";
+import { Box, Typography, Link as MuiLink, CircularProgress } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
+import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
+import { useTrips } from "../hooks/useTrips";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
 
 export default function DashboardPage() {
   const { user } = useContext(AuthContext);
   const { t } = useTranslation();
-
-  const [trips, setTrips] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTrips = async () => {
-      try {
-        const response = await axios.get(`${backendURL}/api/trips/me`);
-        setTrips(response.data);
-      } catch (error) {
-        console.error("Error fetching trips:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTrips();
-  }, []);
+  const { trips, loading } = useTrips();
 
   const nextTrip = trips
     .filter((trip) => dayjs(trip.start_date).isAfter(dayjs()))
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0];
 
-  const tripSoon =
-    nextTrip && dayjs(nextTrip.start_date).diff(dayjs(), "day") < 7;
+  const tripSoon = nextTrip && dayjs(nextTrip.start_date).diff(dayjs(), "day") < 7;
 
   if (loading) {
     return (

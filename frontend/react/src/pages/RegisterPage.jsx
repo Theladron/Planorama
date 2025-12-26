@@ -2,24 +2,13 @@ import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Link as MuiLink } from "@mui/material";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { backendURL } from "../config";
-
-function validatePassword(password, t) {
-  if (password.length < 8) return t("register.error_password_length");
-  if (!/[A-Z]/.test(password)) return t("register.error_password_uppercase");
-  if (!/[a-z]/.test(password)) return t("register.error_password_lowercase");
-  if (!/\d/.test(password)) return t("register.error_password_number");
-  if (!/[^\w\s]/.test(password)) return t("register.error_password_symbol");
-  return null; // valid
-}
-
-function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
+import { validateEmail, validatePassword } from "../utils/validation";
+import { useAuth } from "../hooks/useAuth";
+import { BackgroundBox } from "../components/common/BackgroundBox";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
+  const { register, loading, error: authError } = useAuth();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -29,74 +18,42 @@ export default function RegisterPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setSuccessMessage("");
+    e.preventDefault();
+    setError("");
+    setSuccessMessage("");
 
-  if (!validateEmail(email)) {
-    setError(t("register.error_invalid_email") || "Invalid email address");
-    return;
-  }
+    if (!validateEmail(email)) {
+      setError(t("register.error_invalid_email") || "Invalid email address");
+      return;
+    }
 
-  if (password !== passwordRepeat) {
-    setError(t("register.error_mismatch"));
-    return;
-  }
+    if (password !== passwordRepeat) {
+      setError(t("register.error_mismatch"));
+      return;
+    }
 
-  const passwordError = validatePassword(password, t);
-  if (passwordError) {
-    setError(passwordError);
-    return;
-  }
+    const passwordError = validatePassword(password, t);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
 
-  try {
-    const response = await fetch(`${backendURL}/api/users/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
-    });
-
-    if (response.ok) {
+    try {
+      await register(username, email, password);
       setSuccessMessage(t("register.success_message", { username }));
       setUsername("");
       setEmail("");
       setPassword("");
       setPasswordRepeat("");
-    } else {
-      const data = await response.json();
-      setError(data.detail || t("register.error_generic"));
+    } catch (err) {
+      setError(err.message || t("register.error_generic"));
     }
-  } catch (err) {
-    setError(t("register.error_network"));
-  }
-};
+  };
 
+  const displayError = error || authError;
 
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        backgroundImage: `url('/images/home_background.jpg')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.4)",
-          zIndex: 1,
-        },
-        zIndex: 2,
-      }}
-    >
+    <BackgroundBox>
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -119,9 +76,9 @@ export default function RegisterPage() {
           {t("register.title")}
         </Typography>
 
-        {error && (
+        {displayError && (
           <Typography color="error" variant="body2">
-            {error}
+            {displayError}
           </Typography>
         )}
 
@@ -166,10 +123,10 @@ export default function RegisterPage() {
           sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
         />
 
-        <Button variant="contained" type="submit">
-          {t("register.submit_button")}
+        <Button variant="contained" type="submit" disabled={loading}>
+          {loading ? "Loading..." : t("register.submit_button")}
         </Button>
       </Box>
-    </Box>
+    </BackgroundBox>
   );
 }

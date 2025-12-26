@@ -217,5 +217,8 @@
     "departure": "Abfahrt",
     "price": "Preis",
     "more_info": "Mehr Infos"
+  },
+  "common": {
+    "back": "Zurück"
   }
 }

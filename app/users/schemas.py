@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, model_validator, field_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator, field_validator, ConfigDict
 from typing import Optional
 import re
 
@@ -25,10 +25,9 @@ class UserCreate(UserBase):
         return password
 
 class UserSchema(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
-
-    class Config:
-        from_attributes = True
 
 
 class UserUpdate(BaseModel):

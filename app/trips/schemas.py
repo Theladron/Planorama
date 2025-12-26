@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator, ConfigDict
 from typing import List, Optional
 from datetime import date
 
@@ -30,12 +30,11 @@ class TripCreate(TripBase):
 
 
 class TripSchema(TripBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     user_id: int
     created_at: date
-
-    class Config:
-        from_attributes = True
 
 class TripUpdate(BaseModel):
     start_date: Optional[date] = None

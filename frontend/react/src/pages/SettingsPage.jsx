@@ -1,20 +1,9 @@
-import { backendURL } from "../config";
-import React, { useContext, useState } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  CircularProgress,
-} from "@mui/material";
+import React, { useState, useContext } from "react";
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
 import { useTranslation } from "react-i18next";
+import { deleteUser } from "../api/userApi";
 import Sidebar from "../components/Sidebar";
 
 export default function SettingsPage() {
@@ -44,7 +33,7 @@ export default function SettingsPage() {
     setDeleting(true);
     setError(null);
     try {
-      await axios.delete(`${backendURL}/api/users/me`);
+      await deleteUser();
       logout();
       navigate("/login");
     } catch (err) {

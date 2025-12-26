@@ -1,81 +1,40 @@
-import { backendURL } from "../config";
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Card,
-  CircularProgress,
-  Alert,
-  TextField,
-  MenuItem,
-  Button,
-  Snackbar,
-} from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Button, CircularProgress, Alert, TextField, MenuItem, Snackbar } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { useTrip } from "../hooks/useTrip";
+import { useStations } from "../hooks/useStations";
+import { reorderStations } from "../api/stationApi";
+import { getTripDays, hasDuplicates } from "../utils/dateUtils";
+import { BackgroundBox } from "../components/common/BackgroundBox";
+import { StyledCard } from "../components/common/StyledCard";
+import { BackButton } from "../components/common/BackButton";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
 
 export default function ReorderStationsPage() {
   const { t } = useTranslation();
   const { tripId } = useParams();
-  const [trip, setTrip] = useState(null);
-  const [stations, setStations] = useState([]);
+  const navigate = useNavigate();
+
+  const { trip, loading: tripLoading, error: tripError } = useTrip(tripId);
+  const { stations, setStations } = useStations(tripId);
+
   const [dayAssignments, setDayAssignments] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
-  }, [tripId]);
-
-  async function fetchData() {
-    setLoading(true);
-    try {
-      const tripRes = await axios.get(`${backendURL}/api/trips/${tripId}`);
-      const stationsRes = await axios.get(`${backendURL}/api/stations/by-trip/${tripId}`);
-      setTrip(tripRes.data);
-      setStations(stationsRes.data);
-
+    if (stations.length > 0) {
       const initialAssignments = {};
-      stationsRes.data.forEach((s) => {
+      stations.forEach((s) => {
         initialAssignments[s.link_id] = String(s.day_number);
       });
       setDayAssignments(initialAssignments);
-    } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.detail ||
-          t("reorderstations.error_load")
-      );
-    } finally {
-      setLoading(false);
     }
-  }
+  }, [stations]);
 
-  function getTripDays() {
-    if (!trip) return [];
-    const start = dayjs(trip.start_date);
-    const end = dayjs(trip.end_date);
-    const days = [];
-    for (let i = 1; i <= end.diff(start, "day") + 1; i++) {
-      days.push(i);
-    }
-    return days;
-  }
-
-  function hasDuplicates(values) {
-    const seen = new Set();
-    for (const val of values) {
-      if (seen.has(val)) return true;
-      seen.add(val);
-    }
-    return false;
-  }
+  const tripDays = trip ? getTripDays(trip) : [];
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -90,103 +49,39 @@ export default function ReorderStationsPage() {
     setSubmitLoading(true);
 
     try {
-      const response = await axios.put(`${backendURL}/api/stations/reorder`, {
-        trip_id: Number(tripId),
-        stations: Object.entries(dayAssignments).map(([link_id, day]) => ({
+      const updatedStations = await reorderStations(
+        tripId,
+        Object.entries(dayAssignments).map(([link_id, day]) => ({
           link_id: Number(link_id),
           day_number: Number(day),
-        })),
-      });
-
-      // Use updated stations from backend
-      setStations(response.data);
-
+        }))
+      );
+      setStations(updatedStations);
       setSubmitSuccess(true);
     } catch (err) {
       console.error(err);
-      setSubmitError(
-        err.response?.data?.detail ||
-          t("reorderstations.error_generic")
-      );
+      setSubmitError(err.response?.data?.detail || t("reorderstations.error_generic"));
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          bgcolor: "black",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
+  if (tripLoading) {
+    return <LoadingSpinner />;
   }
 
-  if (error) {
+  if (tripError) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error">{error}</Alert>
-      </Box>
+      <BackgroundBox>
+        <Alert severity="error">{tripError}</Alert>
+      </BackgroundBox>
     );
   }
-
-  const tripDays = getTripDays();
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundImage: "url('/images/home_background.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        position: "relative",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        p: 3,
-        color: "#fff",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.4)",
-          zIndex: 0,
-        },
-      }}
-    >
-      <Card
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          width: 420,
-          backdropFilter: "blur(6px)",
-          backgroundColor: "rgba(250, 201, 72, 0.15)",
-          border: "1px solid rgba(250, 201, 72, 0.3)",
-          borderRadius: "8px",
-          boxShadow: "0 8px 32px 0 rgba(250, 201, 72, 0.2)",
-          fontFamily: "'Pacifico', cursive",
-          textShadow: "2px 2px 6px rgba(0,0,0,0.6)",
-          color: "#fac948",
-          p: 4,
-        }}
-      >
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          mb={3}
-          textAlign="center"
-          sx={{ userSelect: "none" }}
-        >
+    <BackgroundBox>
+      <StyledCard width={420} sx={{ p: 4 }}>
+        <Typography variant="h4" fontWeight="bold" mb={3} textAlign="center" sx={{ userSelect: "none" }}>
           {t("reorderstations.title", { tripName: trip.trip_name })}
         </Typography>
 
@@ -254,44 +149,13 @@ export default function ReorderStationsPage() {
           onClose={() => setSubmitSuccess(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          <Alert
-            onClose={() => setSubmitSuccess(false)}
-            severity="success"
-            sx={{ width: "100%" }}
-          >
+          <Alert onClose={() => setSubmitSuccess(false)} severity="success" sx={{ width: "100%" }}>
             {t("reorderstations.success_message")}
           </Alert>
         </Snackbar>
-      </Card>
+      </StyledCard>
 
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 24,
-          left: 0,
-          right: 0,
-          display: "flex",
-          justifyContent: "center",
-          zIndex: 10,
-        }}
-      >
-        <Button
-          variant="outlined"
-          color="warning"
-          onClick={() => navigate("/trips")}
-          sx={{
-            fontWeight: "bold",
-            borderColor: "#fac948",
-            color: "#fac948",
-            "&:hover": {
-              backgroundColor: "rgba(250, 201, 72, 0.15)",
-              borderColor: "#fac948",
-            },
-          }}
-        >
-          {t("reorderstations.back_button")}
-        </Button>
-      </Box>
-    </Box>
+      <BackButton />
+    </BackgroundBox>
   );
 }

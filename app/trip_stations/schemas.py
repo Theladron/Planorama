@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List
 
 
@@ -13,10 +13,9 @@ class TripStationCreate(TripStationBase):
 
 
 class TripStationSchema(TripStationBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
-
-    class Config:
-        from_attributes = True
 
 
 class TripStationReorderItem(BaseModel):

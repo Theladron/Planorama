@@ -96,7 +96,7 @@ const MultiTabModal = ({
         <Typography variant="h7">
           {t("tabbedmodal.visitDay")} {visitDay}
         </Typography>
-        <Typography sx={{ transform: "translateX(13em)" }}>
+        <Typography sx={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
           {stationName}
         </Typography>
         <IconButton

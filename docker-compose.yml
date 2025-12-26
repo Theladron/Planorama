@@ -73,6 +73,35 @@ services:
       - planorama_network
     restart: unless-stopped
 
+  # Test Service (runs tests and exits)
+  # Usage: docker compose run --rm test
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      # Database (for potential integration tests that need it)
+      POSTGRESQL_USERNAME: ${POSTGRESQL_USERNAME:-postgres}
+      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD:-postgres}
+      POSTGRESQL_SERVER: postgres
+      POSTGRESQL_PORT: ${POSTGRESQL_PORT:-5432}
+      POSTGRESQL_DATABASE: ${POSTGRESQL_DATABASE:-Planorama}
+      # Environment variables (tests use mocks, but config is still required)
+      ENVIRONMENT: ${ENVIRONMENT:-local}
+      DEBUG: ${DEBUG:-False}
+      DOMAIN: ${DOMAIN:-localhost:8000}
+      # API Keys (dummy values for tests - tests use mocks anyway)
+      ORS_API_KEY: ${ORS_API_KEY:-test-ors-api-key}
+      AI_API_KEY: ${AI_API_KEY:-test-ai-api-key}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-test-jwt-secret-key-for-testing-only}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - planorama_network
+    # Run both backend and frontend tests using run-all-tests.sh
+    # Container will be automatically removed when using: docker compose run --rm test
+
 volumes:
   postgres_data:
     driver: local

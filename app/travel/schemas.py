@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict
 
 
 class TravelSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     trip_id: int
     from_station_id: int
@@ -11,6 +13,3 @@ class TravelSchema(BaseModel):
     cost_euros: Optional[float]
     travel_route_description: Optional[Dict]
     time_estimated: Optional[str]
-
-    class Config:
-        from_attributes = True

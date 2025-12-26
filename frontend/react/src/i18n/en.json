@@ -217,5 +217,8 @@
     "departure": "Departure",
     "price": "Price",
     "more_info": "More Info"
+  },
+  "common": {
+    "back": "Back"
   }
 }

@@ -3,69 +3,38 @@ import { Box, Typography, TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { backendURL } from "../config";
+import { useAuth } from "../hooks/useAuth";
+import { BackgroundBox } from "../components/common/BackgroundBox";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const { login } = useContext(AuthContext);
+  const { login: loginContext } = useContext(AuthContext);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { login, loading, error: authError } = useAuth();
+
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const response = await fetch(`${backendURL}/api/auth/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          username: email,
-          password,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        login(data.access_token);
-        setEmail("");
-        setPassword("");
-        navigate("/dashboard");
-      } else {
-        const data = await response.json();
-        setError(data.detail || "login.error_generic");
-      }
+      const token = await login(email, password);
+      loginContext(token);
+      setEmail("");
+      setPassword("");
+      navigate("/dashboard");
     } catch (err) {
-      setError("login.error_network");
+      setError(err.message || t("login.error_generic"));
     }
   };
 
+  const displayError = error || authError;
+
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        backgroundImage: "url('/images/home_background.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundColor: "rgba(0, 0, 0, 0.4)",
-          zIndex: 1,
-        },
-        zIndex: 2,
-      }}
-    >
+    <BackgroundBox>
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -88,9 +57,9 @@ export default function LoginPage() {
           {t("login.title")}
         </Typography>
 
-        {error && (
+        {displayError && (
           <Typography color="error" variant="body2">
-            {t(error)}
+            {t(displayError)}
           </Typography>
         )}
 
@@ -111,10 +80,10 @@ export default function LoginPage() {
           sx={{ backgroundColor: "#f0e6cc", borderRadius: 1 }}
         />
 
-        <Button variant="contained" type="submit">
-          {t("login.submit_button")}
+        <Button variant="contained" type="submit" disabled={loading}>
+          {loading ? "Loading..." : t("login.submit_button")}
         </Button>
       </Box>
-    </Box>
+    </BackgroundBox>
   );
 }

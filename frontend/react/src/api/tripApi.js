@@ -83,3 +83,49 @@ export const fetchFullRouteByCoords = async ({ startLat, startLon, endLat, endLo
   return res.data;
 };
 
+/**
+ * Fetch user's trips
+ */
+export const fetchUserTrips = async () => {
+  const res = await axios.get(`${backendURL}/api/trips/me`);
+  return res.data;
+};
+
+/**
+ * Fetch trip by ID
+ */
+export const fetchTripById = async (tripId) => {
+  const res = await axios.get(`${backendURL}/api/trips/${tripId}`);
+  return res.data;
+};
+
+/**
+ * Create a new trip
+ */
+export const createTrip = async (tripName, startDate, endDate) => {
+  const res = await axios.post(`${backendURL}/api/trips/`, {
+    trip_name: tripName,
+    start_date: startDate,
+    end_date: endDate,
+  });
+  return res.data;
+};
+
+/**
+ * Update trip dates
+ */
+export const updateTripDates = async (tripId, startDate, endDate) => {
+  const res = await axios.put(`${backendURL}/api/trips/${tripId}`, {
+    start_date: startDate,
+    end_date: endDate,
+  });
+  return res.data;
+};
+
+/**
+ * Delete a trip
+ */
+export const deleteTrip = async (tripId) => {
+  await axios.delete(`${backendURL}/api/trips/${tripId}`);
+};
+

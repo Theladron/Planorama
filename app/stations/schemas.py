@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class StationBase(BaseModel):
     station_name: str
@@ -8,19 +8,17 @@ class StationCreate(StationBase):
     day_number: int
 
 class StationSchema(StationBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     station_name_de: str
     latitude: float
     longitude: float
     country: str
 
-    class Config:
-        from_attributes = True
-
 
 class StationWithLinkIdSchema(StationSchema):
+    model_config = ConfigDict(from_attributes=True)
+    
     link_id: int
     day_number: int
-
-    class Config:
-        from_attributes = True
