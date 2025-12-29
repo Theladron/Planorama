@@ -8,13 +8,13 @@ from app.trips.services import get_trip
 from app.trip_stations.models import TripStation
 
 
-def get_user_travel_for_trip(db: Session, trip_id: int, user_id: int) -> List[Travel]:
+def get_user_travel_for_trip(db: Session, trip_id: int, user_id: str) -> List[Travel]:
     """Retrieve all travel routes for a specific trip.
     
     Args:
         db: Database session.
         trip_id: Unique trip identifier.
-        user_id: Unique user identifier for authorization.
+        user_id: Auth0 user identifier for authorization.
         
     Returns:
         List of Travel objects for the trip.
@@ -35,14 +35,14 @@ def get_user_travel_for_trip(db: Session, trip_id: int, user_id: int) -> List[Tr
 
 
 def get_user_travel_by_day(db: Session, trip_id: int,
-                           day_number: int, user_id: int) -> Optional[Travel]:
+                           day_number: int, user_id: str) -> Optional[Travel]:
     """Retrieve travel route for a specific day within a trip.
     
     Args:
         db: Database session.
         trip_id: Unique trip identifier.
         day_number: Day number within the trip.
-        user_id: Unique user identifier for authorization.
+        user_id: Auth0 user identifier for authorization.
         
     Returns:
         Travel object if found, None otherwise.

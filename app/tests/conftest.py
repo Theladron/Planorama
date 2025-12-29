@@ -5,7 +5,6 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from datetime import datetime, date
 from app.core.database import Base, get_db, import_all_models
-from app.core.security import hash_password
 from app.users.models import User
 from app.trips.models import Trip
 from app.stations.models import Station
@@ -70,10 +69,9 @@ def mock_db_session():
 def sample_user_data():
     """Sample user data for testing."""
     return {
-        "id": 1,
+        "id": "auth0|testuser123",
         "username": "testuser",
         "email": "test@example.com",
-        "password_hash": hash_password("TestPassword123!"),
         "is_active": True,
         "is_admin": False,
         "language_preference": "en",
@@ -86,7 +84,7 @@ def sample_trip_data():
     """Sample trip data for testing."""
     return {
         "id": 1,
-        "user_id": 1,
+        "user_id": "auth0|testuser123",
         "trip_name": "Test Trip",
         "trip_countries": ["DE", "FR"],
         "start_date": date(2025, 6, 1),
@@ -110,13 +108,15 @@ def sample_station_data():
 
 @pytest.fixture
 def test_user(test_db):
-    """Create a test user in the database."""
+    """Create a test user in the database.
+    
+    Note: Admin status is determined by Auth0 roles, not stored in database.
+    """
     user = User(
+        id="auth0|testuser123",
         username="testuser",
         email="test@example.com",
-        password_hash=hash_password("TestPassword123!"),
         is_active=True,
-        is_admin=False,
         language_preference="en"
     )
     test_db.add(user)
@@ -127,13 +127,16 @@ def test_user(test_db):
 
 @pytest.fixture
 def test_admin_user(test_db):
-    """Create a test admin user in the database."""
+    """Create a test admin user in the database.
+    
+    Note: Admin status is determined by Auth0 roles, not stored in database.
+    This fixture creates a user that would have admin role in Auth0.
+    """
     user = User(
+        id="auth0|admin123",
         username="admin",
         email="admin@example.com",
-        password_hash=hash_password("AdminPassword123!"),
         is_active=True,
-        is_admin=True,
         language_preference="en"
     )
     test_db.add(user)
@@ -176,27 +179,31 @@ def test_station(test_db):
 
 @pytest.fixture
 def mock_current_user():
-    """Mock authenticated user."""
+    """Mock authenticated user.
+    
+    Note: Admin status is checked from Auth0 token, not user.is_admin.
+    """
     from app.users.models import User
     user = Mock(spec=User)
-    user.id = 1
+    user.id = "auth0|testuser123"
     user.username = "testuser"
     user.email = "test@example.com"
     user.is_active = True
-    user.is_admin = False
     user.language_preference = "en"
     return user
 
 
 @pytest.fixture
 def mock_admin_user():
-    """Mock admin user."""
+    """Mock admin user.
+    
+    Note: Admin status is checked from Auth0 token, not user.is_admin.
+    """
     from app.users.models import User
     user = Mock(spec=User)
-    user.id = 1
+    user.id = "auth0|admin123"
     user.username = "admin"
     user.email = "admin@example.com"
     user.is_active = True
-    user.is_admin = True
     user.language_preference = "en"
     return user

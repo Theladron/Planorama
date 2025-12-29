@@ -1,6 +1,7 @@
 /**
  * Tests for React components
  */
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BackButton } from '../src/components/common/BackButton';
@@ -9,14 +10,14 @@ import { StyledTextField } from '../src/components/common/StyledTextField';
 import { StyledCard } from '../src/components/common/StyledCard';
 
 // Mock react-router-dom
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   Navigate: ({ to }) => <div data-testid="navigate" data-to={to}>Navigate to {to}</div>,
 }));
 
 // Mock react-i18next
-jest.mock('react-i18next', () => ({
+vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key) => key,
     i18n: { language: 'en' },
@@ -26,7 +27,7 @@ jest.mock('react-i18next', () => ({
 
 describe('Common Components', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('BackButton', () => {

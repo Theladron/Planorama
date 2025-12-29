@@ -54,12 +54,12 @@ def get_all_stations(db: Session):
     return db.query(Station).all()
 
 
-def get_user_language_preference(db: Session, user_id: int):
+def get_user_language_preference(db: Session, user_id: str):
     """Retrieve a user's language preference.
     
     Args:
         db: Database session.
-        user_id: Unique user identifier.
+        user_id: Auth0 user identifier.
         
     Returns:
         User's language preference code ('en' or 'de'), defaults to 'en'.
@@ -73,7 +73,7 @@ def get_user_language_preference(db: Session, user_id: int):
     return user.language_preference or "en"
 
 
-def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> List[TripStation]:
+def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: str) -> List[TripStation]:
     """Retrieve TripStation objects linked to a trip owned by user.
     
     Args:
@@ -116,7 +116,7 @@ def get_trip_stations_with_link_id(db: Session, trip_id: int, user_id: int) -> L
     ]
 
 
-async def create_station(db: Session, station_data: StationCreate, user_id: int) -> Station:
+async def create_station(db: Session, station_data: StationCreate, user_id: str) -> Station:
     """Create a new station and link it to a trip.
     
     Args:
@@ -244,7 +244,7 @@ async def create_station(db: Session, station_data: StationCreate, user_id: int)
 def delete_station(
     db: Session,
     link_id: int,
-    user_id: int
+    user_id: str
 ):
     """Delete a station link from a trip.
     
@@ -356,7 +356,7 @@ def reorder_stations(
     db: Session,
     trip_id: int,
     reorder_items: List[TripStationReorderItem],
-    user_id: int
+    user_id: str
 ) -> List[TripStation]:
     """Reorder stations within a trip by updating day numbers.
     
@@ -433,7 +433,7 @@ def reorder_stations(
 
 
 
-def get_stations_by_trip(db: Session, trip_id: int, user_id: int) -> List[Station]:
+def get_stations_by_trip(db: Session, trip_id: int, user_id: str) -> List[Station]:
     """Retrieve all stations for a specific trip in order.
     
     Args:

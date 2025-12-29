@@ -14,7 +14,7 @@ const flagStyles = {
 };
 
 export default function Navbar({ hasSidebar }) {
-  const { isAuthenticated, user, logout } = useContext(AuthContext);
+  const { isAuthenticated, user, logout, login, register } = useContext(AuthContext);
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
 
@@ -31,13 +31,12 @@ export default function Navbar({ hasSidebar }) {
       await i18n.changeLanguage(lng);
 
       if (isAuthenticated) {
-        // Update backend user language preference
         await axios.patch(`${backendURL}/api/users/me/language`, {
           language_preference: lng,
         });
       }
-    } catch (err) {
-      console.error("Failed to change language:", err);
+    } catch {
+      // Silently handle language change errors
     }
   };
 
@@ -47,7 +46,7 @@ export default function Navbar({ hasSidebar }) {
   const handleLogout = () => {
     logout();
     handleMenuClose();
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -94,15 +93,15 @@ export default function Navbar({ hasSidebar }) {
             </IconButton>
 
             {!isAuthenticated && (
-  <>
-    <Button component={Link} to="/login" color="inherit">
-      {t("navbar.login")}
-    </Button>
-    <Button component={Link} to="/register" color="inherit">
-      {t("navbar.register")}
-    </Button>
-  </>
-)}
+              <>
+                <Button onClick={login} color="inherit">
+                  {t("navbar.login")}
+                </Button>
+                <Button onClick={register} color="inherit">
+                  {t("navbar.register")}
+                </Button>
+              </>
+            )}
           </>
 
 

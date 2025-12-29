@@ -50,7 +50,6 @@ export default function AddStationPage() {
       setSelectedDay("");
       refreshStations();
     } catch (err) {
-      console.error(err);
       setSubmitError(err.response?.data?.detail || t("addstation.error_submitFailed"));
     } finally {
       setSubmitLoading(false);

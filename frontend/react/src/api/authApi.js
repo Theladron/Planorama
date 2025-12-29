@@ -1,42 +1,8 @@
-import { backendURL } from "../config";
-
-/**
- * Login user and get access token
- */
-export const login = async (email, password) => {
-  const response = await fetch(`${backendURL}/api/auth/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      username: email,
-      password,
-    }),
-  });
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.detail || "Login failed");
-  }
-
-  const data = await response.json();
-  return data.access_token;
+export const login = async () => {
+  throw new Error("Login is now handled by Auth0. Use AuthContext.login() instead.");
 };
 
-/**
- * Register a new user
- */
-export const register = async (username, email, password) => {
-  const response = await fetch(`${backendURL}/api/users/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, email, password }),
-  });
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.detail || "Registration failed");
-  }
-
-  return await response.json();
+export const register = async () => {
+  throw new Error("Registration is now handled by Auth0. Use Auth0's signup flow.");
 };
 

@@ -53,9 +53,9 @@ class TestTripServices:
         """Test getting trips for a user that doesn't own any trips."""
         from app.users.models import User
         other_user = User(
+            id="auth0|otheruser123",
             username="otheruser",
             email="other@example.com",
-            password_hash="hash",
             is_active=True
         )
         test_db.add(other_user)

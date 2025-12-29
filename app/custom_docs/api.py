@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
-from app.auth.services import get_token_from_request, is_token_admin
+from app.auth.services import get_token_from_request, verify_auth0_token_and_get_user
+from app.core.database import get_db
 from app.custom_docs.services import get_base_openapi_schema
 
 router = APIRouter()
@@ -17,21 +18,30 @@ async def custom_openapi(request: Request):
         "about travel routes, weather, and things to do while on vacation."
     )
     openapi_schema["info"]["version"] = "0.8.0"
+    # Auth0 Bearer token authentication
     openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})[
-        "OAuth2Password"
+        "BearerAuth"
     ] = {
-        "type": "oauth2",
-        "flows": {
-            "password": {
-                "tokenUrl": "/api/auth/token",
-                "scopes": {}
-            }
-        }
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
     }
-    openapi_schema.setdefault("security", [{"OAuth2Password": []}])
+    openapi_schema.setdefault("security", [{"BearerAuth": []}])
+    # Remove deprecated auth endpoints
+    openapi_schema["paths"].pop("/api/auth/token", None)
     openapi_schema["paths"].pop("/api/auth/check-token", None)
+    
+    # Check if user is admin via Auth0 token (directly from token, not database)
     token = get_token_from_request(request)
-    if token is None or not is_token_admin(token):
+    is_admin = False
+    if token:
+        try:
+            from app.auth.services import has_admin_permission
+            is_admin = has_admin_permission(token)
+        except Exception:
+            pass
+    
+    if not is_admin:
         filtered_paths = {
             path: path_item
             for path, path_item in openapi_schema["paths"].items()
@@ -68,17 +78,7 @@ async def custom_swagger_ui_html(request: Request):
             }
         }
         const response = await originalFetch(input, init);
-        if (url.includes("/api/auth/token") && response.ok) {
-            try {
-                const clone = response.clone();
-                const data = await clone.json();
-                if (data.access_token) {
-                    const safeToken = encodeURIComponent(data.access_token);
-                    document.cookie = `swagger_authentication=${safeToken}; path=/; SameSite=Lax`;
-                    location.reload();  // <<< reload after login
-                }
-            } catch (e) {}
-        }
+        // Auth0 tokens are handled by the frontend, not via /api/auth/token
         return response;
     };
 })();
@@ -97,14 +97,8 @@ async def custom_swagger_ui_html(request: Request):
         return;
     }
     try {
-        const res = await fetch('/api/auth/check-token', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${decodeURIComponent(token)}`,
-            },
-            credentials: 'include'
-        });
-        if (!res.ok) throw new Error("Invalid token");
+        // Token validation is handled by Auth0 - just check if token exists
+        if (!token) throw new Error("No token");
     } catch (e) {
         deleteCookie('swagger_authentication');
         location.reload();

@@ -32,12 +32,12 @@ def get_trip(db: Session, trip_id: int):
     return db.query(Trip).filter_by(id=trip_id).first()
 
 
-def get_user_trips(db: Session, user_id: int):
+def get_user_trips(db: Session, user_id: str):
     """Retrieve all trips belonging to a specific user.
     
     Args:
         db: Database session.
-        user_id: Unique user identifier.
+        user_id: Auth0 user identifier.
         
     Returns:
         List of Trip objects for the specified user.
@@ -45,13 +45,13 @@ def get_user_trips(db: Session, user_id: int):
     return db.query(Trip).filter_by(user_id=user_id).all()
 
 
-def create_trip(db: Session, trip_data: TripCreate, user_id: int):
+def create_trip(db: Session, trip_data: TripCreate, user_id: str):
     """Create a new trip in the database.
     
     Args:
         db: Database session.
         trip_data: TripCreate schema with trip information.
-        user_id: ID of the user creating the trip.
+        user_id: Auth0 ID of the user creating the trip.
         
     Returns:
         Created Trip object.

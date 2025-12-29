@@ -7,16 +7,23 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (using npm install for OS-independence)
+# Using --legacy-peer-deps to handle React 19 compatibility with testing libraries
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
 # Build the application
-# VITE_BACKEND_URL will be set at runtime via docker-compose
+# Environment variables will be set at runtime via docker-compose
 ARG VITE_BACKEND_URL
+ARG VITE_AUTH0_DOMAIN
+ARG VITE_AUTH0_CLIENT_ID
+ARG VITE_AUTH0_AUDIENCE
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN
+ENV VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID
+ENV VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE
 RUN npm run build
 
 # Production stage

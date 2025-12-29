@@ -49,18 +49,15 @@ jobs:
     if: needs.check.outputs.should_run == 'true' || github.event_name == 'pull_request'
     name: Backend Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
           cache: 'pip'
 
       - name: Install dependencies
@@ -78,10 +75,17 @@ jobs:
           POSTGRESQL_DATABASE: test_planorama
           ORS_API_KEY: test-ors-api-key
           AI_API_KEY: test-ai-api-key
-          JWT_SECRET_KEY: test-jwt-secret-key-for-ci
           DOMAIN: localhost:8000
           ENVIRONMENT: local
           DEBUG: False
+          # Auth0 test variables (dummy values for CI)
+          AUTH0_DOMAIN: test-auth0-domain
+          AUTH0_AUDIENCE: https://test-api.planorama
+          AUTH0_CLIENT_ID: test-client-id
+          AUTH0_CLIENT_SECRET: test-client-secret
+          AUTH0_MANAGEMENT_CLIENT_ID: test-mgmt-client-id
+          AUTH0_MANAGEMENT_CLIENT_SECRET: test-mgmt-client-secret
+          AUTH0_CONNECTION_NAME: Username-Password-Authentication
         run: |
           pytest -v --cov=app --cov-report=term-missing --cov-report=xml
 
@@ -160,7 +164,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./frontend/react
-        run: npm test -- --coverage --watchAll=false
+        run: npm run test:coverage
 
   frontend-lint:
     name: Frontend Lint (ESLint)

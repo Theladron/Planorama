@@ -22,13 +22,15 @@ class TestTripsAPI:
 
     @pytest.fixture
     def mock_user(self):
-        """Mock authenticated user."""
+        """Mock authenticated user.
+        
+        Note: Admin status is checked from Auth0 token, not user.is_admin.
+        """
         user = MagicMock()
-        user.id = 1
+        user.id = "auth0|testuser123"
         user.username = "testuser"
         user.email = "test@example.com"
         user.is_active = True
-        user.is_admin = False
         return user
 
     @pytest.fixture
@@ -49,7 +51,7 @@ class TestTripsAPI:
                 'trip_name': 'Test Trip',
                 'start_date': date(2025, 6, 1),
                 'end_date': date(2025, 6, 10),
-                'user_id': 1,
+                'user_id': 'auth0|testuser123',
                 'created_at': date.today(),
             })()
             mock_get_trips.return_value = [mock_trip]
@@ -78,7 +80,7 @@ class TestTripsAPI:
                 'trip_name': 'New Trip',
                 'start_date': date(2025, 6, 1),
                 'end_date': date(2025, 6, 10),
-                'user_id': 1,
+                'user_id': 'auth0|testuser123',
                 'created_at': date.today(),
             })()
             mock_create_trip.return_value = mock_trip
@@ -110,7 +112,7 @@ class TestTripsAPI:
              patch('app.trips.api.delete_trip') as mock_delete_trip:
             mock_trip = type('Trip', (), {
                 'id': 1,
-                'user_id': 1,
+                'user_id': 'auth0|testuser123',
             })()
             mock_get_trip.return_value = mock_trip
             mock_delete_trip.return_value = True

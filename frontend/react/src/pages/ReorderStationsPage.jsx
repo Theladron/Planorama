@@ -58,7 +58,6 @@ export default function ReorderStationsPage() {
       setStations(updatedStations);
       setSubmitSuccess(true);
     } catch (err) {
-      console.error(err);
       setSubmitError(err.response?.data?.detail || t("reorderstations.error_generic"));
     } finally {
       setSubmitLoading(false);

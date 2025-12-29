@@ -34,7 +34,8 @@ COPY frontend/react/package*.json ./frontend/react/
 
 # Install frontend dependencies
 WORKDIR /app/frontend/react
-RUN npm ci
+# Using --legacy-peer-deps to handle React 19 compatibility with testing libraries
+RUN npm install --legacy-peer-deps
 
 # Copy rest of frontend files
 WORKDIR /app

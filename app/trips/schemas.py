@@ -33,7 +33,7 @@ class TripSchema(TripBase):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
-    user_id: int
+    user_id: str  # Auth0 user ID
     created_at: date
 
 class TripUpdate(BaseModel):

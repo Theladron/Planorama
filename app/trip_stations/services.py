@@ -83,14 +83,14 @@ def create_trip_station(db: Session, data: TripStationCreate) -> TripStation:
 
 
 
-def delete_trip_station(db: Session, trip_id: int, day_number: int, user_id: int):
+def delete_trip_station(db: Session, trip_id: int, day_number: int, user_id: str):
     """Delete a TripStation link and clean up orphaned stations.
     
     Args:
         db: Database session.
         trip_id: Unique trip identifier.
         day_number: Day number of the station to remove.
-        user_id: Unique user identifier for authorization.
+        user_id: Auth0 user identifier for authorization.
         
     Returns:
         Dictionary with success message.

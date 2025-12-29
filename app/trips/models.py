@@ -14,7 +14,7 @@ class Trip(Base):
     __tablename__ = "trips"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)  # Auth0 user ID
     trip_name: Mapped[str] = mapped_column(String(100), nullable=False)
     trip_countries: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
