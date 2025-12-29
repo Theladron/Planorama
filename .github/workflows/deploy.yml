@@ -25,44 +25,8 @@ jobs:
           # When triggered by workflow_run, checkout the commit from the CI workflow
           # When triggered manually (workflow_dispatch), checkout normally
           ref: ${{ github.event.workflow_run.head_sha || github.ref }}
-          fetch-depth: 2  # Need previous commit to compare
-
-      - name: Check if code changed
-        id: check_changes
-        run: |
-          # For manual triggers, always deploy
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Manual trigger - deploying"
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Check if we have a previous commit to compare against
-          if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
-            echo "No previous commit found (likely first commit) - deploying"
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Check if any code-related files changed between HEAD~1 and HEAD
-          # Include: app code, frontend code, Dockerfiles, docker-compose, requirements, migrations, config files
-          # NOTE: Exclude .github/workflows/ - workflow changes don't require deployment
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          
-          if echo "$CHANGED_FILES" | grep -qE '^(app/|frontend/|docker-compose\.yml|.*Dockerfile|requirements\.txt|alembic\.ini|migrations/)'; then
-            echo "Code changes detected - deploying"
-            echo "Changed files:"
-            echo "$CHANGED_FILES" | grep -E '^(app/|frontend/|docker-compose\.yml|.*Dockerfile|requirements\.txt|alembic\.ini|migrations/)' || true
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
-          else
-            echo "No code changes detected - skipping deployment"
-            echo "All changed files:"
-            echo "$CHANGED_FILES" || echo "(none)"
-            echo "should_deploy=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: Configure SSH
-        if: steps.check_changes.outputs.should_deploy == 'true'
         run: |
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
@@ -90,7 +54,6 @@ jobs:
           echo "SSH configuration completed"
 
       - name: Deploy to EC2
-        if: steps.check_changes.outputs.should_deploy == 'true'
         env:
           # GitHub context (automatically available)
           GITHUB_REPOSITORY: ${{ github.repository }}

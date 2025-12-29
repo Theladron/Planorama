@@ -3,38 +3,8 @@ name: CI
 on:
   push:
     branches: [main, develop]
-    paths:
-      - 'app/**'
-      - 'frontend/**'
-      - 'docker-compose.yml'
-      - '**/Dockerfile'
-      - 'requirements.txt'
-      - 'alembic.ini'
-      - 'migrations/**'
-      - 'pytest.ini'
-      - 'pyproject.toml'
-      - '.pylintrc'
-      - 'frontend/react/package.json'
-      - 'frontend/react/package-lock.json'
-      - 'frontend/react/eslint.config.js'
-      - '.github/workflows/ci.yml'  # Include CI workflow changes
   pull_request:
     branches: [main, develop]
-    paths:
-      - 'app/**'
-      - 'frontend/**'
-      - 'docker-compose.yml'
-      - '**/Dockerfile'
-      - 'requirements.txt'
-      - 'alembic.ini'
-      - 'migrations/**'
-      - 'pytest.ini'
-      - 'pyproject.toml'
-      - '.pylintrc'
-      - 'frontend/react/package.json'
-      - 'frontend/react/package-lock.json'
-      - 'frontend/react/eslint.config.js'
-      - '.github/workflows/ci.yml'  # Include CI workflow changes
 
 # Skip CI on merge commits (when PRs are merged, they create a push event with a merge commit)
 # This prevents duplicate runs: we check PRs, then skip the redundant check on merge
