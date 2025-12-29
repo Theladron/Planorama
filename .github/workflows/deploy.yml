@@ -80,17 +80,40 @@ jobs:
           ADMIN_USERNAME: ${{ vars.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           # Auth0 Configuration
-          AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
           AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
           AUTH0_MANAGEMENT_CLIENT_ID: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
           AUTH0_MANAGEMENT_CLIENT_SECRET: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
-          AUTH0_CONNECTION_NAME: ${{ vars.AUTH0_CONNECTION_NAME }}
+          # AUTH0_CONNECTION_NAME is hard-coded to the default Auth0 database connection
+          # Only used for backend Management API operations (e.g., seeding admin user)
+          # Frontend authentication doesn't use this - Auth0 handles connection selection automatically
+          AUTH0_CONNECTION_NAME: "Username-Password-Authentication"
           # Frontend
           VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
         run: |
           APP_PATH="${EC2_APP_PATH:-/opt/planorama}"
+          
+          # Verify critical environment variables are set
+          echo "Verifying environment variables are set..."
+          if [ -z "${AUTH0_DOMAIN}" ]; then
+            echo "ERROR: AUTH0_DOMAIN is not set in GitHub Actions environment!"
+            echo "Please ensure AUTH0_DOMAIN is set in GitHub Environment Secrets for the 'Planorama' environment"
+            exit 1
+          fi
+          if [ -z "${AUTH0_AUDIENCE}" ]; then
+            echo "ERROR: AUTH0_AUDIENCE is not set in GitHub Actions environment!"
+            exit 1
+          fi
+          if [ -z "${AUTH0_CLIENT_ID}" ]; then
+            echo "ERROR: AUTH0_CLIENT_ID is not set in GitHub Actions environment!"
+            exit 1
+          fi
+          echo "Environment variables verified (showing non-sensitive keys only):"
+          echo "AUTH0_DOMAIN=${AUTH0_DOMAIN:0:10}... (set)"
+          echo "AUTH0_AUDIENCE=${AUTH0_AUDIENCE:0:10}... (set)"
+          echo "AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID:0:10}... (set)"
           
           # Create .env file content locally with variable expansion
           cat > /tmp/.env << EOF
@@ -128,7 +151,7 @@ jobs:
           AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
           AUTH0_MANAGEMENT_CLIENT_ID=${AUTH0_MANAGEMENT_CLIENT_ID}
           AUTH0_MANAGEMENT_CLIENT_SECRET=${AUTH0_MANAGEMENT_CLIENT_SECRET}
-          AUTH0_CONNECTION_NAME=${AUTH0_CONNECTION_NAME:-Username-Password-Authentication}
+          AUTH0_CONNECTION_NAME=Username-Password-Authentication
           EOF
           
           # Deploy code and .env file to EC2
@@ -206,6 +229,25 @@ jobs:
               exit 1
             fi
             echo ".env file verified"
+            
+            echo "Checking critical environment variables in .env file..."
+            # Check that critical variables are not empty (without exposing secrets)
+            if ! grep -q "^AUTH0_DOMAIN=.*[^[:space:]]" .env; then
+              echo "ERROR: AUTH0_DOMAIN is missing or empty in .env file!"
+              echo "First 20 lines of .env (masking secrets):"
+              sed 's/=.*/=***MASKED***/' .env | head -20
+              exit 1
+            fi
+            if ! grep -q "^AUTH0_AUDIENCE=.*[^[:space:]]" .env; then
+              echo "ERROR: AUTH0_AUDIENCE is missing or empty in .env file!"
+              exit 1
+            fi
+            if ! grep -q "^AUTH0_CLIENT_ID=.*[^[:space:]]" .env; then
+              echo "ERROR: AUTH0_CLIENT_ID is missing or empty in .env file!"
+              exit 1
+            fi
+            echo "Critical environment variables verified (showing non-sensitive keys only):"
+            grep -E "^(AUTH0_DOMAIN|AUTH0_AUDIENCE|ENVIRONMENT|DOMAIN|POSTGRESQL_DATABASE)=" .env | sed 's/=.*/=***MASKED***/'
             
             echo "Stopping containers..."
             docker compose down || true
