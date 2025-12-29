@@ -216,63 +216,75 @@ jobs:
             
             # Stop all containers first
             docker stop $(docker ps -aq) 2>/dev/null || true
+            docker rm $(docker ps -aq) 2>/dev/null || true
             
-            # Remove all stopped containers
-            docker container prune -f || true
+            # Remove ALL images except the ones we're about to build (very aggressive)
+            # Keep only postgres and nginx base images if they exist
+            docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres\|nginx\|node\|python" | awk '{print $1}' | xargs -r docker rmi -f 2>/dev/null || true
             
-            # Remove unused Docker resources (containers, networks, images, build cache)
+            # Remove all unused containers, networks, images, build cache
             docker system prune -af --volumes || true
             
-            # Remove dangling images and build cache
-            docker image prune -af || true
+            # Aggressively remove build cache
             docker builder prune -af || true
             
-            # Remove old/unused images (keep only the most recent)
-            # This is more aggressive but necessary when disk is full
-            docker images --format "{{.Repository}}:{{.Tag}}" | grep -v "REPOSITORY" | head -n -5 | xargs -r docker rmi -f 2>/dev/null || true
+            # Remove all unused images
+            docker image prune -af || true
             
+            # Clean up Docker's internal storage
+            docker system df
             echo "Disk space after cleanup:"
             df -h /
             
-            # Check if we have enough space (at least 1GB free)
+            # Check available space
             AVAILABLE_SPACE=$(df / | tail -1 | awk '{print $4}')
+            echo "Available space: ${AVAILABLE_SPACE}KB"
+            
             if [ "$AVAILABLE_SPACE" -lt 1048576 ]; then
-              echo "WARNING: Less than 1GB free space available. Build may fail."
-              echo "Available space: ${AVAILABLE_SPACE}KB"
-            else
-              echo "Sufficient disk space available: ${AVAILABLE_SPACE}KB"
+              echo "WARNING: Less than 1GB free space. Attempting additional cleanup..."
+              # Remove ALL images (we'll rebuild them)
+              docker rmi $(docker images -q) 2>/dev/null || true
+              docker system prune -af --volumes || true
+              echo "Disk space after aggressive cleanup:"
+              df -h /
             fi
             
             echo "Building containers (this may take several minutes)..."
             echo "Start time: $(date)"
-            # Docker Compose uses Docker's layer caching automatically:
-            # - Unchanged layers are reused from cache (very fast)
-            # - Only changed layers are rebuilt
-            # - This means if only frontend files changed, backend layers are reused and vice versa
-            # Use --progress=plain to see build output and detect if it's stuck
-            # Note: Large packages like SQLAlchemy may take 2-5 minutes to download
-            # If timeout command is available, use it (30 minutes should be more than enough)
+            # Build only backend and frontend - skip test service to save space
+            # Build services one at a time to free space between builds
+            
+            echo "Building backend..."
             if command -v timeout >/dev/null 2>&1; then
-              if timeout 1800 docker compose build --progress=plain; then
-                echo "Build completed successfully at: $(date)"
-              else
-                EXIT_CODE=$?
-                echo "ERROR: Docker build failed or timed out (exit code: $EXIT_CODE)"
-                echo "End time: $(date)"
-                echo "Checking Docker status..."
-                docker ps -a
-                echo "Checking disk space..."
-                df -h
-                echo "Checking network connectivity..."
-                ping -c 3 pypi.org || echo "Warning: Cannot reach PyPI"
-                exit 1
-              fi
+              timeout 900 docker compose build --progress=plain backend || {
+                echo "Backend build failed, cleaning up and retrying..."
+                docker builder prune -af || true
+                timeout 900 docker compose build --progress=plain backend || exit 1
+              }
             else
-              # Fallback if timeout command is not available
-              echo "Warning: timeout command not available, building without timeout"
-              docker compose build --progress=plain
-              echo "Build completed successfully at: $(date)"
+              docker compose build --progress=plain backend || exit 1
             fi
+            
+            # Clean up build cache after backend to free space for frontend
+            echo "Cleaning build cache after backend build..."
+            docker builder prune -af || true
+            echo "Disk space after backend build:"
+            df -h /
+            
+            echo "Building frontend..."
+            if command -v timeout >/dev/null 2>&1; then
+              timeout 900 docker compose build --progress=plain frontend || {
+                echo "Frontend build failed, cleaning up and retrying..."
+                docker builder prune -af || true
+                timeout 900 docker compose build --progress=plain frontend || exit 1
+              }
+            else
+              docker compose build --progress=plain frontend || exit 1
+            fi
+            
+            echo "Build completed successfully at: $(date)"
+            echo "Final disk space:"
+            df -h /
 
             echo "Starting containers..."
             docker compose up -d
