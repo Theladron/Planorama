@@ -1,20 +1,22 @@
-import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import React, { useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 export default function PrivateRoute({ children }) {
-  const { isAuthenticated, loading } = useContext(AuthContext);
+  const { isAuthenticated, loading, login } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      login();
+    }
+  }, [loading, isAuthenticated, login]);
 
   if (loading) {
-    // While checking auth state, show a loading indicator or null to avoid flicker
     return <div>Loading...</div>;
   }
 
-  // If not authenticated after loading, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <div>Redirecting to login...</div>;
   }
 
-  // Authenticated: render protected content
   return children;
 }

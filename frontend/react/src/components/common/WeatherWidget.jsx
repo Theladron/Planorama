@@ -38,7 +38,6 @@ const WeatherWidget = ({ lat, lon, fetchCachedWeather }) => {
         }
         setWeatherData(data);
       } catch (error) {
-        console.error("Failed to fetch weather:", error);
         setWeatherData(null);
       } finally {
         setLoading(false);

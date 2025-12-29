@@ -32,23 +32,29 @@ This workflow uses a GitHub Environment (Settings → Environments → Planorama
 - `POSTGRESQL_SERVER`: PostgreSQL server host (use `postgres` for Docker Compose)
 - `POSTGRESQL_PORT`: PostgreSQL port (usually `5432`)
 - `POSTGRESQL_DATABASE`: PostgreSQL database name
-- `ACCESS_TOKEN_EXPIRE_MINUTES`: (Optional) Token expiration in minutes (defaults to `30`)
-- `ALGORITHM`: (Optional) JWT algorithm (defaults to `HS256`)
 - `ENVIRONMENT`: Environment name (`local`, `staging`, or `production`)
 - `DOMAIN`: Domain name for the application
 - `BACKEND_CORS_ORIGINS`: Comma-separated list of allowed CORS origins
 - `DEBUG`: (Optional) Debug mode (`True` or `False`, defaults to `False`)
 - `ADMIN_EMAIL`: Admin user email for seeding
 - `ADMIN_USERNAME`: Admin user username for seeding
+- `AUTH0_DOMAIN`: Auth0 tenant domain (e.g., `dev-xxxxx.us.auth0.com`)
+- `AUTH0_AUDIENCE`: Auth0 API identifier (e.g., `https://api.planorama`)
+- `AUTH0_CONNECTION_NAME`: (Optional) Auth0 database connection name (defaults to `Username-Password-Authentication`)
 - `VITE_BACKEND_URL`: (Optional) Backend URL for frontend build. Should include port 8000 (e.g., `http://13.51.172.110:8000`). Defaults to `http://localhost:8000`
+
+**Note:** The `VITE_AUTH0_*` variables are automatically derived from `AUTH0_*` variables by `docker-compose.yml` during the frontend build process, so you don't need to set them separately.
 
 *Environment Secrets (Sensitive - store as Secrets, not Variables):*
 - `AWS_EC2_SSH_PRIVATE_KEY`: Private SSH key for EC2 access (entire `.pem` file content, including `-----BEGIN` and `-----END` lines with all newlines preserved)
 - `POSTGRESQL_PASSWORD`: PostgreSQL database password
 - `ORS_API_KEY`: OpenRouteService API key
 - `AI_API_KEY`: AI service API key
-- `JWT_SECRET_KEY`: Secret key for JWT token signing (use strong random string)
 - `ADMIN_PASSWORD`: Admin user password for seeding
+- `AUTH0_CLIENT_ID`: Auth0 SPA application client ID
+- `AUTH0_CLIENT_SECRET`: Auth0 SPA application client secret
+- `AUTH0_MANAGEMENT_CLIENT_ID`: Auth0 Management API M2M application client ID
+- `AUTH0_MANAGEMENT_CLIENT_SECRET`: Auth0 Management API M2M application client secret
 
 **Note:** PostgreSQL server host should be `postgres` for Docker Compose deployments (this is the Docker service name that containers use to communicate. **Do not use `localhost`** when running in Docker, as `localhost` inside a container refers to that container itself.)
 

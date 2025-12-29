@@ -11,14 +11,10 @@ export const fetchAISuggestions = async ({ lat, lon, townName, language, content
     });
     return res.data || [];
   } catch (err) {
-    console.error("AI suggestion fetch error:", err);
     return [];
   }
 };
 
-/**
- * Fetch AI transport route suggestions
- */
 export const fetchAiTransportRoutes = async ({ startLat, startLon, startCity, endLat, endLon, endCity, language }) => {
   try {
     const response = await axios.get(`${backendURL}/api/ai-transport`, {
@@ -34,20 +30,15 @@ export const fetchAiTransportRoutes = async ({ startLat, startLon, startCity, en
     });
     return response.data || [];
   } catch (err) {
-    console.error("AI transport fetch error:", err);
     throw err;
   }
 };
 
-/**
- * Fetch weather data for coordinates
- */
 export const fetchWeather = async (lat, lon) => {
   try {
     const res = await axios.get(`${backendURL}/api/weather`, { params: { lat, lon } });
     return res.data;
   } catch (err) {
-    console.error("Weather fetch error:", err);
     return null;
   }
 };

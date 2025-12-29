@@ -12,10 +12,10 @@ pytest -v || BACKEND_EXIT_CODE=$?
 
 echo ""
 echo "=========================================="
-echo "Running Frontend Tests (Jest)"
+echo "Running Frontend Tests (Vitest)"
 echo "=========================================="
 cd /app/frontend/react
-npm test -- --coverage --watchAll=false || FRONTEND_EXIT_CODE=$?
+npm test -- --coverage || FRONTEND_EXIT_CODE=$?
 
 echo ""
 echo "=========================================="

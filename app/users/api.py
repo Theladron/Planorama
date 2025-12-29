@@ -4,9 +4,8 @@ from sqlalchemy.orm import Session
 from app.auth.services import get_current_active_user, get_current_admin_user
 from app.core.database import get_db
 from app.users.models import User
-from app.users.schemas import UserSchema, UserCreate, UserUpdate, LanguagePreferenceUpdate
+from app.users.schemas import UserSchema, UserUpdate, LanguagePreferenceUpdate, PasswordUpdate
 from app.users.services import (get_users,
-                                create_user,
                                 get_user,
                                 delete_user,
                                 update_user,
@@ -23,17 +22,6 @@ admin_user_router = APIRouter(
 )
 
 
-@user_router.post(
-    "/",
-    response_model=UserSchema,
-    summary="Register a new user",
-    description="Creates a new user account with a username, email, and password."
-)
-def user_post(user: UserCreate, db: Session = Depends(get_db)):
-    try:
-        return create_user(db, user)
-    except Exception as error:
-        raise HTTPException(status_code=400, detail=f"User creation failed: {str(error)}")
 
 
 @user_router.get(
@@ -49,8 +37,8 @@ def get_current_user(current_user: User = Depends(get_current_active_user)):
 @user_router.patch(
     "/me",
     response_model=UserSchema,
-    summary="Update current user's username and/or password",
-    description="Allows user to update username and password (must provide old password to change password)."
+    summary="Update current user's username",
+    description="Allows user to update username."
 )
 def update_current_user(
     update_data: UserUpdate,
@@ -62,6 +50,58 @@ def update_current_user(
         return updated_user
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
+
+
+@user_router.patch(
+    "/me/password",
+    summary="Update current user's password",
+    description="Updates the user's password in Auth0."
+)
+def update_password(
+    password_data: PasswordUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update user password via Auth0 Management API.
+    
+    Args:
+        password_data: PasswordUpdate schema with new password.
+        current_user: Current authenticated user.
+        
+    Returns:
+        Success message.
+        
+    Raises:
+        HTTPException: If password update fails.
+    """
+    new_password = password_data.password
+    
+    try:
+        from app.core.auth0_management import get_management_api_token
+        import requests
+        from app.core.config_loader import settings
+        
+        token = get_management_api_token()
+        url = f"https://{settings.AUTH0_DOMAIN}/api/v2/users/{current_user.id}"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        payload = {"password": new_password}
+        
+        response = requests.patch(url, json=payload, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        return {"message": "Password updated successfully"}
+    except requests.exceptions.HTTPError as e:
+        error_detail = "Failed to update password"
+        try:
+            error_json = e.response.json()
+            error_detail = error_json.get("message", str(error_json))
+        except:
+            error_detail = f"HTTP {e.response.status_code}: {e.response.text}"
+        raise HTTPException(status_code=400, detail=error_detail)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update password: {str(e)}")
 
 
 @user_router.patch(
@@ -109,11 +149,11 @@ def admin_user_list(
 @admin_user_router.get(
     "/{user_id}",
     response_model=UserSchema,
-    summary="Admin: Get user by ID",
-    description="Returns user data for the specified ID. Admin access required."
+    summary="Admin: Get user by Auth0 ID",
+    description="Returns user data for the specified Auth0 ID. Admin access required."
 )
 def admin_get_user_by_id(
-    user_id: int,
+    user_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)
 ):
@@ -125,11 +165,11 @@ def admin_get_user_by_id(
 
 @admin_user_router.delete(
     "/{user_id}",
-    summary="Admin: Delete user by ID",
-    description="Deletes a user by ID. Admin access required."
+    summary="Admin: Delete user by Auth0 ID",
+    description="Deletes a user by Auth0 ID. Admin access required."
 )
 def admin_delete_user_by_id(
-    user_id: int,
+    user_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)
 ):
@@ -137,4 +177,4 @@ def admin_delete_user_by_id(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     delete_user(db, user_id)
-    return {"message": f"User with ID {user_id} deleted by admin."}
+    return {"message": f"User with Auth0 ID {user_id} deleted by admin."}

@@ -17,7 +17,6 @@ export const useTrips = () => {
         const data = await fetchUserTrips();
         setTrips(data);
       } catch (err) {
-        console.error("Failed to fetch trips:", err);
         setError(err.message || "Failed to load trips");
       } finally {
         setLoading(false);

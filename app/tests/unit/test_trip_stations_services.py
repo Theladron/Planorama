@@ -127,9 +127,9 @@ class TestTripStationServices:
         from app.users.models import User
         from app.trip_stations.models import TripStation
         other_user = User(
+            id="auth0|otheruser123",
             username="otheruser",
             email="other@example.com",
-            password_hash="hash",
             is_active=True
         )
         test_db.add(other_user)

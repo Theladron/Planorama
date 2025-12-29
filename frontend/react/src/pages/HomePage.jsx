@@ -1,12 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Box, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
+import { AuthContext } from "../context/AuthContext";
 
 export default function HomePage() {
-
   const { t } = useTranslation();
+  const { register } = useContext(AuthContext);
   return (
     <Box
       sx={{
@@ -44,16 +43,17 @@ export default function HomePage() {
           {t('home.subtitle')}
         </Typography>
         <Typography variant="h6" paragraph>
-          <Link
-            to="/register"
+          <span
+            onClick={register}
             style={{
               textDecoration: "none",
               color: "#90caf9",
               fontWeight: "bold",
+              cursor: "pointer",
             }}
           >
             {t('home.register_link')}
-          </Link>
+          </span>
         </Typography>
       </Box>
     </Box>

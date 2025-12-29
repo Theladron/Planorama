@@ -19,9 +19,9 @@ class TestTravelServices:
         """Test getting travel routes for trip owned by different user raises HTTPException."""
         from app.users.models import User
         other_user = User(
+            id="auth0|otheruser123",
             username="otheruser",
             email="other@example.com",
-            password_hash="hash",
             is_active=True
         )
         test_db.add(other_user)
@@ -39,9 +39,9 @@ class TestTravelServices:
         """Test getting travel route by day for unauthorized user raises HTTPException."""
         from app.users.models import User
         other_user = User(
+            id="auth0|otheruser123",
             username="otheruser",
             email="other@example.com",
-            password_hash="hash",
             is_active=True
         )
         test_db.add(other_user)

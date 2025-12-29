@@ -22,7 +22,6 @@ export const useStations = (tripId) => {
         const data = await fetchStationsByTrip(tripId);
         setStations(data);
       } catch (err) {
-        console.error("Failed to fetch stations:", err);
         setError(err.response?.data?.detail || "Failed to load stations");
       } finally {
         setLoading(false);
@@ -37,7 +36,6 @@ export const useStations = (tripId) => {
       const data = await fetchStationsByTrip(tripId);
       setStations(data);
     } catch (err) {
-      console.error("Failed to refresh stations:", err);
     }
   };
 

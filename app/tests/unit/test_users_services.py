@@ -3,11 +3,10 @@ import pytest
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from app.users.services import (
-    get_users, get_user, get_user_by_email, create_user,
+    get_users, get_user, get_user_by_email, create_user_from_auth0,
     delete_user, update_user, update_language_preference
 )
-from app.users.schemas import UserCreate, UserUpdate
-from app.core.security import verify_password
+from app.users.schemas import UserUpdate
 
 
 @pytest.mark.unit
@@ -35,7 +34,7 @@ class TestUserServices:
 
     def test_get_user_not_exists(self, test_db):
         """Test getting a user by ID when user doesn't exist."""
-        user = get_user(test_db, 999)
+        user = get_user(test_db, "auth0|nonexistent")
         assert user is None
 
     def test_get_user_by_email_exists(self, test_db, test_user):
@@ -56,41 +55,45 @@ class TestUserServices:
         user = get_user_by_email(test_db, "nonexistent@example.com")
         assert user is None
 
-    def test_create_user_success(self, test_db):
-        """Test creating a new user."""
-        user_data = UserCreate(
-            username="newuser",
+    def test_create_user_from_auth0_success(self, test_db):
+        """Test creating a new user from Auth0."""
+        auth0_id = "auth0|newuser123"
+        user = create_user_from_auth0(
+            db=test_db,
+            auth0_id=auth0_id,
             email="newuser@example.com",
-            password="NewPassword123!"
+            username="newuser"
         )
-        user = create_user(test_db, user_data)
         assert user is not None
-        assert user.id is not None
+        assert user.id == auth0_id
         assert user.username == "newuser"
         assert user.email == "newuser@example.com"
-        assert verify_password("NewPassword123!", user.password_hash)
         assert user.is_active is True
-        assert user.is_admin is False
+        # Note: Admin status is determined by Auth0 roles, not stored in database
 
-    def test_create_user_email_normalized(self, test_db):
+    def test_create_user_from_auth0_email_normalized(self, test_db):
         """Test that email is normalized (lowercased and stripped) on creation."""
-        user_data = UserCreate(
-            username="testuser",
+        auth0_id = "auth0|testuser123"
+        user = create_user_from_auth0(
+            db=test_db,
+            auth0_id=auth0_id,
             email="  TEST@EXAMPLE.COM  ",
-            password="TestPassword123!"
+            username="testuser"
         )
-        user = create_user(test_db, user_data)
         assert user.email == "test@example.com"
 
-    def test_create_user_duplicate_email(self, test_db, test_user):
-        """Test that creating user with duplicate email raises exception."""
-        user_data = UserCreate(
-            username="anotheruser",
+    def test_create_user_from_auth0_duplicate_email(self, test_db, test_user):
+        """Test that creating user with duplicate email updates existing user."""
+        # The function should update the existing user with the new Auth0 ID
+        updated_user = create_user_from_auth0(
+            db=test_db,
+            auth0_id="auth0|anotheruser123",
             email=test_user.email,
-            password="TestPassword123!"
+            username="anotheruser"
         )
-        with pytest.raises(Exception):
-            create_user(test_db, user_data)
+        assert updated_user.id == "auth0|anotheruser123"
+        assert updated_user.email == test_user.email
+        assert updated_user.username == test_user.username  # Username should remain the same
 
     def test_delete_user_exists(self, test_db, test_user):
         """Test deleting an existing user."""
@@ -101,7 +104,7 @@ class TestUserServices:
 
     def test_delete_user_not_exists(self, test_db):
         """Test deleting a non-existent user (should not raise error)."""
-        delete_user(test_db, 999)
+        delete_user(test_db, "auth0|nonexistent", delete_from_auth0=False)
         assert True
 
     def test_update_user_username(self, test_db, test_user):
@@ -111,26 +114,6 @@ class TestUserServices:
         assert updated_user.username == "updateduser"
         assert updated_user.email == test_user.email
 
-    def test_update_user_password(self, test_db, test_user):
-        """Test updating user password."""
-        old_password_hash = test_user.password_hash
-        update_data = UserUpdate(
-            old_password="TestPassword123!",
-            new_password="NewPassword456!"
-        )
-        updated_user = update_user(test_db, test_user, update_data)
-        assert updated_user.password_hash != old_password_hash
-        assert verify_password("NewPassword456!", updated_user.password_hash)
-        assert not verify_password("TestPassword123!", updated_user.password_hash)
-
-    def test_update_user_password_wrong_old_password(self, test_db, test_user):
-        """Test updating password with incorrect old password raises ValueError."""
-        update_data = UserUpdate(
-            old_password="WrongPassword",
-            new_password="NewPassword456!"
-        )
-        with pytest.raises(ValueError, match="Old password is incorrect"):
-            update_user(test_db, test_user, update_data)
 
     def test_update_user_no_data(self, test_db, test_user):
         """Test updating user with no data raises ValueError."""
@@ -138,16 +121,6 @@ class TestUserServices:
         with pytest.raises(ValueError, match="No data provided to update"):
             update_user(test_db, test_user, update_data)
 
-    def test_update_user_username_and_password(self, test_db, test_user):
-        """Test updating both username and password."""
-        update_data = UserUpdate(
-            username="newusername",
-            old_password="TestPassword123!",
-            new_password="NewPassword789!"
-        )
-        updated_user = update_user(test_db, test_user, update_data)
-        assert updated_user.username == "newusername"
-        assert verify_password("NewPassword789!", updated_user.password_hash)
 
     def test_update_language_preference_valid(self, test_db, test_user):
         """Test updating language preference with valid language."""

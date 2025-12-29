@@ -70,10 +70,6 @@ jobs:
           # API Keys (these should be in Environment Secrets)
           ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
-          # Security (JWT_SECRET_KEY should be in Environment Secrets)
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          ACCESS_TOKEN_EXPIRE_MINUTES: ${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}
-          ALGORITHM: ${{ vars.ALGORITHM }}
           # Environment
           ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           DOMAIN: ${{ vars.DOMAIN }}
@@ -83,6 +79,14 @@ jobs:
           ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
           ADMIN_USERNAME: ${{ vars.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          # Auth0 Configuration
+          AUTH0_DOMAIN: ${{ vars.AUTH0_DOMAIN }}
+          AUTH0_AUDIENCE: ${{ vars.AUTH0_AUDIENCE }}
+          AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+          AUTH0_MANAGEMENT_CLIENT_ID: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
+          AUTH0_MANAGEMENT_CLIENT_SECRET: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
+          AUTH0_CONNECTION_NAME: ${{ vars.AUTH0_CONNECTION_NAME }}
           # Frontend
           VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
         run: |
@@ -90,35 +94,41 @@ jobs:
           
           # Create .env file content locally with variable expansion
           cat > /tmp/.env << EOF
-          # Database Configuration
+          # Backend Configuration
+          ENVIRONMENT=${ENVIRONMENT}
+          DEBUG=${DEBUG:-False}
+          BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+          
+          # PostgreSQL Database Configuration
           POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME}
           POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
           POSTGRESQL_SERVER=${POSTGRESQL_SERVER:-postgres}
           POSTGRESQL_PORT=${POSTGRESQL_PORT:-5432}
           POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
           
+          # Domain Configuration
+          DOMAIN=${DOMAIN}
+          
+          # Frontend Configuration
+          VITE_BACKEND_URL=${VITE_BACKEND_URL}
+          
           # API Keys
           ORS_API_KEY=${ORS_API_KEY}
           AI_API_KEY=${AI_API_KEY}
           
-          # Security
-          JWT_SECRET_KEY=${JWT_SECRET_KEY}
-          ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
-          ALGORITHM=${ALGORITHM:-HS256}
-          
-          # Environment
-          ENVIRONMENT=${ENVIRONMENT}
-          DOMAIN=${DOMAIN}
-          BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
-          DEBUG=${DEBUG:-False}
-          
-          # Admin User Seeding
+          # Admin User Configuration (for seeding)
           ADMIN_EMAIL=${ADMIN_EMAIL}
           ADMIN_USERNAME=${ADMIN_USERNAME}
           ADMIN_PASSWORD=${ADMIN_PASSWORD}
           
-          # Frontend
-          VITE_BACKEND_URL=${VITE_BACKEND_URL}
+          # Auth0 Configuration
+          AUTH0_DOMAIN=${AUTH0_DOMAIN}
+          AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
+          AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+          AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+          AUTH0_MANAGEMENT_CLIENT_ID=${AUTH0_MANAGEMENT_CLIENT_ID}
+          AUTH0_MANAGEMENT_CLIENT_SECRET=${AUTH0_MANAGEMENT_CLIENT_SECRET}
+          AUTH0_CONNECTION_NAME=${AUTH0_CONNECTION_NAME:-Username-Password-Authentication}
           EOF
           
           # Deploy code and .env file to EC2

@@ -52,9 +52,21 @@ class Settings(BaseSettings):
     ORS_API_KEY: str
     AI_API_KEY: str
 
-    ALGORITHM: str = "HS256"
-    JWT_SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    # Auth0 Configuration
+    AUTH0_DOMAIN: str = ""
+    AUTH0_AUDIENCE: str = ""
+    AUTH0_CLIENT_ID: str = ""  # SPA Client ID
+    AUTH0_CLIENT_SECRET: str = ""  # SPA Client Secret
+    
+    # Auth0 Management API (for user creation/seeding)
+    AUTH0_MANAGEMENT_CLIENT_ID: str = ""  # Management API M2M Client ID
+    AUTH0_MANAGEMENT_CLIENT_SECRET: str = ""  # Management API M2M Client Secret
+    AUTH0_CONNECTION_NAME: str = "Username-Password-Authentication"  # Auth0 database connection name
+    
+    # Auth0 Admin User (for seeding)
+    ADMIN_EMAIL: str = ""  # Admin email (will be created/fetched in Auth0)
+    ADMIN_USERNAME: str = ""  # Admin username
+    ADMIN_PASSWORD: str = ""  # Admin password (for initial creation)
 
     DOMAIN: str
     ENVIRONMENT: Literal["local", "staging", "production"]

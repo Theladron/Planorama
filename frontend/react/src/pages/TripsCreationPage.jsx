@@ -38,7 +38,6 @@ export default function TripsCreationPage() {
       await createTrip(tripName, startDate, endDate);
       navigate("/trips");
     } catch (err) {
-      console.error("Failed to create trip:", err);
       setError(err.response?.data?.detail || t("tripscreation.error_generic"));
     } finally {
       setLoading(false);

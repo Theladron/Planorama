@@ -37,7 +37,6 @@ export const useTripManagement = (t) => {
               const stations = await fetchStationsByTrip(trip.id);
               return { tripId: trip.id, stations };
             } catch (err) {
-              console.error(`Failed to fetch stations for trip ${trip.id}:`, err);
               return { tripId: trip.id, stations: [] };
             }
           })
@@ -49,7 +48,6 @@ export const useTripManagement = (t) => {
         });
         setStationsByTrip(stationsMap);
       } catch (err) {
-        console.error("Failed to fetch trips:", err);
         setError(t("trips.errorLoading"));
       } finally {
         setLoading(false);
@@ -82,7 +80,6 @@ export const useTripManagement = (t) => {
         )
       );
     } catch (err) {
-      console.error("Failed to update trip dates:", err);
       throw err;
     } finally {
       setUpdateLoading((prev) => ({ ...prev, [tripId]: false }));
@@ -97,7 +94,6 @@ export const useTripManagement = (t) => {
         [tripId]: prev[tripId].filter((station) => station.link_id !== linkId),
       }));
     } catch (err) {
-      console.error("Failed to delete station:", err);
       throw err;
     }
   };
@@ -112,7 +108,6 @@ export const useTripManagement = (t) => {
         return updated;
       });
     } catch (err) {
-      console.error("Failed to delete trip:", err);
       throw err;
     }
   };

@@ -39,11 +39,9 @@ export const useTransportSearch = (travels, stations, i18n, getStationName) => {
         language: i18n.language,
       });
 
-      console.log("AI Transport suggestions (external):", data);
       transportCacheRef.current[key] = data;
       setAiTransportData((prev) => ({ ...prev, [travelId]: data }));
     } catch (err) {
-      console.error("Failed to fetch AI transport suggestions:", err);
     } finally {
       setIsTransportLoading(false);
     }
