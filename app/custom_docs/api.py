@@ -11,6 +11,9 @@ router = APIRouter()
 @router.get("/openapi.json", include_in_schema=False)
 async def custom_openapi(request: Request):
     openapi_schema = get_base_openapi_schema(request.app)
+    # Ensure OpenAPI version field is set (required by Swagger UI)
+    if "openapi" not in openapi_schema:
+        openapi_schema["openapi"] = "3.1.0"
     openapi_schema["info"]["title"] = "Planorama"
     openapi_schema["info"]["description"] = (
         "Planorama is an all-in-one travel app that lets you plan your perfect trip. "

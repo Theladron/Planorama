@@ -256,13 +256,22 @@ jobs:
             echo "Disk space before cleanup:"
             df -h /
             
-            # Stop all containers first
-            docker stop $(docker ps -aq) 2>/dev/null || true
-            docker rm $(docker ps -aq) 2>/dev/null || true
+            # Stop only our application containers (not nginx/letsencrypt/duckdns if they're in Docker)
+            # Use docker compose to stop only containers defined in docker-compose.yml
+            docker compose down || true
+            
+            # Get list of containers that are part of our docker-compose setup
+            # This prevents stopping nginx/letsencrypt/duckdns containers if they exist separately
+            COMPOSE_CONTAINERS=$(docker compose ps -q 2>/dev/null || true)
+            
+            # Stop only containers that are stopped or from our compose setup
+            # Don't stop running containers that might be nginx/letsencrypt/duckdns
+            docker ps -a --format "{{.ID}} {{.Names}}" | grep -v "nginx\|letsencrypt\|certbot\|duckdns" | awk '{print $1}' | xargs -r docker stop 2>/dev/null || true
+            docker ps -a --format "{{.ID}} {{.Names}}" | grep -v "nginx\|letsencrypt\|certbot\|duckdns" | awk '{print $1}' | xargs -r docker rm 2>/dev/null || true
             
             # Remove ALL images except the ones we're about to build (very aggressive)
-            # Keep only postgres and nginx base images if they exist
-            docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres\|nginx\|node\|python" | awk '{print $1}' | xargs -r docker rmi -f 2>/dev/null || true
+            # Keep only postgres, nginx base images, and any letsencrypt/certbot images
+            docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres\|nginx\|node\|python\|letsencrypt\|certbot" | awk '{print $1}' | xargs -r docker rmi -f 2>/dev/null || true
             
             # Remove all unused containers, networks, images, build cache
             docker system prune -af --volumes || true
