@@ -172,7 +172,29 @@ jobs:
           echo "Attempting SSH connection to ${EC2_USER}@${EC2_HOST}..."
           echo "Verifying SSH key format..."
           ssh-keygen -l -f "$HOME/.ssh/deploy_key" 2>&1 || echo "Key format check completed"
-          ssh -T -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${EC2_USER}@${EC2_HOST} << ENDSSH
+          
+          # Test connectivity first
+          echo "Testing network connectivity to ${EC2_HOST}..."
+          if ! timeout 10 ping -c 3 ${EC2_HOST} 2>/dev/null; then
+            echo "Warning: Cannot ping ${EC2_HOST}, but continuing with SSH attempt..."
+          fi
+          
+          # Try SSH connection with increased timeout and retries
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          SSH_SUCCESS=false
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SSH_SUCCESS" != "true" ]; do
+            echo "SSH connection attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+            
+            if ssh -T -i "$HOME/.ssh/deploy_key" \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=60 \
+              -o ConnectTimeout=60 \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o LogLevel=INFO \
+              ${EC2_USER}@${EC2_HOST} << ENDSSH
             set -e
             
             # Create app directory if it doesn't exist
@@ -200,9 +222,42 @@ jobs:
             
             echo "Code updated successfully"
           ENDSSH
+            then
+              echo "SSH connection successful!"
+              SSH_SUCCESS=true
+            else
+              EXIT_CODE=$?
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "SSH connection failed (exit code: $EXIT_CODE), retrying in 10 seconds..."
+                sleep 10
+              else
+                echo "ERROR: Failed to establish SSH connection after $MAX_RETRIES attempts"
+                echo "Last exit code: $EXIT_CODE"
+                echo "Please check:"
+                echo "  1. EC2 instance is running"
+                echo "  2. Security group allows SSH (port 22) from GitHub Actions IPs"
+                echo "  3. EC2 host IP is correct: ${EC2_HOST}"
+                echo "  4. SSH key is correct and has proper permissions"
+                exit 1
+              fi
+            fi
+          done
+          
+          if [ "$SSH_SUCCESS" != "true" ]; then
+            echo "ERROR: Could not establish SSH connection"
+            exit 1
+          fi
           
           # Upload .env file to EC2 (after git reset to ensure it's not overwritten)
-          scp -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/.env ${EC2_USER}@${EC2_HOST}:${APP_PATH}/.env
+          echo "Uploading .env file to EC2..."
+          scp -i "$HOME/.ssh/deploy_key" \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=60 \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            /tmp/.env ${EC2_USER}@${EC2_HOST}:${APP_PATH}/.env
           
           # Clean up local temp file
           rm /tmp/.env
@@ -210,7 +265,14 @@ jobs:
           echo ".env file uploaded successfully"
           
           # Continue with container deployment
-          ssh -T -i "$HOME/.ssh/deploy_key" -o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${EC2_USER}@${EC2_HOST} << ENDSSH
+          echo "Connecting to EC2 for container deployment..."
+          ssh -T -i "$HOME/.ssh/deploy_key" \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=60 \
+            -o ConnectTimeout=60 \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            ${EC2_USER}@${EC2_HOST} << ENDSSH
             set -e
             cd ${APP_PATH}
             
