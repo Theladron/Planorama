@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
           audience: auth0Audience,
         });
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        } catch (err) {
+        } catch {
           delete axios.defaults.headers.common["Authorization"];
         }
       } else {

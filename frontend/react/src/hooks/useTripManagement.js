@@ -36,7 +36,7 @@ export const useTripManagement = (t) => {
             try {
               const stations = await fetchStationsByTrip(trip.id);
               return { tripId: trip.id, stations };
-            } catch (err) {
+            } catch {
               return { tripId: trip.id, stations: [] };
             }
           })
@@ -47,7 +47,7 @@ export const useTripManagement = (t) => {
           stationsMap[tripId] = stations;
         });
         setStationsByTrip(stationsMap);
-      } catch (err) {
+      } catch {
         setError(t("trips.errorLoading"));
       } finally {
         setLoading(false);
@@ -79,37 +79,27 @@ export const useTripManagement = (t) => {
           trip.id === tripId ? { ...trip, start_date, end_date } : trip
         )
       );
-    } catch (err) {
-      throw err;
     } finally {
       setUpdateLoading((prev) => ({ ...prev, [tripId]: false }));
     }
   };
 
   const handleDeleteStation = async (linkId, tripId) => {
-    try {
-      await deleteStation(linkId);
-      setStationsByTrip((prev) => ({
-        ...prev,
-        [tripId]: prev[tripId].filter((station) => station.link_id !== linkId),
-      }));
-    } catch (err) {
-      throw err;
-    }
+    await deleteStation(linkId);
+    setStationsByTrip((prev) => ({
+      ...prev,
+      [tripId]: prev[tripId].filter((station) => station.link_id !== linkId),
+    }));
   };
 
   const handleDeleteTrip = async (tripId) => {
-    try {
-      await deleteTrip(tripId);
-      setTrips((prev) => prev.filter((t) => t.id !== tripId));
-      setStationsByTrip((prev) => {
-        const updated = { ...prev };
-        delete updated[tripId];
-        return updated;
-      });
-    } catch (err) {
-      throw err;
-    }
+    await deleteTrip(tripId);
+    setTrips((prev) => prev.filter((t) => t.id !== tripId));
+    setStationsByTrip((prev) => {
+      const updated = { ...prev };
+      delete updated[tripId];
+      return updated;
+    });
   };
 
   return {

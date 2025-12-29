@@ -48,4 +48,11 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    // Mock files - use Node globals
+    files: ['**/__mocks__/**/*.{js,jsx}'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

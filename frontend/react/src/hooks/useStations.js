@@ -35,7 +35,8 @@ export const useStations = (tripId) => {
     try {
       const data = await fetchStationsByTrip(tripId);
       setStations(data);
-    } catch (err) {
+    } catch {
+      // Silently handle refresh errors
     }
   };
 

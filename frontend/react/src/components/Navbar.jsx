@@ -35,7 +35,8 @@ export default function Navbar({ hasSidebar }) {
           language_preference: lng,
         });
       }
-    } catch (err) {
+    } catch {
+      // Silently handle language change errors
     }
   };
 

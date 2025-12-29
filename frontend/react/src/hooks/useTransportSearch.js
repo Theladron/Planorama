@@ -41,7 +41,8 @@ export const useTransportSearch = (travels, stations, i18n, getStationName) => {
 
       transportCacheRef.current[key] = data;
       setAiTransportData((prev) => ({ ...prev, [travelId]: data }));
-    } catch (err) {
+    } catch {
+      // Silently handle transport search errors
     } finally {
       setIsTransportLoading(false);
     }

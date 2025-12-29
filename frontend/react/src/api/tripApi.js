@@ -10,35 +10,31 @@ export const fetchAISuggestions = async ({ lat, lon, townName, language, content
       params: { lat, lon, town_name: townName, language, content_type: contentType },
     });
     return res.data || [];
-  } catch (err) {
+  } catch {
     return [];
   }
 };
 
 export const fetchAiTransportRoutes = async ({ startLat, startLon, startCity, endLat, endLon, endCity, language }) => {
-  try {
-    const response = await axios.get(`${backendURL}/api/ai-transport`, {
-      params: {
-        start_lat: startLat,
-        start_lon: startLon,
-        start_city: startCity,
-        end_lat: endLat,
-        end_lon: endLon,
-        end_city: endCity,
-        language,
-      },
-    });
-    return response.data || [];
-  } catch (err) {
-    throw err;
-  }
+  const response = await axios.get(`${backendURL}/api/ai-transport`, {
+    params: {
+      start_lat: startLat,
+      start_lon: startLon,
+      start_city: startCity,
+      end_lat: endLat,
+      end_lon: endLon,
+      end_city: endCity,
+      language,
+    },
+  });
+  return response.data || [];
 };
 
 export const fetchWeather = async (lat, lon) => {
   try {
     const res = await axios.get(`${backendURL}/api/weather`, { params: { lat, lon } });
     return res.data;
-  } catch (err) {
+  } catch {
     return null;
   }
 };
