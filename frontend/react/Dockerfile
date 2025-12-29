@@ -9,7 +9,15 @@ COPY package*.json ./
 
 # Install dependencies (using npm install for OS-independence)
 # Using --legacy-peer-deps to handle React 19 compatibility with testing libraries
-RUN npm install --legacy-peer-deps
+# Configure npm for better reliability: increased timeouts and retries
+RUN npm config set fetch-timeout 300000 && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install --legacy-peer-deps || \
+    (echo "First npm install attempt failed, retrying..." && \
+     sleep 10 && \
+     npm install --legacy-peer-deps)
 
 # Copy source code
 COPY . .

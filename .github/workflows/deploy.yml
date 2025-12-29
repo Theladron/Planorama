@@ -323,11 +323,23 @@ jobs:
             df -h /
             
             echo "Building frontend..."
+            # Check network connectivity before building (npm needs internet access)
+            echo "Checking network connectivity..."
+            ping -c 3 registry.npmjs.org || echo "Warning: Cannot reach npm registry, but continuing..."
+            
+            # Frontend build can take longer due to npm install, especially with network issues
+            # Increased timeout to 30 minutes (1800 seconds) to handle slow npm downloads
             if command -v timeout >/dev/null 2>&1; then
-              timeout 900 docker compose build --progress=plain frontend || {
+              timeout 1800 docker compose build --progress=plain frontend || {
                 echo "Frontend build failed, cleaning up and retrying..."
                 docker builder prune -af || true
-                timeout 900 docker compose build --progress=plain frontend || exit 1
+                echo "Retrying frontend build..."
+                timeout 1800 docker compose build --progress=plain frontend || {
+                  echo "Frontend build failed after retry. Checking disk space and network..."
+                  df -h /
+                  ping -c 3 registry.npmjs.org || echo "ERROR: Cannot reach npm registry"
+                  exit 1
+                }
               }
             else
               docker compose build --progress=plain frontend || exit 1
