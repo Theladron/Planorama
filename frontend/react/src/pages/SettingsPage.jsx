@@ -166,7 +166,7 @@ export default function SettingsPage() {
         component="main"
         sx={{
           ml: "320px",
-          mt: "180px",
+          mt: "120px",
           pr: 4,
           pb: 4,
           flexGrow: 1,

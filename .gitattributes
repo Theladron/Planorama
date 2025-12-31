@@ -1,0 +1,44 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Shell scripts must use LF line endings (required for Linux/Unix)
+*.sh text eol=lf
+
+# Docker files should use LF
+Dockerfile* text eol=lf
+*.dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+
+# Configuration files should use LF
+*.ini text eol=lf
+*.conf text eol=lf
+*.config text eol=lf
+
+# Python files (though Python handles both, LF is preferred for cross-platform)
+*.py text eol=lf
+
+# JavaScript/TypeScript files
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+
+# Other code files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+

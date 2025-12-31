@@ -159,8 +159,6 @@ jobs:
           echo "Verifying SSH key format..."
           ssh-keygen -l -f "$HOME/.ssh/deploy_key" 2>&1 || echo "Key format check completed"
           
-          # Deploy code and .env file to EC2
-          # Using increased timeout (60s) but keeping simple structure that worked before
           ssh -T -i "$HOME/.ssh/deploy_key" \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=60 \
@@ -256,24 +254,16 @@ jobs:
             echo "Disk space before cleanup:"
             df -h /
             
-            # Stop only our application containers (not nginx/letsencrypt/duckdns if they're in Docker)
-            # Use docker compose to stop only containers defined in docker-compose.yml
             docker compose down || true
             
             # Get list of containers that are part of our docker-compose setup
-            # This prevents stopping nginx/letsencrypt/duckdns containers if they exist separately
             COMPOSE_CONTAINERS=$(docker compose ps -q 2>/dev/null || true)
             
-            # Stop only containers that are stopped or from our compose setup
-            # Don't stop running containers that might be nginx/letsencrypt/duckdns
             docker ps -a --format "{{.ID}} {{.Names}}" | grep -v "nginx\|letsencrypt\|certbot\|duckdns" | awk '{print $1}' | xargs -r docker stop 2>/dev/null || true
             docker ps -a --format "{{.ID}} {{.Names}}" | grep -v "nginx\|letsencrypt\|certbot\|duckdns" | awk '{print $1}' | xargs -r docker rm 2>/dev/null || true
             
-            # Remove ALL images except the ones we're about to build (very aggressive)
-            # Keep only postgres, nginx base images, and any letsencrypt/certbot images
             docker images --format "{{.ID}} {{.Repository}}" | grep -v "postgres\|nginx\|node\|python\|letsencrypt\|certbot" | awk '{print $1}' | xargs -r docker rmi -f 2>/dev/null || true
             
-            # Remove all unused containers, networks, images, build cache
             docker system prune -af --volumes || true
             
             # Aggressively remove build cache
@@ -302,8 +292,6 @@ jobs:
             
             echo "Building containers (this may take several minutes)..."
             echo "Start time: $(date)"
-            # Build only backend and frontend - skip test service to save space
-            # Build services one at a time to free space between builds
             
             echo "Building backend..."
             if command -v timeout >/dev/null 2>&1; then

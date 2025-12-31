@@ -19,9 +19,7 @@ services:
     networks:
       - planorama_network
 
-  # Test Service (runs tests and exits)
-  # Runs automatically with 'docker compose up' or manually with 'docker compose run --rm test'
-  # Tests run FIRST - backend/frontend only start if tests pass (fail-fast approach)
+  # Test Service - runs tests before backend/frontend start (fail-fast approach)
   test:
     build:
       context: .

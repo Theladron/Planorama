@@ -30,7 +30,6 @@ async def custom_openapi(request: Request):
         "bearerFormat": "JWT"
     }
     openapi_schema.setdefault("security", [{"BearerAuth": []}])
-    # Remove deprecated auth endpoints
     openapi_schema["paths"].pop("/api/auth/token", None)
     openapi_schema["paths"].pop("/api/auth/check-token", None)
     
@@ -81,7 +80,6 @@ async def custom_swagger_ui_html(request: Request):
             }
         }
         const response = await originalFetch(input, init);
-        // Auth0 tokens are handled by the frontend, not via /api/auth/token
         return response;
     };
 })();
@@ -142,8 +140,6 @@ async def custom_swagger_ui_html(request: Request):
 
     monitorLogoutButton();
 })();
-
-// === NEW: Hide the Authorization input fields without breaking functionality ===
 
 function hideAuthInputs() {
     const inputs = document.querySelectorAll('.auth-wrapper input');
