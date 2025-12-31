@@ -28,16 +28,9 @@ export default function TripsGenerationPage() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
 
-  // Fetch trip data
   const { stations, travels, loading, error } = useTripData(tripId, t);
-
-  // Fetch route data
   const routesData = useRouteData(travels, stations, t);
-
-  // Weather caching
   const { getCachedWeatherForCoords } = useWeatherCache();
-
-  // AI suggestions
   const {
     isActivityLoading,
     isOvernightLoading,

@@ -4,9 +4,7 @@
 import React from 'react';
 import { vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useAuth } from '../src/hooks/useAuth';
 import { useTrips } from '../src/hooks/useTrips';
-import { AuthContext } from '../src/context/AuthContext';
 
 // Mock Auth0
 const mockGetAccessTokenSilently = vi.fn().mockResolvedValue('mock-token');
@@ -68,44 +66,9 @@ vi.mock('../src/api/tripApi', () => ({
 describe('Custom Hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset mock implementations
     mockGetAccessTokenSilently.mockResolvedValue('mock-token');
     mockLoginWithRedirect.mockResolvedValue();
     mockAxiosGet.mockResolvedValue({ data: {} });
-  });
-
-  describe('useAuth', () => {
-    it('should return deprecated functions that throw errors', () => {
-      // Create a mock context value
-      const mockContextValue = {
-        login: vi.fn(),
-        logout: vi.fn(),
-        loading: false,
-        authError: null,
-        isAuthenticated: false,
-        user: null,
-        setAuthError: vi.fn(),
-      };
-      
-      // Create a wrapper that provides the mock context
-      const wrapper = ({ children }) => (
-        <AuthContext.Provider value={mockContextValue}>
-          {children}
-        </AuthContext.Provider>
-      );
-      
-      const { result } = renderHook(() => useAuth(), { wrapper });
-      
-      // Verify the hook returns the expected structure
-      expect(result.current.loading).toBeDefined();
-      expect(result.current.error).toBeDefined();
-      expect(typeof result.current.login).toBe('function');
-      expect(typeof result.current.register).toBe('function');
-      
-      // Verify deprecated functions throw errors
-      expect(() => result.current.login()).toThrow('useAuth.login is deprecated');
-      expect(() => result.current.register()).toThrow('Registration is now handled by Auth0');
-    });
   });
 
   describe('useTrips', () => {

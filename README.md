@@ -8,26 +8,30 @@ Planorama is a smart travel planning backend powered by FastAPI and AI. It integ
 
 ---
 
-## 🔗 Test the current Deployed Version
-Test the current working version of Planorama on Amazon AWS EC2:<br>
-[Backend](http://13.51.172.110:8000/api/docs)<br>
-[Frontend](http://13.51.172.110:5173/)<br><br>
+## 🔗 Live Demo
+Test the current deployed version of Planorama:<br>
+[Frontend](https://planorama.duckdns.org/) - Main application<br>
+[Backend API Docs](https://planorama.duckdns.org/api/docs) - Interactive API documentation<br><br>
+
+*Deployed on AWS EC2 with automated CI/CD via GitHub Actions*
 
 ---
 
 ## 🚀 Tech Stack
 
-| Layer              | Tech                                               |
-|--------------------|----------------------------------------------------|
+| Layer              | Tech                                              |
+|--------------------|---------------------------------------------------|
 | Backend            | FastAPI, SQLAlchemy 2.0, Pydantic 2.x             |
 | Frontend           | React 19, Vite, MUI, React Router                 |
 | Database           | PostgreSQL, Alembic, SQLite (testing)             |
-| Auth               | JWT (PyJWT), Argon2 password hashing               |
+| Auth               | JWT (PyJWT), Auth0                                |
 | AI Services        | Sonar AI, OpenRouteService, Open-Meteo            |
-| Testing            | Pytest, pytest-cov, Jest, React Testing Library  |
-| Docs               | Sphinx                                             |
-| DevOps             | Docker, Docker Compose, Render                     |
-| Code Quality       | Pylint, ESLint, pre-commit                        |
+| Testing            | Pytest, pytest-cov, Vitest, React Testing Library |
+| Docs               | Sphinx                                            |
+| DevOps             | Docker, Docker Compose, GitHub Actions            |
+| CI/CD              | GitHub Actions (CI/CD workflows)                  |
+| Deployment         | AWS EC2, DuckDNS, Let's Encrypt (HTTPS)           |
+| Code Quality       | Pylint, ESLint                                    |
 
 ---
 
@@ -113,9 +117,16 @@ project_root/<br>
 │   └── index.rst<br>
 ├── scripts/                 # Utility scripts<br>
 │   └── run-all-tests.sh<br>
+├── .github/<br>
+│   └── workflows/          # GitHub Actions CI/CD<br>
+│       ├── ci.yml          # Continuous Integration<br>
+│       └── deploy.yml      # Deployment to AWS EC2<br>
+├── .gitattributes          # Git line ending configuration<br>
 ├── alembic.ini<br>
-├── docker-compose.yml<br>
-├── Dockerfile.test<br>
+├── docker-compose.yml      # Docker Compose configuration<br>
+├── Dockerfile.test         # Test container Dockerfile<br>
+├── app/Dockerfile          # Backend production Dockerfile<br>
+├── frontend/react/Dockerfile # Frontend production Dockerfile<br>
 ├── pytest.ini<br>
 ├── pyproject.toml<br>
 ├── requirements.txt<br>
@@ -129,39 +140,49 @@ project_root/<br>
 
 ## 🔧 Setup (Development)
 
+### Option 1: Docker Compose (Recommended)
+
+The easiest way to get started is using Docker Compose, which sets up all services (database, backend, frontend) automatically:
+
 ```bash
 # Clone the repo
 git clone https://github.com/Theladron/planorama.git
 cd planorama
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+# Create .env file with your configuration
+# Copy from .env.example and fill in your values:
+# - Database credentials
+# - Auth0 configuration
+# - API keys (ORS_API_KEY, AI_API_KEY)
 
-# Install dependencies
-pip install -r requirements.txt
+# Build and start all services
+docker compose up
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your database credentials and API keys
+# Or run in detached mode
+docker compose up -d
 
-# Set up database (PostgreSQL)
-# Create database and update DATABASE_URL in .env
+# View logs
+docker compose logs -f
 
-# Run migrations
-alembic upgrade head
-
-# Run the backend
-uvicorn app.main:app --reload
-
-# In a separate terminal, run the frontend
-cd frontend/react
-npm install
-npm run dev
+# Stop services
+docker compose down
 ```
+
+**Note**: The Docker Compose setup runs tests automatically before starting backend and frontend services (fail-fast approach).
+
 
 ### Running Tests
 
+**With Docker Compose:**
+```bash
+# Run all tests (backend + frontend)
+docker compose run --rm test
+
+# Or just start services - tests run automatically before backend/frontend start
+docker compose up
+```
+
+**Without Docker (Local):**
 ```bash
 # Backend tests
 pytest
@@ -185,10 +206,10 @@ npm run test:coverage
 
 * [x] FastAPI scaffolding with feature module architecture
 * [x] SQLAlchemy 2.0 models with proper relationships
-* [x] JWT authentication with Argon2 password hashing
+* [x] Auth0 authentication
 * [x] React 19 frontend with Vite and MUI
 * [x] Comprehensive test suite (pytest + Jest)
-* [x] Test coverage reporting (56% backend, improving)
+* [x] Test coverage reporting
 * [x] AI suggestion generation (Sonar AI)
 * [x] Route optimization (OpenRouteService)
 * [x] Weather integration (Open-Meteo)
@@ -197,8 +218,10 @@ npm run test:coverage
 * [x] Render deployment
 * [x] Database migrations (Alembic)
 * [x] Internationalization (i18n)
-* [x] Code quality tools (Pylint, ESLint, pre-commit)
-
+* [x] Code quality tools (Pylint, ESLint)
+* [x] AWS EC2 Deployment with DuckDNS and Let's Encrypt (HTTPS)
+* [x] GitHub Actions CI/CD pipelines
+* [x] Docker Compose for local development
 ---
 
 ## 🤝 Contributing
