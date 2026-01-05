@@ -1,17 +1,57 @@
 """Custom OpenAPI documentation services."""
-from copy import deepcopy
+
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 
 
-def get_base_openapi_schema(app: FastAPI):
-    """Get a deep copy of the base OpenAPI schema.
+def get_custom_openapi_schema(app: FastAPI) -> dict:
+    """
+    Get the custom OpenAPI schema for the FastAPI application.
+    This includes BearerAuth security and removes auth token endpoints.
     
     Args:
-        app: FastAPI application instance.
+        app: The FastAPI application instance.
         
     Returns:
-        Deep copy of the OpenAPI schema dictionary.
+        The custom OpenAPI schema dictionary.
     """
-    if not hasattr(app, "base_openapi_schema"):
-        app.base_openapi_schema = app.openapi()
-    return deepcopy(app.base_openapi_schema)
+    schema = get_openapi(
+        title="Planorama",
+        version="0.8.0",
+        description=(
+            "Planorama is an all-in-one travel app that lets you plan your perfect trip. "
+            "It gives you necessary data about travel routes, weather, and things to do "
+            "while on vacation."
+        ),
+        routes=app.routes,
+    )
+    schema.setdefault("components", {}).setdefault("securitySchemes", {})[
+        "BearerAuth"
+    ] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+    }
+
+    schema["security"] = [{"BearerAuth": []}]
+    schema.get("paths", {}).pop("/api/auth/token", None)
+    schema.get("paths", {}).pop("/api/auth/check-token", None)
+
+    return schema
+
+
+def setup_custom_openapi(app: FastAPI) -> None:
+    """
+    Configure and override FastAPI's OpenAPI schema generation.
+    """
+
+    def custom_openapi():
+        # Use cached schema if already generated
+        if app.openapi_schema:
+            return app.openapi_schema
+
+        app.openapi_schema = get_custom_openapi_schema(app)
+        return app.openapi_schema
+
+    # Override FastAPI OpenAPI generator
+    app.openapi = custom_openapi

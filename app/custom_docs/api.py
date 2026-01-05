@@ -3,14 +3,14 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from app.auth.services import get_token_from_request, verify_auth0_token_and_get_user
 from app.core.database import get_db
-from app.custom_docs.services import get_base_openapi_schema
+from app.custom_docs.services import get_custom_openapi_schema
 
 router = APIRouter()
 
 
 @router.get("/openapi.json", include_in_schema=False)
 async def custom_openapi(request: Request):
-    openapi_schema = get_base_openapi_schema(request.app)
+    openapi_schema = get_custom_openapi_schema(request.app)
     # Ensure OpenAPI version field is set (required by Swagger UI)
     if "openapi" not in openapi_schema:
         openapi_schema["openapi"] = "3.1.0"
