@@ -4,6 +4,42 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
 
+def get_custom_openapi_schema(app: FastAPI) -> dict:
+    """
+    Get the custom OpenAPI schema for the FastAPI application.
+    This includes BearerAuth security and removes auth token endpoints.
+    
+    Args:
+        app: The FastAPI application instance.
+        
+    Returns:
+        The custom OpenAPI schema dictionary.
+    """
+    schema = get_openapi(
+        title="Planorama",
+        version="0.8.0",
+        description=(
+            "Planorama is an all-in-one travel app that lets you plan your perfect trip. "
+            "It gives you necessary data about travel routes, weather, and things to do "
+            "while on vacation."
+        ),
+        routes=app.routes,
+    )
+    schema.setdefault("components", {}).setdefault("securitySchemes", {})[
+        "BearerAuth"
+    ] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+    }
+
+    schema["security"] = [{"BearerAuth": []}]
+    schema.get("paths", {}).pop("/api/auth/token", None)
+    schema.get("paths", {}).pop("/api/auth/check-token", None)
+
+    return schema
+
+
 def setup_custom_openapi(app: FastAPI) -> None:
     """
     Configure and override FastAPI's OpenAPI schema generation.
@@ -14,29 +50,7 @@ def setup_custom_openapi(app: FastAPI) -> None:
         if app.openapi_schema:
             return app.openapi_schema
 
-        schema = get_openapi(
-            title="Planorama",
-            version="0.8.0",
-            description=(
-                "Planorama is an all-in-one travel app that lets you plan your perfect trip. "
-                "It gives you necessary data about travel routes, weather, and things to do "
-                "while on vacation."
-            ),
-            routes=app.routes,
-        )
-        schema.setdefault("components", {}).setdefault("securitySchemes", {})[
-            "BearerAuth"
-        ] = {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-        }
-
-        schema["security"] = [{"BearerAuth": []}]
-        schema.get("paths", {}).pop("/api/auth/token", None)
-        schema.get("paths", {}).pop("/api/auth/check-token", None)
-
-        app.openapi_schema = schema
+        app.openapi_schema = get_custom_openapi_schema(app)
         return app.openapi_schema
 
     # Override FastAPI OpenAPI generator
