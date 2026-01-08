@@ -173,7 +173,6 @@ docker compose down
 
 ### Running Tests
 
-**With Docker Compose:**
 ```bash
 # Run all tests (backend + frontend)
 docker compose run --rm test
@@ -181,24 +180,6 @@ docker compose run --rm test
 # Or just start services - tests run automatically before backend/frontend start
 docker compose up
 ```
-
-**Without Docker (Local):**
-```bash
-# Backend tests
-pytest
-
-# Backend tests with coverage
-pytest --cov=app --cov-report=html
-
-# Frontend tests
-cd frontend/react
-npm test
-
-# Frontend tests with coverage
-npm run test:coverage
-```
-
----
 
 ## 📌 Roadmap
 
